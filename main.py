@@ -1,6 +1,6 @@
 from pandas import read_csv
 from pandas.plotting import scatter_matrix
 from matplotlib import pyplot as plt
-
-dataset = read_csv('https://www.quandl.com/api/v3/datasets/EOD/WMT.csv?api_key=tHUig52wPMmBP8xuxces')
+from api_key.txt import api_key
+dataset = read_csv('https://www.quandl.com/api/v3/datasets/EOD/WMT.csv?api_key=' + api_key)
 print(dataset)
