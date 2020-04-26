@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 
 time_period = 50
 csv_location = 'EOD-WMT.csv'
+cols=['Date','Open','High','Low','Close']
+# csv_location = 'OPEC-ORB.csv'
+# cols = ['Date', 'Value']
 split_location = 800
 
 
@@ -73,7 +76,7 @@ def exp_mov_avg(train_data, df):
     plt.show()
 
 
-df = pd.read_csv(csv_location, usecols=['Date','Open','High','Low','Close'])
+df = pd.read_csv(csv_location, usecols=cols)
 df = df.sort_values('Date')
 print(df.head())
 # plt.figure(figsize = (12,6))
@@ -83,9 +86,11 @@ print(df.head())
 # plt.ylabel('Mid Price', fontsize=18)
 # plt.show()
 # First calculate the mid prices from the highest and lowest
+
 high_prices = df.loc[:,'High'].to_numpy()
 low_prices = df.loc[:,'Low'].to_numpy()
 mid_prices = (high_prices+low_prices)/2.0
+# mid_prices = df.loc[:,'Value'].to_numpy()
 train_data = mid_prices[:split_location]
 test_data = mid_prices[split_location:]
 # Scale the data to be between 0 and 1
@@ -120,7 +125,7 @@ for ti in range(split_location):
 all_mid_data = np.concatenate([train_data,test_data],axis=0)
 
 #standard_avg(train_data, df)
-#exp_mov_avg(train_data, df)
+exp_mov_avg(train_data, df)
 
 
 
