@@ -7,6 +7,7 @@ avg_window = 6
 # amount = avg_window * 100
 #print('we need to request ' + str(amount))
 days_ago = 15
+mean_distance = 0.03
 starting_money = 200
 api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
 #symbols = ['AHPI', 'AMD', 'APDN',  'FARM', 'FNMAT', 'WTRH', 'NRZ']
@@ -35,15 +36,17 @@ roll_avg = roll_avgs[symbols[0]]
 above = real_data[avg_window] > roll_avg[avg_window]
 start = real_data[avg_window]
 end = real_data[-1]
+up_bound = 1 + mean_distance
+down_bound = 1 - mean_distance
 print('starting price is ' + str(start))
 print('ending price is ' + str(end))
 print('above is ' + str(above))
 for i in range(avg_window, len(real_data)):
-    if i < len(real_data) - days_ago:
-        above = real_data[avg_window] > roll_avg[avg_window]
-        pass
+    # if i < len(real_data) - days_ago:
+    #     above = real_data[avg_window] > roll_avg[avg_window]
+    #     pass
     price = real_data[i]
-    if above == True and price <= (roll_avg[i-avg_window] * 1.03):
+    if above == True and price <= (roll_avg[i-avg_window] * up_bound):
         above = False
         if stocks_owned > 0:
             print('selling on day ' + str(i))
@@ -53,7 +56,7 @@ for i in range(avg_window, len(real_data)):
             stocks_owned = 0
         # else:
             #print('i wanted to sell stocks for ' + str(price) + ' but i don\'t own any stocks')
-    elif above == False and price >= (roll_avg[i-avg_window] * .97):
+    elif above == False and price >= (roll_avg[i-avg_window] * down_bound):
         above = True
         num_stocks_to_buy = money // price
         if num_stocks_to_buy > 0:
