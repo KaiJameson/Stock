@@ -132,8 +132,8 @@ class RA:
     def find_best_average(self):
         starting_money = self.money
         money_list = []
-        if self.window == self.days:
-            average_list = [i for i in range(2, 14)]
+        if self.window > 20:
+            average_list = [i for i in range(2, 21)]
         else:
             average_list = [i for i in range(2, self.window)]
         for i in average_list:
@@ -218,24 +218,6 @@ class RA:
 #symbols = ['TUSK', 'PENN', 'NET', 'LYFT', 'AAPL', 'BLCM']
 #symbols = ['MRAM', 'WTRH', 'XERS', 'DOOO', 'SERV']
 #symbols = ['THC', 'NWS', 'RDFN', 'NBL', 'CARR', 'CC']
-symbols = []
-done = False
-while not done:
-    ticker = input('Enter the name of a stock to look at. leave blank to exit\n')
-    done = ticker.strip() == ''
-    if not done:
-        symbols.append(ticker.strip().upper())
-print('here the symbols you requested to look at', symbols)
-cash = 100
-day_count = 252
-for symbol in symbols:
-    print('for the stock of ticker: ' + symbol)
-    try:
-        trader = RA(cash, symbol, days=day_count, window=50)
-        trader.find_bests()
-        trader.what_to_do()
-    except:
-        print('There is an error')
-    print('\n--------\n')
+
 
 
