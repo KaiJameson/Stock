@@ -2,81 +2,259 @@ from api_key import paper_api_key_id, paper_api_secret_key
 import alpaca_trade_api as tradeapi
 import numpy as np
 from matplotlib import pyplot as plt
-avg_window = 6
+#avg_window = 6
 # avg_window = int(6 * (4 * 6.5))
 # amount = avg_window * 100
 #print('we need to request ' + str(amount))
-days_ago = 15
-mean_distance = 0.03
-starting_money = 200
+#days_ago = 15
+#mean_distance = 0.03
+#starting_money = 200
 api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
 #symbols = ['AHPI', 'AMD', 'APDN',  'FARM', 'FNMAT', 'WTRH', 'NRZ']
-symbols = ['AHPI']
-barset = api.get_barset(symbols=symbols, timeframe='day', limit=252)
-#call based on 0 - 212 with avg_windows of 4-6
-data = {}
-symbols = []
-for symbol, bar in barset.items():
-    print('appending symbol ' + symbol)
-    symbols.append(symbol)
-    data[symbol] = [(day.c + day.o)/2 for day in bar]
-    #data[symbol] = [day.c for day in bar]
-roll_avgs = {}
-for key in data:
-    info = np.array(data[key])
-    avgs = []
-    for i in range(avg_window, len(info)):
-        avgs.append(np.mean(info[i-avg_window:i+1]))
-    roll_avgs[key] = avgs
+#symbols = ['AHPI']
+#barset = api.get_barset(symbols=symbols, timeframe='day', limit=252)
 
-money = starting_money
-stocks_owned = 0
-real_data = data[symbols[0]]
-roll_avg = roll_avgs[symbols[0]]
-above = real_data[avg_window] > roll_avg[avg_window]
-start = real_data[avg_window]
-end = real_data[-1]
-up_bound = 1 + mean_distance
-down_bound = 1 - mean_distance
-print('starting price is ' + str(start))
-print('ending price is ' + str(end))
-print('above is ' + str(above))
-for i in range(avg_window, len(real_data)):
-    # if i < len(real_data) - days_ago:
-    #     above = real_data[avg_window] > roll_avg[avg_window]
-    #     pass
-    price = real_data[i]
-    if above == True and price <= (roll_avg[i-avg_window] * up_bound):
-        above = False
-        if stocks_owned > 0:
-            print('selling on day ' + str(i))
-            money_made = stocks_owned * price
-            #print('money made today from selling ' + str(stocks_owned) + ' for ' + str(price))
-            money += money_made
-            stocks_owned = 0
-        # else:
-            #print('i wanted to sell stocks for ' + str(price) + ' but i don\'t own any stocks')
-    elif above == False and price >= (roll_avg[i-avg_window] * down_bound):
-        above = True
-        num_stocks_to_buy = money // price
-        if num_stocks_to_buy > 0:
-            print('buying on day ' + str(i))
-            #print('before buying i have ' + str(money) + ' dollars')
-            #print('buying ' + str(num_stocks_to_buy) + ' stocks at ' + str(price) + ' per stock')
-            money -= num_stocks_to_buy * price
-            stocks_owned += num_stocks_to_buy
-            #print('i have ' + str(money) + ' dollars')
-        # else:
-            #print('i wanted to buy ' + str(num_stocks_to_buy) + ' stocks but didnt have the money')
-            #print('i have ' + str(money) + ' dollars')
-    # else:
-        #print('i held the stocks today')
-total_money = money + (stocks_owned * end)
-print('started at ' + str(starting_money))
-print('i now have ' + str(total_money) + ' dollars effective')
-print('spencer wanted me to have earned ' + str(starting_money * (end/start)))
-# x = [i for i in range(len(real_data))]
-# plt.plot(x, real_data, color='blue', label='real data')
-# plt.plot(x[avg_window:len(x)], roll_avg, color='red', label='roll_avg')
-# plt.legend()
-# plt.show()
+
+
+class RA:
+    def __init__(self, money, stock_ticket, days, avg_window=6, mean_distance=0.03, window=None):
+        self.money = money
+        self.stock = stock_ticket
+        self.prices = []
+        self.roll_avg = []
+        self.days = days
+        self.avg_window = avg_window
+        self.mean_distance = mean_distance
+        if window is None:
+            self.window = days
+        else:
+            self.window = window
+        self.get_prices()
+        self.get_roll_avg()
+
+    def get_prices(self):
+        barset = api.get_barset(symbols=self.stock, timeframe='day', limit=self.days)
+        for symbol, bar in barset.items():
+            self.prices = [(day.c + day.o) / 2 for day in bar]
+
+    def get_roll_avg(self, avg_window=None):
+        if not avg_window is None:
+            self.avg_window = avg_window
+        avgs = []
+        for i in range(self.avg_window, len(self.prices)):
+            avgs.append(np.mean(self.prices[i - self.avg_window:i + 1]))
+        self.roll_avg = avgs
+
+    def trade(self, prints=False):
+        money = self.money
+        stocks_owned = 0
+        above = self.prices[self.avg_window] > self.roll_avg[self.avg_window]
+        start = self.prices[self.avg_window]
+        end = self.prices[-1]
+        up_bound = 1 + self.mean_distance
+        down_bound = 1 - self.mean_distance
+        #print('starting price is ' + str(start))
+        #print('ending price is ' + str(end))
+        #print('above is ' + str(above))
+        for i in range(self.avg_window, len(self.prices)):
+            if i < len(self.prices) - self.window:
+                above = self.prices[self.avg_window] > self.roll_avg[self.avg_window]
+                pass
+            price = self.prices[i]
+            if above == True and price <= (self.roll_avg[i - self.avg_window] * up_bound):
+                above = False
+                if stocks_owned > 0:
+                    money_made = stocks_owned * price
+                    money += money_made
+                    stocks_owned = 0
+            elif above == False and price >= (self.roll_avg[i - self.avg_window] * down_bound):
+                above = True
+                num_stocks_to_buy = money // price
+                if num_stocks_to_buy > 0:
+                    money -= num_stocks_to_buy * price
+                    stocks_owned += num_stocks_to_buy
+        total_money = money + (stocks_owned * end)
+        if prints:
+            print('started at ' + str(self.money))
+            print('i now have ' + str(total_money) + ' dollars effective')
+            print('spencer wanted me to have earned ' + str(self.money * (end / start)))
+            print('total money is', total_money)
+            print('the money you actually have is', money)
+            print('you own this many stocks:', stocks_owned)
+        self.money=money
+        return total_money
+
+
+
+    def limited_trading(self):
+        #this function is largely work in progress
+        #it returns values lower than the regular trade for now
+        money = self.money
+        stocks_owned = 0
+        stocks_owned_last_checkpoint = 0
+        money_last_checkpoint = money
+        checkpoint_distance = 30
+        above = self.prices[self.avg_window] > self.roll_avg[self.avg_window]
+        end = self.prices[-1]
+        up_bound = 1 + self.mean_distance
+        down_bound = 1 - self.mean_distance
+        for i in range(self.avg_window, len(self.prices)):
+            if i != self.avg_window and i % checkpoint_distance == 0:
+                find_values = Part_RA(money_last_checkpoint, self.prices[i-checkpoint_distance:i+1], stocks_owned_last_checkpoint)
+                self.avg_window, self.mean_distance = find_values.find_bests()
+                up_bound = 1 + self.mean_distance
+                down_bound = 1 - self.mean_distance
+                self.get_roll_avg()
+                #test a new above here and see if they are different, so you can sell or buy now
+                #do i need to do the thing above or is that already handled?
+                stocks_owned_last_checkpoint = stocks_owned
+                money_last_checkpoint = money
+            price = self.prices[i]
+            if above == True and price <= (self.roll_avg[i - self.avg_window] * up_bound):
+                above = False
+                if stocks_owned > 0:
+                    money_made = stocks_owned * price
+                    money += money_made
+                    stocks_owned = 0
+            elif above == False and price >= (self.roll_avg[i - self.avg_window] * down_bound):
+                above = True
+                num_stocks_to_buy = money // price
+                if num_stocks_to_buy > 0:
+                    money -= num_stocks_to_buy * price
+                    stocks_owned += num_stocks_to_buy
+        total_money = money + (stocks_owned * end)
+        self.money = money
+        print('total money is ' + str(total_money))
+
+    def plot(self):
+        x = [i for i in range(len(self.prices))]
+        plt.plot(x, self.prices, color='blue', label='real data')
+        plt.plot(x[self.avg_window:len(x)], self.roll_avg, color='red', label='roll_avg')
+        plt.legend()
+        plt.show()
+
+    def find_best_average(self):
+        starting_money = self.money
+        money_list = []
+        average_list = [i for i in range(2, 14)]
+        for i in average_list:
+            self.avg_window = i
+            self.get_roll_avg()
+            money = self.trade()
+            money_list.append(money)
+            self.money = starting_money
+        max_index = money_list.index(max(money_list))
+        self.avg_window = average_list[max_index]
+        self.get_roll_avg()
+
+    def find_best_mean_distance(self):
+        starting_money = self.money
+        money_list = []
+        mean_list = [(i*0.01) for i in range(10)]
+        for i in mean_list:
+            self.mean_distance = i
+            money = self.trade()
+            money_list.append(money)
+            self.money = starting_money
+        max_index = money_list.index(max(money_list))
+        self.mean_distance = mean_list[max_index]
+        return money_list[max_index]
+
+    def find_bests(self):
+        self.find_best_average()
+        max_money =self.find_best_mean_distance()
+        print('max money is ', max_money)
+
+
+class Part_RA:
+    def __init__(self, money, prices, stocks_owned, avg_window=6, mean_distance=0.03):
+        self.money = money
+        self.prices = prices
+        self.roll_avg = []
+        self.mean_distance = mean_distance
+        self.avg_window = avg_window
+        self.stocks_owned = stocks_owned
+        self.get_roll_avg()
+
+    def get_roll_avg(self):
+        avgs = []
+        for i in range(self.avg_window, len(self.prices)):
+            avgs.append(np.mean(self.prices[i - self.avg_window:i + 1]))
+        self.roll_avg = avgs
+
+    def trade(self):
+        money = self.money
+        stocks_owned = self.stocks_owned
+        above = self.prices[self.avg_window] > self.roll_avg[self.avg_window]
+        end = self.prices[-1]
+        up_bound = 1 + self.mean_distance
+        down_bound = 1 - self.mean_distance
+        for i in range(self.avg_window, len(self.prices)):
+            price = self.prices[i]
+            if above == True and price <= (self.roll_avg[i - self.avg_window] * up_bound):
+                above = False
+                if stocks_owned > 0:
+                    money_made = stocks_owned * price
+                    money += money_made
+                    stocks_owned = 0
+            elif above == False and price >= (self.roll_avg[i - self.avg_window] * down_bound):
+                above = True
+                num_stocks_to_buy = money // price
+                if num_stocks_to_buy > 0:
+                    money -= num_stocks_to_buy * price
+                    stocks_owned += num_stocks_to_buy
+        total_money = money + (stocks_owned * end)
+        self.money = total_money
+
+    def find_best_average(self):
+        starting_money = self.money
+        money_list = []
+        average_list = [i for i in range(2, 14)]
+        for i in average_list:
+            self.avg_window=i
+            self.get_roll_avg()
+            self.trade()
+            money_list.append(self.money)
+            self.money = starting_money
+        max_index = money_list.index(max(money_list))
+        self.avg_window = average_list[max_index]
+        self.get_roll_avg()
+        return self.avg_window
+
+    def find_best_mean_distance(self):
+        starting_money = self.money
+        money_list = []
+        mean_list = [(i*0.01) for i in range(10)]
+        for i in mean_list:
+            self.mean_distance=i
+            self.trade()
+            money_list.append(self.money)
+            self.money = starting_money
+        max_index = money_list.index(max(money_list))
+        self.mean_distance = mean_list[max_index]
+        return self.mean_distance
+
+    def find_bests(self):
+        avg = self.find_best_average()
+        mean_distance = self.find_best_mean_distance()
+        return avg, mean_distance
+
+
+
+#test = RA(200, 'AMD', days=252)
+#print('limited trading')
+#test.limited_trading()
+#print('\n------------\n')
+#test = RA(200, 'AMD', days=252)
+#print('the regular trade')
+#test.find_bests()
+symbols = ['AHPI', 'AMD', 'APDN', 'WTRH']
+cash = 200
+day_count = 252
+for symbol in symbols:
+    print('for the stock of ticker: ' + symbol)
+    trader = RA(cash, symbol, days=day_count)
+    trader.find_bests()
+    print('\n--------\n')
+
+
