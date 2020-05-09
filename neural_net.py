@@ -83,7 +83,6 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # return the result
     return result
 
-
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
                 loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
     model = Sequential()
@@ -140,7 +139,7 @@ BIDIRECTIONAL = False
 LOSS = "huber_loss"
 OPTIMIZER = "adam"
 BATCH_SIZE = 64
-EPOCHS = 400
+EPOCHS = 200
 # Apple stock market
 ticker = "AAPL"
 ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
@@ -178,4 +177,67 @@ history = model.fit(data["X_train"], data["y_train"],
 
 model.save(os.path.join("results", model_name) + ".h5")
 
+
+#before testing, no shuffle
+data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE,
+                feature_columns=FEATURE_COLUMNS, shuffle=False)
+
+# construct the model
+model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
+                    dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
+model_path = os.path.join("results", model_name) + ".h5"
+model.load_weights(model_path)
+# evaluate the model
+mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
+# calculate the mean absolute error (inverse scaling)
+mean_absolute_error = data["column_scaler"]["adjclose"].inverse_transform(mae.reshape(1, -1))[0][0]
+print("Mean Absolute Error:", mean_absolute_error)
+
+def predict(model, data, classification=False):
+    # retrieve the last sequence from data
+    last_sequence = data["last_sequence"][:N_STEPS]
+    # retrieve the column scalers
+    column_scaler = data["column_scaler"]
+    # reshape the last sequence
+    last_sequence = last_sequence.reshape((last_sequence.shape[1], last_sequence.shape[0]))
+    # expand dimension
+    last_sequence = np.expand_dims(last_sequence, axis=0)
+    # get the prediction (scaled from 0 to 1)
+    prediction = model.predict(last_sequence)
+    # get the price (by inverting the scaling)
+    predicted_price = column_scaler["adjclose"].inverse_transform(prediction)[0][0]
+    return predicted_price
+
+# predict the future price
+future_price = predict(model, data)
+print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
+
+
+def plot_graph(model, data):
+    y_test = data["y_test"]
+    X_test = data["X_test"]
+    y_pred = model.predict(X_test)
+    y_test = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(np.expand_dims(y_test, axis=0)))
+    y_pred = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(y_pred))
+    # last 200 days, feel free to edit that
+    plt.plot(y_test[-200:], c='b')
+    plt.plot(y_pred[-200:], c='r')
+    plt.xlabel("Days")
+    plt.ylabel("Price")
+    plt.legend(["Actual Price", "Predicted Price"])
+    plt.show()
+
+plot_graph(model, data)
+
+def get_accuracy(model, data):
+    y_test = data["y_test"]
+    X_test = data["X_test"]
+    y_pred = model.predict(X_test)
+    y_test = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(np.expand_dims(y_test, axis=0)))
+    y_pred = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(y_pred))
+    y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-LOOKUP_STEP], y_pred[LOOKUP_STEP:]))
+    y_test = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-LOOKUP_STEP], y_test[LOOKUP_STEP:]))
+    return accuracy_score(y_test, y_pred)
+
+print(LOOKUP_STEP + ":", "Accuracy Score:", get_accuracy(model, data))
 
