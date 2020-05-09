@@ -139,7 +139,7 @@ BIDIRECTIONAL = False
 LOSS = "huber_loss"
 OPTIMIZER = "adam"
 BATCH_SIZE = 64
-EPOCHS = 200
+EPOCHS = 1
 # Apple stock market
 ticker = "AAPL"
 ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
@@ -189,9 +189,12 @@ model_path = os.path.join("results", model_name) + ".h5"
 model.load_weights(model_path)
 # evaluate the model
 mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
+print('mae', mae)
+print('mse', mse)
 # calculate the mean absolute error (inverse scaling)
-mean_absolute_error = data["column_scaler"]["adjclose"].inverse_transform(mae.reshape(1, -1))[0][0]
-print("Mean Absolute Error:", mean_absolute_error)
+#mean_absolute_error = data["column_scaler"]["adjclose"].inverse_transform(mae.reshape(1, -1))[0][0]
+#TODO: THERE IS A BIG PROBLEM WITH THE ABOVE LINE, RESHAPE NO WORK ON FLOAT
+#print("Mean Absolute Error:", mean_absolute_error)
 
 def predict(model, data, classification=False):
     # retrieve the last sequence from data
@@ -239,5 +242,5 @@ def get_accuracy(model, data):
     y_test = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-LOOKUP_STEP], y_test[LOOKUP_STEP:]))
     return accuracy_score(y_test, y_pred)
 
-print(LOOKUP_STEP + ":", "Accuracy Score:", get_accuracy(model, data))
+print(str(LOOKUP_STEP) + ":", "Accuracy Score:", get_accuracy(model, data))
 
