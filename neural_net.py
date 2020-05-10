@@ -15,18 +15,22 @@ import time
 import os
 import random
 
+import time
+
 seed = 314
 # set seed, so we can get the same results after rerunning several times
 np.random.seed(seed)
 tf.random.set_seed(seed)
 random.seed(seed)
-
+start_time = time.time()
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
                 test_size=0.2, feature_columns=['adjclose', 'volume', 'open', 'high', 'low']):
     # see if ticker is already a loaded stock from yahoo finance
     if isinstance(ticker, str):
         # load it from yahoo_fin library
         df = si.get_data(ticker)
+        print('printing the data as i get it from ')
+        print(df)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
@@ -55,11 +59,13 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # drop NaNs
     df.dropna(inplace=True)
     sequence_data = []
+    print('going through the sequences')
     sequences = deque(maxlen=n_steps)
     for entry, target in zip(df[feature_columns].values, df['future'].values):
         sequences.append(entry)
         if len(sequences) == n_steps:
             sequence_data.append([np.array(sequences), target])
+    print('done with the sequence')
     # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
     # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
     # this last_sequence will be used to predict in future dates that are not available in the dataset
@@ -85,6 +91,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
 
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
                 loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
+    print('i am inside of create model')
     model = Sequential()
     for i in range(n_layers):
         if i == 0:
@@ -108,6 +115,7 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
         # add dropout after each layer
         model.add(Dropout(dropout))
     model.add(Dense(1, activation="linear"))
+    print('i am going to compile this model and return it')
     model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
     return model
 
@@ -139,9 +147,9 @@ BIDIRECTIONAL = False
 LOSS = "huber_loss"
 OPTIMIZER = "adam"
 BATCH_SIZE = 64
-EPOCHS = 1
+EPOCHS = 1400
 # Apple stock market
-ticker = "AAPL"
+ticker = "TSLA"
 ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
 # model name to save, making it as unique as possible based on parameters
 model_name = f"{date_now}_{ticker}-{LOSS}-{OPTIMIZER}-{CELL.__name__}-seq-{N_STEPS}-step-{LOOKUP_STEP}-layers-{N_LAYERS}-units-{UNITS}"
@@ -156,14 +164,18 @@ if not os.path.isdir("data"):
     os.mkdir("data")
 # load the data
 data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, feature_columns=FEATURE_COLUMNS)
-
+print('here is the data[X_test]')
+print(data['X_test'])
+print('here is the data[y_test]')
+print(data['y_test'])
 # save the dataframe
 data["df"].to_csv(ticker_data_filename)
 
 # construct the model
 model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                     dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
-
+print('here is the model')
+print(model)
 # some tensorflow callbacks
 checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
 tensorboard = TensorBoard(log_dir=os.path.join("logs", model_name))
@@ -223,8 +235,8 @@ def plot_graph(model, data):
     y_test = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(np.expand_dims(y_test, axis=0)))
     y_pred = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(y_pred))
     # last 200 days, feel free to edit that
-    plt.plot(y_test[-200:], c='b')
-    plt.plot(y_pred[-200:], c='r')
+    plt.plot(y_test[-100:], c='b')
+    plt.plot(y_pred[-100:], c='r')
     plt.xlabel("Days")
     plt.ylabel("Price")
     plt.legend(["Actual Price", "Predicted Price"])
@@ -243,4 +255,7 @@ def get_accuracy(model, data):
     return accuracy_score(y_test, y_pred)
 
 print(str(LOOKUP_STEP) + ":", "Accuracy Score:", get_accuracy(model, data))
-
+end_time = time.time()
+total_time = end_time - start_time
+total_minutes = total_time / 60
+print('total minutes is', total_minutes)
