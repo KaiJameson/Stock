@@ -147,7 +147,7 @@ BIDIRECTIONAL = False
 LOSS = "huber_loss"
 OPTIMIZER = "adam"
 BATCH_SIZE = 64
-EPOCHS = 1400
+EPOCHS = 50
 # Apple stock market
 ticker = "TSLA"
 ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
@@ -242,6 +242,10 @@ def plot_graph(model, data):
     plt.legend(["Actual Price", "Predicted Price"])
     plt.show()
 
+end_time = time.time()
+total_time = end_time - start_time
+total_minutes = total_time / 60
+print('total minutes is', total_minutes)
 plot_graph(model, data)
 
 def get_accuracy(model, data):
@@ -255,7 +259,4 @@ def get_accuracy(model, data):
     return accuracy_score(y_test, y_pred)
 
 print(str(LOOKUP_STEP) + ":", "Accuracy Score:", get_accuracy(model, data))
-end_time = time.time()
-total_time = end_time - start_time
-total_minutes = total_time / 60
-print('total minutes is', total_minutes)
+
