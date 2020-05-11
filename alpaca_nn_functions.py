@@ -18,11 +18,10 @@ import os
 import random
 
 
-api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
 
-
-def make_dataframe(symbol, timeframe='day', limit=252):
-    barset = api.get_barset(symbols=symbol, timeframe='day', limit=10)
+def make_dataframe(symbol, timeframe='day', limit=1000):
+    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
+    barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
     items = barset.items()
     data = {}
     for symbol, bar in items:
@@ -31,31 +30,37 @@ def make_dataframe(symbol, timeframe='day', limit=252):
         low_values = []
         high_values = []
         volumes = []
+        mid_values = []
         for day in bar:
             open_price = day.o
             close_price = day.c
             low_price = day.l
             high_price = day.h
             volume = day.v
+            mid_price = low_price + high_price / 2
             open_values.append(open_price)
             close_values.append(close_price)
             low_values.append(low_price)
             high_values.append(high_price)
             volumes.append(volume)
+            mid_values.append(mid_price)
+        ticker_column = [symbol for x in range(len(volumes))]
         data['open'] = open_values
         data['low'] = low_values
         data['high'] = high_values
         data['close'] = close_values
         data['volume'] = volumes
+        data['mid'] = mid_values
+        data['ticker'] = ticker_column
     df = pd.DataFrame(data=data)
     return df
 
 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
-                test_size=0.2, feature_columns=['adjclose', 'volume', 'open', 'high', 'low']):
+                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'volume']):
     # see if ticker is already a loaded stock from yahoo finance
     if isinstance(ticker, str):
-        # load it from yahoo_fin library
+        # load data from alpaca
         df = make_dataframe(ticker, limit=n_steps)
         #print('printing the data as i get it from ')
         #print(df)
@@ -80,7 +85,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
         # add the MinMaxScaler instances to the result returned
         result["column_scaler"] = column_scaler
     # add the target column (label) by shifting by `lookup_step`
-    df['future'] = df['adjclose'].shift(-lookup_step)
+    df['future'] = df['close'].shift(-lookup_step)
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
     last_sequence = np.array(df[feature_columns].tail(lookup_step))
@@ -149,9 +154,9 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
     return model
 
 
-def predict(model, data, classification=False):
+def predict(model, data, n_steps, classification=False):
     # retrieve the last sequence from data
-    last_sequence = data["last_sequence"][:N_STEPS]
+    last_sequence = data["last_sequence"][:n_steps]
     # retrieve the column scalers
     column_scaler = data["column_scaler"]
     # reshape the last sequence
@@ -161,7 +166,7 @@ def predict(model, data, classification=False):
     # get the prediction (scaled from 0 to 1)
     prediction = model.predict(last_sequence)
     # get the price (by inverting the scaling)
-    predicted_price = column_scaler["adjclose"].inverse_transform(prediction)[0][0]
+    predicted_price = column_scaler["close"].inverse_transform(prediction)[0][0]
     return predicted_price
 
 
@@ -169,8 +174,8 @@ def plot_graph(model, data):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)
-    y_test = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(np.expand_dims(y_test, axis=0)))
-    y_pred = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(y_pred))
+    y_test = np.squeeze(data["column_scaler"]["close"].inverse_transform(np.expand_dims(y_test, axis=0)))
+    y_pred = np.squeeze(data["column_scaler"]["close"].inverse_transform(y_pred))
     # last 200 days, feel free to edit that
     plt.plot(y_test[-100:], c='b')
     plt.plot(y_pred[-100:], c='r')
@@ -180,13 +185,25 @@ def plot_graph(model, data):
     plt.show()
 
 
-def get_accuracy(model, data):
+def get_accuracy(model, data, lookup_step):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)
-    y_test = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(np.expand_dims(y_test, axis=0)))
-    y_pred = np.squeeze(data["column_scaler"]["adjclose"].inverse_transform(y_pred))
-    y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-LOOKUP_STEP], y_pred[LOOKUP_STEP:]))
-    y_test = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-LOOKUP_STEP], y_test[LOOKUP_STEP:]))
+    y_test = np.squeeze(data["column_scaler"]["close"].inverse_transform(np.expand_dims(y_test, axis=0)))
+    y_pred = np.squeeze(data["column_scaler"]["close"].inverse_transform(y_pred))
+    y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-lookup_step], y_pred[lookup_step:]))
+    y_test = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-lookup_step], y_test[lookup_step:]))
     return accuracy_score(y_test, y_pred)
 
+
+if __name__ == '__main__':
+    ticker = 'TSLA'
+    df1 = si.get_data(ticker)
+    print('dataframe from yahoo')
+    print(df1)
+    print('\n-------------\n')
+    limit = 1000
+    print('limit', limit)
+    df2 = make_dataframe(ticker, limit=limit)
+    print('dataframe from alpaca')
+    print(df2)
