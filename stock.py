@@ -57,7 +57,7 @@ else:
     print('idk what jus happened, exit time')
     sys.exit(-1)
 print('here the symbols you requested to look at', symbols)
-cash = 100
+cash = 1000
 print('starting money is', cash)
 day_count = get_day_count()
 window = get_window(day_count)
@@ -69,6 +69,8 @@ for symbol in symbols:
     try:
         trader = RA(cash, symbol, days=day_count, window=window)
         trader.find_bests()
+        # plot_name = 'plots/' + symbol + '_open_close.png'
+        # trader.save_plot(plot_name)
         decision = trader.what_to_do()
         if decision == 'sell':
             sell.append(symbol)
