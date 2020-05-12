@@ -18,7 +18,6 @@ import os
 import random
 
 
-
 def make_dataframe(symbol, timeframe='day', limit=1000):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
     barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
@@ -61,7 +60,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # see if ticker is already a loaded stock from yahoo finance
     if isinstance(ticker, str):
         # load data from alpaca
-        df = make_dataframe(ticker, limit=n_steps)
+        df = make_dataframe(ticker)
         #print('printing the data as i get it from ')
         #print(df)
     elif isinstance(ticker, pd.DataFrame):
@@ -91,13 +90,24 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     last_sequence = np.array(df[feature_columns].tail(lookup_step))
     # drop NaNs
     df.dropna(inplace=True)
+    print('df futures')
+    print(df['future'].values)
+    print('len of df future values:', len(df['future'].values))
+    print('df feature columns')
+    print(df[feature_columns])
+    print('len df[feature columns]:', len(df[feature_columns].values))
     sequence_data = []
     #print('going through the sequences')
     sequences = deque(maxlen=n_steps)
+    print('sequences after declaration')
+    print(sequences)
+    append_count = 0
     for entry, target in zip(df[feature_columns].values, df['future'].values):
         sequences.append(entry)
+        append_count+=1
         if len(sequences) == n_steps:
             sequence_data.append([np.array(sequences), target])
+    print('appended', append_count, 'things')
     #print('done with the sequence')
     # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
     # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
@@ -107,7 +117,11 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     last_sequence = np.array(pd.DataFrame(last_sequence).shift(-1).dropna())
     # add to result
     result['last_sequence'] = last_sequence
+    # print('result')
+    # print(result)
     # construct the X's and y's
+    print('sequence_data')
+    print(sequence_data)
     X, y = [], []
     for seq, target in sequence_data:
         X.append(seq)
@@ -118,6 +132,11 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # reshape X to fit the neural network
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     # split the dataset
+    print('printing paramters')
+    print('test size:', test_size)
+    print('shuffle:', shuffle)
+    print('after reshape, x:', X)
+    print('y is', y)
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
     # return the result
     return result
@@ -198,12 +217,13 @@ def get_accuracy(model, data, lookup_step):
 
 if __name__ == '__main__':
     ticker = 'TSLA'
-    df1 = si.get_data(ticker)
-    print('dataframe from yahoo')
-    print(df1)
-    print('\n-------------\n')
-    limit = 1000
-    print('limit', limit)
-    df2 = make_dataframe(ticker, limit=limit)
-    print('dataframe from alpaca')
-    print(df2)
+    load_data(ticker, n_steps=100)
+    # df1 = si.get_data(ticker)
+    # print('dataframe from yahoo')
+    # print(df1)
+    # print('\n-------------\n')
+    # limit = 1000
+    # print('limit', limit)
+    # df2 = make_dataframe(ticker, limit=limit)
+    # print('dataframe from alpaca')
+    # print(df2)

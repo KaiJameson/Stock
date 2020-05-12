@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 
 
-from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph
+from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy
 
 import numpy as np
 import pandas as pd
@@ -57,7 +57,7 @@ OPTIMIZER = "adam"
 BATCH_SIZE = 64
 EPOCHS = 40
 # Apple stock market
-ticker = "TSLA"
+ticker = "AHPI"
 #ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
 # model name to save, making it as unique as possible based on parameters
 model_name = f"{date_now}_{ticker}-{LOSS}-{OPTIMIZER}-{CELL.__name__}-seq-{N_STEPS}-step-{LOOKUP_STEP}-layers-{N_LAYERS}-units-{UNITS}"
