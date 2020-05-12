@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 
 
-from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph
+from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy
 
 import numpy as np
 import pandas as pd
