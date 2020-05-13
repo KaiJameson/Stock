@@ -201,20 +201,22 @@ def plot_graph(model, data):
     y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
     y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
     # last 200 days, feel free to edit that
+    money = 10000
     real_y_values = y_test[-100:]
     predicted_y_values = y_pred[-100:]
-    spencer_money = 10000 * (real_y_values[-1]/real_y_values[0])
+    spencer_money = money * (real_y_values[-1]/real_y_values[0])
     print('spencer wanted me to have', spencer_money, 'dollars')
-    money_made = decide_trades(real_y_values, predicted_y_values)
+    money_made = decide_trades(money, real_y_values, predicted_y_values)
     print('money made from using real vs predicted:', money_made)
-    other_money = decide_trades(predicted_y_values, predicted_y_values, real=real_y_values)
-    print('money made from using predicted vs predicted:', other_money)
+    #other_money = decide_trades(money, predicted_y_values, predicted_y_values, real=real_y_values)
+    #print('money made from using predicted vs predicted:', other_money)
     plt.plot(real_y_values, c='b')
     plt.plot(predicted_y_values, c='r')
     plt.xlabel("Days")
     plt.ylabel("Price")
     plt.legend(["Actual Price", "Predicted Price"])
     plt.show()
+    return real_y_values[-1]
 
 
 def get_accuracy(model, data, lookup_step):
@@ -228,32 +230,38 @@ def get_accuracy(model, data, lookup_step):
     return accuracy_score(y_test, y_pred)
 
 
-def decide_trades(data1, data2, real=None):
+def decide_trades(money, data1, data2, real=None):
     if len(data1) != len(data2):
         print('your data isnt the same size in decide trades')
         return
-    money = 10000
     stocks_owned = 0
     for i in range(1,len(data1)):
         now_price = data1[i-1]
         if data2[i] > now_price:
+            print('can buy on day', i)
             if real is not None:
                 stocks_can_buy = money // real[i-1]
             else:
                 stocks_can_buy = money // now_price
             if stocks_can_buy > 0:
+                print('actually buying on this day')
                 money -= stocks_can_buy * now_price
                 stocks_owned += stocks_can_buy
         elif data2[i] < now_price:
+            print('can sell on day', i)
+            if stocks_owned > 0:
+                print('actually selling today')
             if real is not None:
                 money += real[i-1] * stocks_owned
             else:
                 money += now_price * stocks_owned
             stocks_owned = 0
     if stocks_owned != 0:
+        print('i own stocks now')
         if real is not None:
             money += stocks_owned * real[len(data1)-1]
         else:
+            print('the current price is', data1[len(data1)-1])
             money += stocks_owned * data1[len(data1)-1]
     return money
 
