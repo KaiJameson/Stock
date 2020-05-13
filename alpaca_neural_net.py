@@ -42,11 +42,11 @@ def main(ticker):
     # LSTM cell
     CELL = LSTM
     # 256 LSTM neurons
-    UNITS = 256
+    UNITS = 512
     # 40% dropout
-    DROPOUT = 0.1
+    DROPOUT = 0.3
     # whether to use bidirectional RNNs
-    BIDIRECTIONAL = False
+    BIDIRECTIONAL = True
     ### training parameters
     # mean absolute error loss
     # LOSS = "mae"
@@ -54,7 +54,7 @@ def main(ticker):
     LOSS = "huber_loss"
     OPTIMIZER = "adam"
     BATCH_SIZE = 64
-    EPOCHS = 2000
+    EPOCHS = 1000
     # Apple stock market
     ticker = ticker
     #ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
@@ -140,4 +140,4 @@ def main(ticker):
 
 
 if __name__== '__main__':
-    main('AAPL')
+    main('TSLA')
