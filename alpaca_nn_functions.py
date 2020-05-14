@@ -17,9 +17,10 @@ import matplotlib.pyplot as plt
 import time
 import os
 import random
+import datetime
+import math 
 
-tz = 'America/New_York'
-test_var = 'mid'
+test_var = 'open'
 
 def make_dataframe(symbol, timeframe='day', limit=1000):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
@@ -31,39 +32,71 @@ def make_dataframe(symbol, timeframe='day', limit=1000):
         close_values = []
         low_values = []
         high_values = []
-        volumes = []
         mid_values = []
         for day in bar:
             open_price = day.o
             close_price = day.c
             low_price = day.l
             high_price = day.h
-            volume = day.v
             mid_price = (low_price + high_price) / 2
             open_values.append(open_price)
             close_values.append(close_price)
             low_values.append(low_price)
             high_values.append(high_price)
-            volumes.append(volume)
             mid_values.append(mid_price)
         data['open'] = open_values
         data['low'] = low_values
         data['high'] = high_values
         data['close'] = close_values
-        data['volume'] = volumes
         data['mid'] = mid_values
+    tz = 'US/Eastern'
+    now = datetime.datetime.now()
+    date = now.date()
+    year = date.year
+    month = date.month
+    day = date.day
+    start = datetime.datetime(year, month, day, 0, 0)
+    start = time.mktime(start.timetuple())
+    t = time.mktime(now.timetuple())
+    start = pd.Timestamp(start, unit='s', tz=tz).isoformat()
+    end = pd.Timestamp(t, unit='s', tz=tz).isoformat()
+    barset = api.get_barset(symbol, '15Min', start=start, end=end)
+    for symbol, bars in barset.items():
+        open_v = bars[0].o
+        close = bars[-1].c
+        high = 0
+        low = math.inf
+        for period in bars:
+            if period.l < low:
+                low = period.l
+            if period.h > high:
+                high = period.h
+        mid = (high + low) / 2
+        mid_values = data['mid']
+        mid_values.append(mid)
+        data['mid'] = mid_values
+        open_values = data['open']
+        open_values.append(open_v)
+        data['open'] = open_values
+        high_values = data['high']
+        high_values.append(high)
+        data['high'] = high_values
+        low_values = data['low']
+        low_values.append(low)
+        data['low'] = low_values
+        close_values = data['close']
+        close_values.append(close)
+        data['close'] = close
     df = pd.DataFrame(data=data)
     return df
 
 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
-                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'volume', 'mid']):
+                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid']):
     # see if ticker is already a loaded stock from yahoo finance
     if isinstance(ticker, str):
         # load data from alpaca
         df = make_dataframe(ticker)
-        #print('printing the data as i get it from ')
-        #print(df)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
@@ -89,45 +122,25 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
     last_sequence = np.array(df[feature_columns].tail(lookup_step))
-    #print('first last sequence')
-    #print(last_sequence)
     # drop NaNs
     df.dropna(inplace=True)
-    # print('df futures')
-    # print(df['future'].values)
-    # print('len of df future values:', len(df['future'].values))
-    #print('df feature columns')
-    #print(df[feature_columns])
-    #print('len df[feature columns]:', len(df[feature_columns].values))
     sequence_data = []
-    #print('going through the sequences')
     sequences = deque(maxlen=n_steps)
-    #append_count = 0
     for entry, target in zip(df[feature_columns].values, df['future'].values):
         sequences.append(entry)
-        #append_count+=1
         if len(sequences) == n_steps:
             sequence_data.append([np.array(sequences), target])
-    #print('appended', append_count, 'things')
-    #print('done with the sequence')
     # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
     # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
     # this last_sequence will be used to predict in future dates that are not available in the dataset
     last_sequence = list(sequences) + list(last_sequence)
     # shift the last sequence by -1
     last_sequence = np.array(pd.DataFrame(last_sequence).shift(-1).dropna())
-    # print('last last sequence')
-    # print(last_sequence)
     # add to result
     result['last_sequence'] = last_sequence
-    # print('result')
-    # print(result)
     # construct the X's and y's
     X, y = [], []
     for seq, target in sequence_data:
-        # print('size of x:',len(seq))
-        # print('x is', seq)
-        # print('value of y:',target)
         X.append(seq)
         y.append(target)
     # convert to numpy arrays
@@ -136,11 +149,6 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # reshape X to fit the neural network
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     # split the dataset
-    # print('printing paramters')
-    # print('test size:', test_size)
-    # print('shuffle:', shuffle)
-    # print('after reshape, x:', X)
-    # print('y is', y)
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
     # return the result
     return result
@@ -148,7 +156,6 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
 
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
                 loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
-    #print('i am inside of create model')
     model = Sequential()
     for i in range(n_layers):
         if i == 0:
@@ -190,11 +197,10 @@ def predict(model, data, n_steps, classification=False):
     prediction = model.predict(last_sequence)
     # get the price (by inverting the scaling)
     predicted_close = column_scaler[test_var].inverse_transform(prediction)[0][0]
-    #predicted_price = column_scaler["close"].inverse_transform(prediction)[0][0]
     return predicted_close
 
 
-def plot_graph(model, data):
+def plot_graph(model, data, ticker='default'):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)
@@ -205,17 +211,24 @@ def plot_graph(model, data):
     real_y_values = y_test[-100:]
     predicted_y_values = y_pred[-100:]
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
-    print('spencer wanted me to have', spencer_money, 'dollars')
+    file_name = 'reports/' + ticker + '_' + test_var + '.txt'
+    if not os.path.isdir('reports'):
+        os.mkdir('reports')
+    f = open(file_name, 'w')
+    f.write('spencer wanted me to have: $' + str(spencer_money) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
-    print('money made from using real vs predicted:', money_made)
-    #other_money = decide_trades(money, predicted_y_values, predicted_y_values, real=real_y_values)
-    #print('money made from using predicted vs predicted:', other_money)
+    f.write('money made from using real vs predicted: $' + str(money_made) + '\n')
+    f.close()
+    if not os.path.isdir('plots'):
+        os.mkdir('plots')
+    plot_name = 'plots/' + ticker + '_' + test_var + '.png'
     plt.plot(real_y_values, c='b')
     plt.plot(predicted_y_values, c='r')
     plt.xlabel("Days")
     plt.ylabel("Price")
     plt.legend(["Actual Price", "Predicted Price"])
-    plt.show()
+    plt.savefig(plot_name)
+    plt.close()
     return real_y_values[-1]
 
 
@@ -232,36 +245,31 @@ def get_accuracy(model, data, lookup_step):
 
 def decide_trades(money, data1, data2, real=None):
     if len(data1) != len(data2):
+        print('\n\n\n\n\n\n\n\n\n\n\n')
         print('your data isnt the same size in decide trades')
+        print('\n\n\n\n\n\n\n\n\n\n\n')
         return
     stocks_owned = 0
     for i in range(1,len(data1)):
         now_price = data1[i-1]
         if data2[i] > now_price:
-            print('can buy on day', i)
             if real is not None:
                 stocks_can_buy = money // real[i-1]
             else:
                 stocks_can_buy = money // now_price
             if stocks_can_buy > 0:
-                print('actually buying on this day')
                 money -= stocks_can_buy * now_price
                 stocks_owned += stocks_can_buy
         elif data2[i] < now_price:
-            print('can sell on day', i)
-            if stocks_owned > 0:
-                print('actually selling today')
             if real is not None:
                 money += real[i-1] * stocks_owned
             else:
                 money += now_price * stocks_owned
             stocks_owned = 0
     if stocks_owned != 0:
-        print('i own stocks now')
         if real is not None:
             money += stocks_owned * real[len(data1)-1]
         else:
-            print('the current price is', data1[len(data1)-1])
             money += stocks_owned * data1[len(data1)-1]
     return money
 
