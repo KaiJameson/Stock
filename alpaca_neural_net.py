@@ -3,11 +3,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-
-from collections import deque
-
+from alpaca_nn_functions import test_var
 
 from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy
 
@@ -19,8 +15,46 @@ import os
 import random
 
 import time
+import threading
+import logging
 
-def main(ticker):
+
+def main(symbols):
+    #threads = list()
+    for symbol in symbols:
+        make_neural_net(symbol)
+        #x = threading.Thread(target=make_neural_net, args=(symbol,))
+        #threads.append(x)
+        #x.start()
+
+
+def deleteFiles(dirObject , dirPath):
+    if dirObject.is_dir(follow_symlinks=False):
+        name = os.fsdecode(dirObject.name)
+        newDir = dirPath+"/"+name
+        moreFiles = os.scandir(newDir)
+        for file in moreFiles:
+            if file.is_dir(follow_symlinks=False):
+                deleteFiles(file, newDir)
+                os.rmdir(newDir+"/"+os.fsdecode(file.name))
+            else:
+                os.remove(newDir+"/"+os.fsdecode(file.name))
+        os.rmdir(newDir)
+    else:
+        os.remove(dirPath+"/"+os.fsdecode(dirObject.name))
+
+
+def delete_files_in_folder(directory):
+    try:
+        files = os.scandir(directory)
+        for file in files:
+            deleteFiles(file, directory)
+    except:
+        print("problem with removing files in " + str(directory))
+
+
+def make_neural_net(ticker):
+    #print('in make_neural_net with the ticker', ticker)
     seed = 314
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(seed)
@@ -33,8 +67,6 @@ def main(ticker):
     LOOKUP_STEP = 1
     # test ratio size, 0.2 is 20%
     TEST_SIZE = 0.2
-    # features to use
-    FEATURE_COLUMNS = ["open", "low", "high", "close", "volume", "mid"]
     # date now
     date_now = time.strftime("%Y-%m-%d")
     ### model parameters
@@ -42,7 +74,7 @@ def main(ticker):
     # LSTM cell
     CELL = LSTM
     # 256 LSTM neurons
-    UNITS = 512
+    UNITS = 256
     # 40% dropout
     DROPOUT = 0.3
     # whether to use bidirectional RNNs
@@ -63,31 +95,14 @@ def main(ticker):
     if BIDIRECTIONAL:
         model_name += "-b"
     # create these folders if they does not exist
-    if not os.path.isdir("results"):
-        os.mkdir("results")
-    # if not os.path.isdir("logs"):
-    #     os.mkdir("logs")
-    # if not os.path.isdir("data"):
-    #     os.mkdir("data")
-    # load the data
-    data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, feature_columns=FEATURE_COLUMNS)
-    #print('here is the data[X_test]')
-    #print(data['X_test'])
-    #print('here is the data[y_test]')
-    #print(data['y_test'])
-    # save the dataframe
-    #data["df"].to_csv(ticker_data_filename)
-
-    # construct the model
+    results_folder = 'results'
+    if not os.path.isdir(results_folder):
+       os.mkdir(results_folder)
+    else:
+        delete_files_in_folder(results_folder)
+    data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE)
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
-    #print('here is the model')
-    #print(model)
-    # some tensorflow callbacks
-    #checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
-    #tensorboard = TensorBoard(log_dir=os.path.join("logs", model_name))
-    #                    callbacks=[checkpointer, tensorboard],
-
     history = model.fit(data["X_train"], data["y_train"],
                         batch_size=BATCH_SIZE,
                         epochs=EPOCHS,
@@ -95,11 +110,8 @@ def main(ticker):
                         verbose=1)
 
     model.save(os.path.join("results", model_name) + ".h5")
-
-
     #before testing, no shuffle
-    data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE,
-                    feature_columns=FEATURE_COLUMNS, shuffle=False)
+    data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False)
 
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
@@ -108,36 +120,32 @@ def main(ticker):
     model.load_weights(model_path)
     # evaluate the model
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
-    #print('mae', mae)
-    #print('mse', mse)
-    # calculate the mean absolute error (inverse scaling)
-    #mean_absolute_error = data["column_scaler"]["adjclose"].inverse_transform(mae.reshape(1, -1))[0][0]
-    #TODO: THERE IS A BIG PROBLEM WITH THE ABOVE LINE, RESHAPE NO WORK ON FLOAT
-    #print("Mean Absolute Error:", mean_absolute_error)
-
-
-
     # predict the future price
     future_price = predict(model, data, N_STEPS)
-    print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
-
-
-
+    #print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
 
     end_time = time.time()
     total_time = end_time - start_time
     total_minutes = total_time / 60
-    print('total minutes is', total_minutes)
-    curr_price = plot_graph(model, data)
-    print('curr price is:', curr_price)
+    curr_price = plot_graph(model, data, ticker=ticker)
+    file_name = 'reports/' + ticker +'_' + test_var + '.txt'
+    f = open(file_name, 'a')
+    f.write('Total time to run was: ' + str(total_minutes) + '\n')
+    f.write('The price at run time was: ' + str(curr_price) + '\n')
+    f.write('The predicted price for tomorrow is ' + str(future_price) + '\n')
     if curr_price < future_price:
-        print('i would buy this stock')
+        f.write('i would buy this stock\n')
     elif curr_price > future_price:
-        print('i would sell this stock')
+        f.write('i would sell this stock\n')
+    percent = future_price / curr_price
 
-
-    print(str(LOOKUP_STEP) + ":", "Accuracy Score:", get_accuracy(model, data, LOOKUP_STEP))
+    f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score:" + str(get_accuracy(model, data, LOOKUP_STEP)) + '\n')
+    f.close()
+    return percent
 
 
 if __name__== '__main__':
-    main('TSLA')
+    #symbols = ['TSLA', 'PENN', 'ZOM', "AHPI"]
+    symbols = ['WMT','AAPL', 'WTRH', 'MVIS']
+    main(symbols)
+    #make_neural_net('ZOM')
