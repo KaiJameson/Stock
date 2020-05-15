@@ -73,9 +73,9 @@ def make_neural_net(ticker):
     N_LAYERS = 3
     # LSTM cell
     CELL = LSTM
-    # 256 LSTM neurons
-    UNITS = 256
-    # 40% dropout
+    # 448 LSTM neurons
+    UNITS = 448
+    # 30% dropout
     DROPOUT = 0.3
     # whether to use bidirectional RNNs
     BIDIRECTIONAL = True
@@ -138,10 +138,10 @@ def make_neural_net(ticker):
     elif curr_price > future_price:
         f.write('i would sell this stock\n')
     percent = future_price / curr_price
-
-    f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score:" + str(get_accuracy(model, data, LOOKUP_STEP)) + '\n')
+    acc = get_accuracy(model, data, LOOKUP_STEP)
+    f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score:" + str(acc) + '\n')
     f.close()
-    return percent
+    return percent, acc
 
 
 if __name__== '__main__':
