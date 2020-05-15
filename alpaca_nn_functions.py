@@ -20,7 +20,7 @@ import random
 import datetime
 import math 
 
-test_var = 'open'
+test_var = 'mid'
 
 def make_dataframe(symbol, timeframe='day', limit=1000):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
@@ -49,44 +49,6 @@ def make_dataframe(symbol, timeframe='day', limit=1000):
         data['high'] = high_values
         data['close'] = close_values
         data['mid'] = mid_values
-    tz = 'US/Eastern'
-    now = datetime.datetime.now()
-    date = now.date()
-    year = date.year
-    month = date.month
-    day = date.day
-    start = datetime.datetime(year, month, day, 0, 0)
-    start = time.mktime(start.timetuple())
-    t = time.mktime(now.timetuple())
-    start = pd.Timestamp(start, unit='s', tz=tz).isoformat()
-    end = pd.Timestamp(t, unit='s', tz=tz).isoformat()
-    barset = api.get_barset(symbol, '15Min', start=start, end=end)
-    for symbol, bars in barset.items():
-        open_v = bars[0].o
-        close = bars[-1].c
-        high = 0
-        low = math.inf
-        for period in bars:
-            if period.l < low:
-                low = period.l
-            if period.h > high:
-                high = period.h
-        mid = (high + low) / 2
-        mid_values = data['mid']
-        mid_values.append(mid)
-        data['mid'] = mid_values
-        open_values = data['open']
-        open_values.append(open_v)
-        data['open'] = open_values
-        high_values = data['high']
-        high_values.append(high)
-        data['high'] = high_values
-        low_values = data['low']
-        low_values.append(low)
-        data['low'] = low_values
-        close_values = data['close']
-        close_values.append(close)
-        data['close'] = close
     df = pd.DataFrame(data=data)
     return df
 

@@ -9,7 +9,6 @@ from keras import optimizers
 from keras.utils import plot_model
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from DataGeneratorSeq import DataGeneratorSeq
 from tensorflow.python.framework import ops
 import tensorflow.compat.v1 as tf
 
@@ -130,48 +129,48 @@ all_mid_data = np.concatenate([train_data,test_data],axis=0)
 
 #standard_avg(train_data, df)
 exp_mov_avg(train_data, df)
-
-dg = DataGeneratorSeq(train_data,5,5)
-u_data, u_labels = dg.unroll_batches()
-
-for ui,(dat,lbl) in enumerate(zip(u_data,u_labels)):
-    print('\n\nUnrolled index %d'%ui)
-    dat_ind = dat
-    lbl_ind = lbl
-    print('\tInputs: ',dat )
-    print('\n\tOutput:',lbl)
-
-D = 1 # Dimensionality of the data. Since your data is 1-D this would be 1
-num_unrollings = 50 # Number of time steps you look into the future.
-batch_size = 500 # Number of samples in a batch
-num_nodes = [200,200,150] # Number of hidden nodes in each layer of the deep LSTM stack we're using
-n_layers = len(num_nodes) # number of layers
-dropout = 0.2 # dropout amount
-
-ops.reset_default_graph() # This is important in case you run this multiple times
-
-# Input data.
-train_inputs, train_outputs = [],[]
-
-# You unroll the input over time defining placeholders for each time step
-for ui in range(num_unrollings):
-    train_inputs.append(tf.placeholder(tf.float32, shape=[batch_size,D],name='train_inputs_%d'%ui))
-    train_outputs.append(tf.placeholder(tf.float32, shape=[batch_size,1], name = 'train_outputs_%d'%ui))
-
-lstm_cells = [
-    tf.distribute.rnn.LSTMCell(num_units=num_nodes[li],
-                            state_is_tuple=True,
-                            initializer= tf.distribute.layers.xavier_initializer()
-                           )
- for li in range(n_layers)]
-
-drop_lstm_cells = [tf.contrib.rnn.DropoutWrapper(
-    lstm, input_keep_prob=1.0,output_keep_prob=1.0-dropout, state_keep_prob=1.0-dropout
-) for lstm in lstm_cells]
-drop_multi_cell = tf.contrib.rnn.MultiRNNCell(drop_lstm_cells)
-multi_cell = tf.contrib.rnn.MultiRNNCell(lstm_cells)
-
-w = tf.get_variable('w',shape=[num_nodes[-1], 1], initializer=tf.contrib.layers.xavier_initializer())
-b = tf.get_variable('b',initializer=tf.random_uniform([1],-0.1,0.1))
-
+#
+# dg = DataGeneratorSeq(train_data,5,5)
+# u_data, u_labels = dg.unroll_batches()
+#
+# for ui,(dat,lbl) in enumerate(zip(u_data,u_labels)):
+#     print('\n\nUnrolled index %d'%ui)
+#     dat_ind = dat
+#     lbl_ind = lbl
+#     print('\tInputs: ',dat )
+#     print('\n\tOutput:',lbl)
+#
+# D = 1 # Dimensionality of the data. Since your data is 1-D this would be 1
+# num_unrollings = 50 # Number of time steps you look into the future.
+# batch_size = 500 # Number of samples in a batch
+# num_nodes = [200,200,150] # Number of hidden nodes in each layer of the deep LSTM stack we're using
+# n_layers = len(num_nodes) # number of layers
+# dropout = 0.2 # dropout amount
+#
+# ops.reset_default_graph() # This is important in case you run this multiple times
+#
+# # Input data.
+# train_inputs, train_outputs = [],[]
+#
+# # You unroll the input over time defining placeholders for each time step
+# for ui in range(num_unrollings):
+#     train_inputs.append(tf.placeholder(tf.float32, shape=[batch_size,D],name='train_inputs_%d'%ui))
+#     train_outputs.append(tf.placeholder(tf.float32, shape=[batch_size,1], name = 'train_outputs_%d'%ui))
+#
+# lstm_cells = [
+#     tf.distribute.rnn.LSTMCell(num_units=num_nodes[li],
+#                             state_is_tuple=True,
+#                             initializer= tf.distribute.layers.xavier_initializer()
+#                            )
+#  for li in range(n_layers)]
+#
+# drop_lstm_cells = [tf.contrib.rnn.DropoutWrapper(
+#     lstm, input_keep_prob=1.0,output_keep_prob=1.0-dropout, state_keep_prob=1.0-dropout
+# ) for lstm in lstm_cells]
+# drop_multi_cell = tf.contrib.rnn.MultiRNNCell(drop_lstm_cells)
+# multi_cell = tf.contrib.rnn.MultiRNNCell(lstm_cells)
+#
+# w = tf.get_variable('w',shape=[num_nodes[-1], 1], initializer=tf.contrib.layers.xavier_initializer())
+# b = tf.get_variable('b',initializer=tf.random_uniform([1],-0.1,0.1))
+#
 

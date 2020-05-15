@@ -120,11 +120,9 @@ def make_neural_net(ticker):
     model.load_weights(model_path)
     # evaluate the model
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
-
     # predict the future price
     future_price = predict(model, data, N_STEPS)
     #print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
-
 
     end_time = time.time()
     total_time = end_time - start_time

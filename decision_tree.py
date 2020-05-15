@@ -2,9 +2,8 @@ from alpaca_neural_net import make_neural_net
 import os
 
 
-def read_in_stocks():
-    curr_stocks_file = 'owned.csv'
-    f = open(curr_stocks_file, 'r')
+def read_in_stocks(file):
+    f = open(file, 'r')
     i = 0
     money = 0
     stocks_owned = []
@@ -21,7 +20,13 @@ def read_in_stocks():
 def find_percents(symbols):
     percents = {}
     for symbol in symbols:
-        percents[symbol] = make_neural_net(symbol)
+        try:
+            percents[symbol] = make_neural_net(symbol)
+        except:
+            f = open('error_file.txt', 'a')
+            f.write('problem with stock of ticker: ' + symbol)
+            f.close()
+
     return percents
 
 
@@ -35,13 +40,13 @@ def decide_sells(money, stocks_owned, percents):
 
 
 
-symbols = ['ZOM', 'PENN', 'WTRH']
-directory = 'decisions'
+symbols = ['ZOM', 'PENN', 'WTRH', 'MVIS', 'DOOO', 'AHPI', 'APDN']
+directory = 'information'
 file_name = directory + '/' + 'choices.txt'
 if not os.path.isdir(directory):
     os.mkdir(directory)
-f = open(file_name, 'w')
 percents = find_percents(symbols)
+f = open(file_name, 'w')
 for key in percents:
     f.write(str(percents[key]) + ' ' + key + ' now\n')
 f.close()
