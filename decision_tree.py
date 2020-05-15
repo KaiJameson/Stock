@@ -17,17 +17,17 @@ def read_in_stocks(file):
     return money, stocks_owned
 
 
-def find_percents(symbols):
+def find_percents_and_accs(symbols):
     percents = {}
+    accuracy = {}
     for symbol in symbols:
         try:
-            percents[symbol] = make_neural_net(symbol)
+            percents[symbol], accuracy[symbol] = make_neural_net(symbol)
         except:
             f = open('error_file.txt', 'a')
             f.write('problem with stock of ticker: ' + symbol)
             f.close()
-
-    return percents
+    return percents, accuracy
 
 
 def decide_sells(money, stocks_owned, percents):
@@ -40,13 +40,15 @@ def decide_sells(money, stocks_owned, percents):
 
 
 
-symbols = ['ZOM', 'PENN', 'WTRH', 'MVIS', 'DOOO', 'AHPI', 'APDN']
+#symbols = ['ZOM', 'PENN', 'WTRH', 'MVIS', 'DOOO', 'AHPI', 'APDN']
+symbols = ['CAN', 'FSLY', 'VUZI', 'NRZ', 'RMD', 'NVDA', 'BA', 'FNMAT', 'FARM']
 directory = 'information'
 file_name = directory + '/' + 'choices.txt'
 if not os.path.isdir(directory):
     os.mkdir(directory)
-percents = find_percents(symbols)
+percents, accuracy = find_percents_and_accs(symbols)
 f = open(file_name, 'w')
 for key in percents:
     f.write(str(percents[key]) + ' ' + key + ' now\n')
+    f.write('has an accuracy of ' + str(accuracy[key]) + '\n')
 f.close()

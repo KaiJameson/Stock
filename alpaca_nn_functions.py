@@ -20,7 +20,7 @@ import random
 import datetime
 import math 
 
-test_var = 'mid'
+test_var = 'open'
 
 def make_dataframe(symbol, timeframe='day', limit=1000):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
