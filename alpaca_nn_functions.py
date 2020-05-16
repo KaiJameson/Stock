@@ -205,7 +205,7 @@ def get_accuracy(model, data, lookup_step):
     return accuracy_score(y_test, y_pred)
 
 
-def decide_trades(money, data1, data2, real=None):
+def decide_trades(money, data1, data2):
     if len(data1) != len(data2):
         print('\n\n\n\n\n\n\n\n\n\n\n')
         print('your data isnt the same size in decide trades')
@@ -215,24 +215,15 @@ def decide_trades(money, data1, data2, real=None):
     for i in range(1,len(data1)):
         now_price = data1[i-1]
         if data2[i] > now_price:
-            if real is not None:
-                stocks_can_buy = money // real[i-1]
-            else:
-                stocks_can_buy = money // now_price
+            stocks_can_buy = money // now_price
             if stocks_can_buy > 0:
                 money -= stocks_can_buy * now_price
                 stocks_owned += stocks_can_buy
         elif data2[i] < now_price:
-            if real is not None:
-                money += real[i-1] * stocks_owned
-            else:
-                money += now_price * stocks_owned
+            money += now_price * stocks_owned
             stocks_owned = 0
     if stocks_owned != 0:
-        if real is not None:
-            money += stocks_owned * real[len(data1)-1]
-        else:
-            money += stocks_owned * data1[len(data1)-1]
+        money += stocks_owned * data1[len(data1)-1]
     return money
 
 
