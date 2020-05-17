@@ -12,7 +12,7 @@ def read_in_stocks(file):
             money = float(line.strip())
             i += 1
         else:
-            stocks_owned.append(line.strip().split(','))
+            stocks_owned.append(line.strip().strip(',').split(','))
     f.close()
     return money, stocks_owned
 
@@ -39,9 +39,17 @@ def decide_sells(money, stocks_owned, percents):
     return money, stocks_owned
 
 
+def read_attributes(file):
+    f = open(file, 'r')
+    stocks = []
+    for line in f:
+        stocks.append(line.strip().strip(',').split(','))
+    return stocks
 
-#symbols = ['ZOM', 'PENN', 'WTRH', 'MVIS', 'DOOO', 'AHPI', 'APDN']
-symbols = ['CAN', 'FSLY', 'VUZI', 'NRZ', 'RMD', 'NVDA', 'BA', 'FNMAT', 'FARM']
+
+
+symbols = ['FARM', 'FNMAT', 'IO', 'ZOM', 'PENN', 'DOOO', 'PBI']
+#symbols = ['ACB']
 directory = 'information'
 file_name = directory + '/' + 'choices.txt'
 if not os.path.isdir(directory):
