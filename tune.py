@@ -29,6 +29,12 @@ def get_file_name(ticker):
     f_name = directory + '/' + ticker + '.csv'
     if not os.path.isfile(f_name):
         subprocess.call(['touch', f_name])
+        f = open(f_name, 'w')
+        f.write('UNITS,448\n')
+        f.write('DROPOUT,.3\n')
+        f.write('N_STEPS,300\n')
+        f.write('EPOCHS,2000\n')
+        f.close()
     return f_name
 
 
