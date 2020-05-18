@@ -1,42 +1,24 @@
 from alpaca_neural_net import make_neural_net
 import os
 import sys
-
+import subprocess
 
 def replace(file, param, new_val):
     f = open(file, 'r')
+    new_line = param+','+str(new_val)+'\n'
     lines = []
+    found = False
     for line in f:
         if line.strip().split(',')[0].strip() == param:
-            line = param+','+str(new_val)+'\n'
+            found = True
+            line = new_line
         lines.append(line)
     f.close()
     f = open(file, 'w')
     for line in lines:
         f.write(line)
-    f.close()
-
-
-def find_best_stats(ticker):
-    directory = 'config'
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
-    f_name = directory + '/' + ticker + '.csv'
-    #unit = find_best_units(ticker)
-    #f = open(f_name, 'w')
-    #f.write('UNITS,'+str(unit))
-    #f.close()
-    dropout = find_best_dropout(ticker)
-    f = open(f_name, 'a')
-    f.write('DROPOUT,'+str(dropout)+'\n')
-    f.close()
-    n_step = find_best_n_steps(ticker)
-    f = open(f_name, 'a')
-    f.write('N_STEPS,'+str(n_step)+'\n')
-    f.close()
-    epoch = find_best_epochs(ticker)
-    f = open(f_name, 'a')
-    f.write('EPOCH,'+str(epoch)+'\n')
+    if not found:
+        f.write(new_line)
     f.close()
 
 
@@ -45,6 +27,14 @@ def get_file_name(ticker):
     if not os.path.isdir(directory):
         os.mkdir(directory)
     f_name = directory + '/' + ticker + '.csv'
+    if not os.path.isfile(f_name):
+        subprocess.call(['touch', f_name])
+        f = open(f_name, 'w')
+        f.write('UNITS,448\n')
+        f.write('DROPOUT,.3\n')
+        f.write('N_STEPS,300\n')
+        f.write('EPOCHS,2000\n')
+        f.close()
     return f_name
 
 
@@ -58,6 +48,7 @@ def find_best_units(ticker):
             best_acc = acc
             best_unit = unit
     f_name = get_file_name(ticker)
+    replace(f_name, 'UNITS', best_unit)
 
 
 def find_best_dropout(ticker):
@@ -70,6 +61,7 @@ def find_best_dropout(ticker):
             best_acc = acc
             best_drop = drop
     f_name = get_file_name(ticker)
+    replace(f_name, 'DROPOUT', best_drop)
     
 
 def find_best_n_steps(ticker):
@@ -82,6 +74,7 @@ def find_best_n_steps(ticker):
             best_acc = acc
             best_step = step
     f_name = get_file_name(ticker)
+    replace(f_name, 'N_STEPS', best_step)
 
 
 def find_best_epochs(ticker):
@@ -94,6 +87,7 @@ def find_best_epochs(ticker):
             best_acc = acc
             best_epoch = epoch
     f_name = get_file_name(ticker)
+    replace(f_name, 'EPOCHS', best_epoch)
 
 
 def possibleArgPrinting():

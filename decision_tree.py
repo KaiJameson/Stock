@@ -48,8 +48,9 @@ def read_attributes(file):
 
 
 
-symbols = ['FARM', 'FNMAT', 'IO', 'ZOM', 'PENN', 'DOOO', 'PBI']
+#symbols = ['FARM', 'FNMAT', 'IO', 'ZOM', 'PENN', 'DOOO', 'PBI']
 #symbols = ['ACB']
+symbols = ['DOOO', 'IO', 'VTR', 'NRZ']
 directory = 'information'
 file_name = directory + '/' + 'choices.txt'
 if not os.path.isdir(directory):
