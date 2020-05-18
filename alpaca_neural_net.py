@@ -54,7 +54,7 @@ def delete_files_in_folder(directory):
 
 
 def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
-    N_LAYERS=3, CELL=LSTM, UNITS=446, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
+    N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
     '''
     # N_STEPS = Window size or the sequence length
