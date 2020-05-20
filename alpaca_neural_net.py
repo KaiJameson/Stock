@@ -112,6 +112,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     #print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
     delete_files_in_folder(results_folder)
     os.rmdir(results_folder)
+    tf.keras.backend.clear_session()
     end_time = time.time()
     total_time = end_time - start_time
     total_minutes = total_time / 60
