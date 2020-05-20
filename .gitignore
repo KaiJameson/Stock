@@ -1,7 +1,6 @@
 .idea/
 __pycache__
 api_key.py
-*.csv
 .vscode/
 logs/
 results/
