@@ -5,11 +5,10 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from yahoo_fin import stock_info as si
 from collections import deque
 import alpaca_trade_api as tradeapi
-from api_key import paper_api_key_id, paper_api_secret_key
-
+from api_key import real_api_key_id, reaL_api_secret_key
+from decision_tree import test_var
 
 import numpy as np
 import pandas as pd
@@ -20,10 +19,8 @@ import random
 import datetime
 import math 
 
-test_var = 'open'
-
 def make_dataframe(symbol, timeframe='day', limit=1000):
-    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key)
+    api = tradeapi.REST(real_api_key_id, reaL_api_secret_key)
     barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
     items = barset.items()
     data = {}
