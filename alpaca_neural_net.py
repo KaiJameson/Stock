@@ -3,7 +3,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn import preprocessing
-
+from time_functions import get_time_string
 
 from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, test_var
 
@@ -117,8 +117,9 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     total_time = end_time - start_time
     total_minutes = total_time / 60
     curr_price = plot_graph(model, data, ticker=ticker)
-    file_name = 'reports/' + ticker +'_' + test_var + '.txt'
+    file_name = 'reports/' + ticker +'/' + get_time_string() + '.txt'
     f = open(file_name, 'a')
+    f.write("The test var was " + test_var + '\n')
     f.write('Total time to run was: ' + str(total_minutes) + '\n')
     f.write('The price at run time was: ' + str(curr_price) + '\n')
     f.write('The predicted price for tomorrow is ' + str(future_price) + '\n')
