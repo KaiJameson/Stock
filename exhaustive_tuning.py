@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 
+startTime = time.time()
 ticker = 'PENN'
 
 EPOCHS = 2000
@@ -26,9 +27,13 @@ f.close()
 for step in N_STEPS:
     for unit in UNITS:
         for drop in DROPOUT:
+            s = time.time()
             perc, acc = make_neural_net(ticker, N_STEPS=step, UNITS=unit, DROPOUT=drop, EPOCHS=EPOCHS)
+            e = time.time()
+            m = (e - s) / 60
             f = open(status_file, 'a')
             f.write("finished another run\n")
+            f.write("this run took " + str(m) + ' minutes to run\n')
             f.write('\tUNITS:'+str(unit)+'\n')
             f.write('\tDROPOUT:'+str(drop)+'\n')
             f.write('\tN_STEPS:'+str(step)+'\n')
@@ -49,6 +54,10 @@ f.write('EPOCHS,2000\n')
 f.close()
 f = open(status_file, 'a')
 f.write('\nDone with ' + ticker + '\n')
+end_time = time.time()
+total_time = end_time - start_time
+total_minutes = total_time / 60
+f.write('it took ' + str(total_minutes) + ' minutes to complete\n')
 f.close()
 
 
