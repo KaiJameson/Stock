@@ -2,6 +2,7 @@ from alpaca_neural_net import make_neural_net
 import os
 import sys
 import subprocess
+import time
 
 startTime = time.time()
 ticker = 'PENN'
