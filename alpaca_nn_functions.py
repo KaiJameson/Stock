@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
-from api_key import real_api_key_id, reaL_api_secret_key
+from api_key import real_api_key_id, real_api_secret_key
 test_var = 'open'
 
 import numpy as np
@@ -20,7 +20,7 @@ import datetime
 import math 
 
 def make_dataframe(symbol, timeframe='day', limit=1000):
-    api = tradeapi.REST(real_api_key_id, reaL_api_secret_key)
+    api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
     items = barset.items()
     data = {}

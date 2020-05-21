@@ -83,7 +83,7 @@ def read_attributes(file):
 
 
 
-symbols = ['VUZI', 'ACB']
+symbols = ['DOOO', 'ACB']
 directory = 'information'
 file_name = directory + '/' + 'choices.txt'
 if not os.path.isdir(directory):
