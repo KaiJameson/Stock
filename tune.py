@@ -39,11 +39,25 @@ def get_file_name(ticker):
 
 
 def find_best_units(ticker):
-    UNIT_VALS = [256, 320, 384, 448]
+    UNIT_VALS = [256, 448, 768]
     best_unit = UNIT_VALS[0]
     best_acc = 0
+    config_name = 'config/' + ticker + '.csv'
     for unit in UNIT_VALS:
-        perc, acc = make_neural_net(ticker, UNITS=unit, EPOCHS=1000)
+        if os.path.isfile(config_name):
+            f = open(config_name, 'r')
+            values = {}
+            for line in f:
+                parts = line.strip().split(',')
+                values[parts[0]] = parts[1]
+            f.close()
+            perc, acc = make_neural_net(ticker,
+            UNITS=unit,
+            DROPOUT=float(values['DROPOUT']), 
+            N_STEPS=int(values['N_STEPS']), 
+            EPOCHS=int(values['EPOCHS']))
+        else:
+            perc, acc = make_neural_net(ticker, UNITS=unit, EPOCHS=1000)
         if acc > best_acc:
             best_acc = acc
             best_unit = unit
@@ -52,11 +66,25 @@ def find_best_units(ticker):
 
 
 def find_best_dropout(ticker):
-    DROPOUTS = [.3, .325, .35, .375, .4, .425]
+    DROPOUTS = [.3, .35, .4]
     best_drop = DROPOUTS[0]
     best_acc = 0
+    config_name = 'config/' + ticker + '.csv'
     for drop in DROPOUTS:
-        perc, acc = make_neural_net(ticker, DROPOUT=drop, EPOCHS=1000)
+        if os.path.isfile(config_name):
+            f = open(config_name, 'r')
+            values = {}
+            for line in f:
+                parts = line.strip().split(',')
+                values[parts[0]] = parts[1]
+            f.close()
+            perc, acc = make_neural_net(ticker,
+            UNITS=int(values['UNITS']),
+            DROPOUT=drop, 
+            N_STEPS=int(values['N_STEPS']), 
+            EPOCHS=int(values['EPOCHS']))
+        else:
+            perc, acc = make_neural_net(ticker, DROPOUT=drop, EPOCHS=1000)
         if acc > best_acc:
             best_acc = acc
             best_drop = drop
@@ -68,8 +96,22 @@ def find_best_n_steps(ticker):
     N_STEP_VALS = [50, 100, 150, 200, 250, 300]
     best_step = N_STEP_VALS[0]
     best_acc = 0
+    config_name = 'config/' + ticker + '.csv'
     for step in N_STEP_VALS:
-        perc, acc = make_neural_net(ticker, N_STEPS=step, EPOCHS=1000)
+        if os.path.isfile(config_name):
+            f = open(config_name, 'r')
+            values = {}
+            for line in f:
+                parts = line.strip().split(',')
+                values[parts[0]] = parts[1]
+            f.close()
+            perc, acc = make_neural_net(ticker,
+            UNITS=int(values['UNITS']),
+            DROPOUT=float(values['DROPOUT']), 
+            N_STEPS=step, 
+            EPOCHS=int(values['EPOCHS']))
+        else:
+            perc, acc = make_neural_net(ticker, N_STEPS=step, EPOCHS=1000)
         if acc > best_acc:
             best_acc = acc
             best_step = step
@@ -78,11 +120,25 @@ def find_best_n_steps(ticker):
 
 
 def find_best_epochs(ticker):
-    EPOCH_VALS = [500, 1000, 1500, 2000]
+    EPOCH_VALS = [1500, 2000]
     best_epoch = EPOCH_VALS[0]
     best_acc = 0
+    config_name = 'config/' + ticker + '.csv'
     for epoch in EPOCH_VALS:
-        perc, acc = make_neural_net(ticker, EPOCHS=epoch)
+        if os.path.isfile(config_name):
+            f = open(config_name, 'r')
+            values = {}
+            for line in f:
+                parts = line.strip().split(',')
+                values[parts[0]] = parts[1]
+            f.close()
+            perc, acc = make_neural_net(ticker,
+            UNITS=int(values['UNITS']),
+            DROPOUT=float(values['DROPOUT']), 
+            N_STEPS=int(values['N_STEPS']), 
+            EPOCHS=epoch)
+        else:
+            perc, acc = make_neural_net(ticker, EPOCHS=epoch)
         if acc > best_acc:
             best_acc = acc
             best_epoch = epoch
