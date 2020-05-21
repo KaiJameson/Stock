@@ -16,7 +16,7 @@ import pandas as pd
 # t = time.mktime(now.timetuple())
 # start = pd.Timestamp(start, unit='s', tz=tz).isoformat()
 # end = pd.Timestamp(t, unit='s', tz=tz).isoformat()
-test_var = 'open'
+
 
 def read_in_stocks(file):
     f = open(file, 'r')
@@ -47,7 +47,7 @@ def find_percents_and_accs(symbols):
                 values[parts[0]] = parts[1]
             try:
                 percents[symbol], accuracy[symbol] = make_neural_net(symbol,
-                    UNITS=values['UNITS'], DROPOUT=values['DROPOUT'], N_STEPS=values['N_STEPS'], EPOCHS=values['EPOCHS'])
+                    UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
             except:
                 f = open(error_file, 'a')
                 f.write('problem with configged stock: ' + symbol + '\n')
@@ -83,7 +83,7 @@ def read_attributes(file):
 
 
 
-symbols = ['VUZI', 'NRZ']
+symbols = ['VUZI', 'ACB']
 directory = 'information'
 file_name = directory + '/' + 'choices.txt'
 if not os.path.isdir(directory):
