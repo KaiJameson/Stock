@@ -3,9 +3,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn import preprocessing
-from decision_tree import test_var
 
-from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy
+
+from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, test_var
 
 import numpy as np
 import pandas as pd

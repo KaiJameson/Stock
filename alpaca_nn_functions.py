@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, reaL_api_secret_key
-from decision_tree import test_var
+test_var = 'open'
 
 import numpy as np
 import pandas as pd
