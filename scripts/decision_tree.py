@@ -5,7 +5,7 @@ from time_functions import get_time_string
 import threading
 import logging
 import sys
-
+from environment import stock_decisions_directory, error_file, config_directory
 
 
 
@@ -28,8 +28,7 @@ def find_percents_and_accs(symbols):
     percents = {}
     accuracy = {}
     for symbol in symbols:
-        error_file = 'error_file.txt'
-        config_name = 'config/' + symbol + '.csv'
+        config_name = config_directory + '/' + symbol + '.csv'
         if os.path.isfile(config_name):
             f = open(config_name, 'r')
             values = {}
@@ -76,10 +75,9 @@ def read_attributes(file):
 
 
 symbols = ['ADT']
-directory = 'information'
-file_name = directory + '/' + get_time_string() + '.txt'
-if not os.path.isdir(directory):
-    os.mkdir(directory)
+file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
+if not os.path.isdir(stock_decisions_directory):
+    os.mkdir(stock_decisions_directory)
 percents, accuracy = find_percents_and_accs(symbols)
 f = open(file_name, 'w')
 for key in percents:
