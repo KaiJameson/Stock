@@ -175,9 +175,10 @@ def plot_graph(model, data, ticker='default'):
     money_made = decide_trades(money, real_y_values, predicted_y_values)
     f.write('money made from using real vs predicted: $' + str(money_made) + '\n')
     f.close()
-    if not os.path.isdir(graph_directory):
-        os.mkdir(graph_directory)
-    plot_name = graph_directory + '/' + ticker + '_' + test_var + '.png'
+    plot_dir = graph_directory + '/' + ticker
+    if not os.path.isdir(plot_dir):
+        os.mkdir(plot_dir)
+    plot_name = plot_dir + '/' + test_var + '_' + get_time_string() + '.png'
     plt.plot(real_y_values, c='b')
     plt.plot(predicted_y_values, c='r')
     plt.xlabel("Days")
