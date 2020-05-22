@@ -73,8 +73,7 @@ def read_attributes(file):
     return stocks
 
 
-
-symbols = ['PENN', 'VUZI']
+symbols = ['DOOO', 'ACB', 'LIVX']
 directory = 'information'
 file_name = directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(directory):

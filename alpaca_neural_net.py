@@ -107,6 +107,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     model.load_weights(model_path)
     # evaluate the model
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
+    #mean_absolute_error = data["column_scaler"]["adjclose"].inverse_transform(mae.reshape(1, -1))[0][0]
     # predict the future price
     future_price = predict(model, data, N_STEPS)
     #print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
@@ -116,8 +117,11 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     end_time = time.time()
     total_time = end_time - start_time
     total_minutes = total_time / 60
+    report_dir = 'reports/' + ticker
+    if not os.path.isdir(report_dir):
+        os.mkdir(report_dir)
     curr_price = plot_graph(model, data, ticker=ticker)
-    file_name = 'reports/' + ticker +'/' + get_time_string() + '.txt'
+    file_name = report_dir +'/' + get_time_string() + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
     f.write('Total time to run was: ' + str(total_minutes) + '\n')
