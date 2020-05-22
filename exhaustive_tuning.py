@@ -28,24 +28,34 @@ f.close()
 for step in N_STEPS:
     for unit in UNITS:
         for drop in DROPOUT:
-            s = time.time()
-            perc, acc = make_neural_net(ticker, N_STEPS=step, UNITS=unit, DROPOUT=drop, EPOCHS=EPOCHS)
-            e = time.time()
-            m = (e - s) / 60
-            f = open(status_file, 'a')
-            f.write("finished another run\n")
-            f.write("this run took " + str(m) + ' minutes to run\n')
-            f.write('\tUNITS:'+str(unit)+'\n')
-            f.write('\tDROPOUT:'+str(drop)+'\n')
-            f.write('\tN_STEPS:'+str(step)+'\n')
-            f.write('\tEPOCHS:2000\n')
-            f.write('acc for this run is ' + str(acc) + '\n')
-            f.close()
-            if acc > best_acc:
-                best_acc = acc
-                best_step = step
-                best_unit = unit
-                best_drop = drop
+            try:
+                s = time.time()
+                perc, acc = make_neural_net(ticker, N_STEPS=step, UNITS=unit, DROPOUT=drop, EPOCHS=EPOCHS)
+                e = time.time()
+                m = (e - s) / 60
+                f = open(status_file, 'a')
+                f.write("finished another run\n")
+                f.write("this run took " + str(m) + ' minutes to run\n')
+                f.write('\tUNITS:'+str(unit)+'\n')
+                f.write('\tDROPOUT:'+str(drop)+'\n')
+                f.write('\tN_STEPS:'+str(step)+'\n')
+                f.write('\tEPOCHS:' + str(EPOCHS) + '\n')
+                f.write('acc for this run is ' + str(acc) + '\n')
+                f.close()
+                if acc > best_acc:
+                    best_acc = acc
+                    best_step = step
+                    best_unit = unit
+                    best_drop = drop
+            except:
+                f = open('error_file.txt', 'a')
+                f.write('problem with running exhaustive tuning on these settings for ticker ' + ticker + '\n')
+                f.write('\tUNITS:'+str(unit)+'\n')
+                f.write('\tDROPOUT:'+str(drop)+'\n')
+                f.write('\tN_STEPS:'+str(step)+'\n')
+                f.write('\tEPOCHS:' + str(EPOCHS) + '\n')
+                f.write(sys.exc_info()[1] + '\n')
+                f.close()
 config_file = 'config/' + ticker + '.csv'
 f = open(config_file, 'w')
 f.write('UNITS,'+str(best_unit)+'\n')

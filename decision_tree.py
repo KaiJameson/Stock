@@ -4,7 +4,7 @@ import pandas as pd
 from time_functions import get_time_string
 import threading
 import logging
-
+import sys
 
 
 
@@ -42,6 +42,7 @@ def find_percents_and_accs(symbols):
             except:
                 f = open(error_file, 'a')
                 f.write('problem with configged stock: ' + symbol + '\n')
+                f.write(sys.exc_info()[1] + '\n')
                 f.write('listing the dictionary below\n')
                 for key in values:
                     f.write(str(key) + ': ' + str(values[key]) + '\n')
@@ -52,6 +53,7 @@ def find_percents_and_accs(symbols):
             except:
                 f = open(error_file, 'a')
                 f.write('problem with a non configged stock of ticker: ' + symbol + '\n')
+                f.write(sys.exc_info()[1] + '\n')
                 f.close()
     return percents, accuracy
 
@@ -73,7 +75,7 @@ def read_attributes(file):
     return stocks
 
 
-symbols = ['DOOO', 'ACB', 'LIVX']
+symbols = ['ADT']
 directory = 'information'
 file_name = directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(directory):
