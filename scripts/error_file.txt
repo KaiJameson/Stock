@@ -1,0 +1,28 @@
+problem with stock of ticker: CANproblem with stock of ticker: FSLYproblem with stock of ticker: CANproblem with stock of ticker: FSLYproblem with stock of ticker: APDNproblem with configged stock: VUZI
+listing the dictionary below
+UNITS: 384
+DROPOUT: 0.375
+N_STEPS: 200
+EPOCHS: 2000
+problem with configged stock: ACB
+listing the dictionary below
+UNITS: 448
+DROPOUT: 0.3
+N_STEPS: 150
+EPOCHS: 1500
+problem with configged stock: VUZI
+listing the dictionary below
+UNITS: 384
+DROPOUT: 0.375
+N_STEPS: 200
+EPOCHS: 2000
+problem with a non configged stock of ticker: APDN
+problem with a non configged stock of ticker: AAPL
+problem with a non configged stock of ticker: AAPL
+problem with configged stock: ACB
+listing the dictionary below
+UNITS: 448
+DROPOUT: 0.3
+N_STEPS: 150
+EPOCHS: 1500
+problem with a non configged stock of ticker: LIVX

@@ -70,6 +70,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     # BATCH_SIZE
     # EPOCHS = how many times the machine trains
     '''
+    tf.config.optimizer.set_jit(True)
     seed = 314
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(seed)
