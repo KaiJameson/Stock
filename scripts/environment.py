@@ -1,6 +1,6 @@
 
 
-
+money = 10000
 test_var = 'open'
 reports_directory = 'reports'
 error_file = 'error_file.txt'
