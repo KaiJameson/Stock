@@ -1,21 +1,12 @@
 from alpaca_neural_net import make_neural_net
 import os
-import datetime
-import time
 import pandas as pd
+from time_functions import get_time_string
+import threading
+import logging
 
-# tz = 'US/Eastern'
-# now = datetime.datetime.now()
-# hour = now.hour
-# date = now.date()
-# year = date.year
-# month = date.month
-# day = date.day
-# start = datetime.datetime(year, month, day, 9, 15)
-# start = time.mktime(start.timetuple())
-# t = time.mktime(now.timetuple())
-# start = pd.Timestamp(start, unit='s', tz=tz).isoformat()
-# end = pd.Timestamp(t, unit='s', tz=tz).isoformat()
+
+
 
 
 def read_in_stocks(file):
@@ -82,10 +73,9 @@ def read_attributes(file):
     return stocks
 
 
-
-symbols = ['DOOO', 'ACB']
+symbols = ['DOOO', 'ACB', 'LIVX']
 directory = 'information'
-file_name = directory + '/' + 'choices.txt'
+file_name = directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(directory):
     os.mkdir(directory)
 percents, accuracy = find_percents_and_accs(symbols)

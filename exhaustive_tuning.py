@@ -4,7 +4,7 @@ import sys
 import subprocess
 import time
 
-startTime = time.time()
+start_time = time.time()
 ticker = 'PENN'
 
 EPOCHS = 2000

@@ -9,7 +9,7 @@ from collections import deque
 import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, real_api_secret_key
 test_var = 'open'
-
+from time_functions import get_time_string
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -170,9 +170,7 @@ def plot_graph(model, data, ticker='default'):
     real_y_values = y_test[-100:]
     predicted_y_values = y_pred[-100:]
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
-    file_name = 'reports/' + ticker + '_' + test_var + '.txt'
-    if not os.path.isdir('reports'):
-        os.mkdir('reports')
+    file_name = 'reports/' + ticker + '/' + get_time_string() + '.txt'
     f = open(file_name, 'w')
     f.write('spencer wanted me to have: $' + str(spencer_money) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
