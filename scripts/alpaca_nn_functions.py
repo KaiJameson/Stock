@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, real_api_secret_key
-test_var = 'open'
+from environment import test_var, reports_directory, graph_directory, money
 from time_functions import get_time_string
 import numpy as np
 import pandas as pd
@@ -155,8 +155,8 @@ def predict(model, data, n_steps, classification=False):
     # get the prediction (scaled from 0 to 1)
     prediction = model.predict(last_sequence)
     # get the price (by inverting the scaling)
-    predicted_close = column_scaler[test_var].inverse_transform(prediction)[0][0]
-    return predicted_close
+    predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
+    return predicted_val
 
 
 def plot_graph(model, data, ticker='default'):
@@ -166,19 +166,19 @@ def plot_graph(model, data, ticker='default'):
     y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
     y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
     # last 200 days, feel free to edit that
-    money = 10000
     real_y_values = y_test[-100:]
     predicted_y_values = y_pred[-100:]
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
-    file_name = 'reports/' + ticker + '/' + get_time_string() + '.txt'
+    file_name = reports_directory + '/' + ticker + '/' + get_time_string() + '.txt'
     f = open(file_name, 'w')
     f.write('spencer wanted me to have: $' + str(spencer_money) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
     f.write('money made from using real vs predicted: $' + str(money_made) + '\n')
     f.close()
-    if not os.path.isdir('plots'):
-        os.mkdir('plots')
-    plot_name = 'plots/' + ticker + '_' + test_var + '.png'
+    plot_dir = graph_directory + '/' + ticker
+    if not os.path.isdir(plot_dir):
+        os.mkdir(plot_dir)
+    plot_name = plot_dir + '/' + test_var + '_' + get_time_string() + '.png'
     plt.plot(real_y_values, c='b')
     plt.plot(predicted_y_values, c='r')
     plt.xlabel("Days")
@@ -201,11 +201,6 @@ def get_accuracy(model, data, lookup_step):
 
 
 def decide_trades(money, data1, data2):
-    if len(data1) != len(data2):
-        print('\n\n\n\n\n\n\n\n\n\n\n')
-        print('your data isnt the same size in decide trades')
-        print('\n\n\n\n\n\n\n\n\n\n\n')
-        return
     stocks_owned = 0
     for i in range(1,len(data1)):
         now_price = data1[i-1]

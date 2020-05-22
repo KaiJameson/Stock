@@ -4,8 +4,8 @@ import pandas as pd
 from time_functions import get_time_string
 import threading
 import logging
-
-
+import sys
+from environment import stock_decisions_directory, error_file, config_directory
 
 
 
@@ -28,8 +28,7 @@ def find_percents_and_accs(symbols):
     percents = {}
     accuracy = {}
     for symbol in symbols:
-        error_file = 'error_file.txt'
-        config_name = 'config/' + symbol + '.csv'
+        config_name = config_directory + '/' + symbol + '.csv'
         if os.path.isfile(config_name):
             f = open(config_name, 'r')
             values = {}
@@ -42,6 +41,7 @@ def find_percents_and_accs(symbols):
             except:
                 f = open(error_file, 'a')
                 f.write('problem with configged stock: ' + symbol + '\n')
+                f.write(sys.exc_info()[1] + '\n')
                 f.write('listing the dictionary below\n')
                 for key in values:
                     f.write(str(key) + ': ' + str(values[key]) + '\n')
@@ -52,6 +52,7 @@ def find_percents_and_accs(symbols):
             except:
                 f = open(error_file, 'a')
                 f.write('problem with a non configged stock of ticker: ' + symbol + '\n')
+                f.write(sys.exc_info()[1] + '\n')
                 f.close()
     return percents, accuracy
 
@@ -73,11 +74,10 @@ def read_attributes(file):
     return stocks
 
 
-symbols = ['DOOO', 'ACB', 'LIVX']
-directory = 'information'
-file_name = directory + '/' + get_time_string() + '.txt'
-if not os.path.isdir(directory):
-    os.mkdir(directory)
+symbols = ['ADT']
+file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
+if not os.path.isdir(stock_decisions_directory):
+    os.mkdir(stock_decisions_directory)
 percents, accuracy = find_percents_and_accs(symbols)
 f = open(file_name, 'w')
 for key in percents:
