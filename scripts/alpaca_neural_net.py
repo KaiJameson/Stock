@@ -4,28 +4,15 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from sklearn import preprocessing
 from time_functions import get_time_string
-
-from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, test_var
-
+from environment import test_var, reports_directory, random_seed, error_file
+from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import time
 import os
 import random
 import sys
 import time
-import threading
-import logging
 
-
-def main(symbols):
-    #threads = list()
-    for symbol in symbols:
-        make_neural_net(symbol)
-        #x = threading.Thread(target=make_neural_net, args=(symbol,))
-        #threads.append(x)
-        #x.start()
 
 
 def deleteFiles(dirObject , dirPath):
@@ -50,7 +37,10 @@ def delete_files_in_folder(directory):
         for file in files:
             deleteFiles(file, directory)
     except:
-        print("problem with removing files in " + str(directory))
+        f = open(error_file, 'a')
+        f.write("problem with deleting files in folder: " + directory + "\n")
+        f.write(sys.exc_info()[1] + '\n')
+        f.close()
 
 
 def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
@@ -71,11 +61,10 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     # EPOCHS = how many times the machine trains
     '''
     tf.config.optimizer.set_jit(True)
-    seed = 314
     # set seed, so we can get the same results after rerunning several times
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-    random.seed(seed)
+    np.random.seed(random_seed)
+    tf.random.set_seed(random_seed)
+    random.seed(random_seed)
     start_time = time.time()
     # date now
     date_now = time.strftime("%Y-%m-%d")
@@ -118,7 +107,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     end_time = time.time()
     total_time = end_time - start_time
     total_minutes = total_time / 60
-    report_dir = 'reports/' + ticker
+    report_dir = reports_directory + '/' + ticker
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
     curr_price = plot_graph(model, data, ticker=ticker)
@@ -139,8 +128,3 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     return percent, acc
 
 
-if __name__== '__main__':
-    #symbols = ['TSLA', 'PENN', 'ZOM', "AHPI"]
-    symbols = ['WMT','AAPL', 'WTRH', 'MVIS']
-    main(symbols)
-    #make_neural_net('ZOM')

@@ -8,7 +8,7 @@ tuning_status_file = 'status.txt'
 config_directory = 'config'
 stock_decisions_directory = 'information'
 graph_directory = 'plots'
-
+random_seed = 314
 
 
 
