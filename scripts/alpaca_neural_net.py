@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from sklearn import preprocessing
 from time_functions import get_time_string
 from environment import test_var, reports_directory, random_seed, error_file
@@ -61,6 +62,9 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     # EPOCHS = how many times the machine trains
     '''
     tf.config.optimizer.set_jit(True)
+
+    
+
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(random_seed)
     tf.random.set_seed(random_seed)
