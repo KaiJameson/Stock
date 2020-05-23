@@ -9,7 +9,7 @@ config_directory = '../config'
 stock_decisions_directory = '../information'
 graph_directory = '../plots'
 random_seed = 314
-
+trades_dir = '../trades'
 
 
 

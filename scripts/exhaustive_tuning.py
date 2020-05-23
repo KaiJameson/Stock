@@ -3,7 +3,9 @@ import os
 import sys
 import subprocess
 import time
+from functions import check_directories
 
+check_directories()
 start_time = time.time()
 ticker = 'PENN'
 
