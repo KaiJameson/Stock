@@ -100,8 +100,13 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     model_path = os.path.join("results", model_name) + ".h5"
     model.load_weights(model_path)
     # evaluate the model
-    mse, mae = model.evaluate(test, verbose=0)
-    #mean_absolute_error = data["column_scaler"]["adjclose"].inverse_transform(mae.reshape(1, -1))[0][0]
+
+    mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
+    #mean_absolute_error = data["column_scaler"][test_var].inverse_transform(mae.reshape(1, -1))[0][0]
+    print('mse:', mse)
+    print('mae:', mae)
+    
+    mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
     # predict the future price
     future_price = predict(model, data, N_STEPS)
     #print(f"Future price after {LOOKUP_STEP} days is {future_price:.2f}$")
@@ -118,6 +123,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     file_name = report_dir +'/' + get_time_string() + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
+    f.write("The mean absolute error is: " + str(mean_absolute_error) + '\n')
     f.write('Total time to run was: ' + str(total_minutes) + '\n')
     f.write('The price at run time was: ' + str(curr_price) + '\n')
     f.write('The predicted price for tomorrow is ' + str(future_price) + '\n')
