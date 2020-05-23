@@ -58,6 +58,7 @@ for step in N_STEPS:
                 f.write('\tEPOCHS:' + str(EPOCHS) + '\n')
                 f.write(str(sys.exc_info()[1]) + '\n')
                 f.close()
+                
 config_file = config_directory + '/' + ticker + '.csv'
 f = open(config_file, 'w')
 f.write('UNITS,'+str(best_unit)+'\n')
