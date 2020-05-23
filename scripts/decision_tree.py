@@ -6,6 +6,7 @@ import threading
 import logging
 import sys
 from environment import stock_decisions_directory, error_file, config_directory
+from functions import check_directories
 
 
 
@@ -74,6 +75,7 @@ def read_attributes(file):
     return stocks
 
 
+check_directories()
 symbols = ['ADT']
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
