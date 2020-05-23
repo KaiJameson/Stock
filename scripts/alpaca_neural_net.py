@@ -63,7 +63,8 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     '''
     tf.config.optimizer.set_jit(True)
 
-    
+    policy = mixed_precision.Policy('mixed_float16')
+    mixed_precision.set_policy(policy)
 
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(random_seed)
