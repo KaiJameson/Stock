@@ -46,7 +46,7 @@ def delete_files_in_folder(directory):
 
 def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
-    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
+    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=4000):
     '''
     # N_STEPS = Window size or the sequence length
     # Lookup step = 1 is the next day
@@ -82,18 +82,17 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     results_folder = 'results'
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
-    data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE)
+    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE)
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
-    history = model.fit(data["X_train"], data["y_train"],
+    history = model.fit(train,
                         batch_size=BATCH_SIZE,
                         epochs=EPOCHS,
-                        validation_data=(data["X_test"], data["y_test"]),
                         verbose=1)
 
     model.save(os.path.join("results", model_name) + ".h5")
     #before testing, no shuffle
-    data = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False)
+    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False)
 
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
@@ -101,10 +100,12 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     model_path = os.path.join("results", model_name) + ".h5"
     model.load_weights(model_path)
     # evaluate the model
+
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
     #mean_absolute_error = data["column_scaler"][test_var].inverse_transform(mae.reshape(1, -1))[0][0]
     print('mse:', mse)
     print('mae:', mae)
+    
     mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
     # predict the future price
     future_price = predict(model, data, N_STEPS)

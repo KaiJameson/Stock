@@ -109,8 +109,12 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     # split the dataset
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
+    train = tf.data.Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
+    test = tf.data.Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
+    train = train.batch(64)
+    test = test.batch(64)
     # return the result
-    return result
+    return result, train, test
 
 
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
