@@ -59,6 +59,7 @@ def find_percents_and_accs(symbols):
                 f.write(str(exit_info[1]) + '\n')
                 traceback.print_tb(tb=exit_info[2], file=f)
                 f.close()
+                print('\nERROR ENCOUNTERED!!CHECK ERROR FILE!!\n')
     return percents, accuracy
 
 

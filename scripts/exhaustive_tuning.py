@@ -61,6 +61,7 @@ for step in N_STEPS:
                 f.write(str(exit_info[1]) + '\n')
                 traceback.print_tb(tb=exit_info[2], file=f)
                 f.close()
+                print('\nERROR ENCOUNTERED!!CHECK ERROR FILE!!\n')
                 
 config_file = config_directory + '/' + ticker + '.csv'
 f = open(config_file, 'w')
