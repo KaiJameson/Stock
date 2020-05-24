@@ -5,6 +5,7 @@ import subprocess
 import time
 from functions import check_directories
 from environment import config_directory, tuning_status_file, error_file
+import traceback
 check_directories()
 start_time = time.time()
 ticker = 'APDN'
@@ -56,8 +57,11 @@ for step in N_STEPS:
                 f.write('\tDROPOUT:'+str(drop)+'\n')
                 f.write('\tN_STEPS:'+str(step)+'\n')
                 f.write('\tEPOCHS:' + str(EPOCHS) + '\n')
-                f.write(str(sys.exc_info()[1]) + '\n')
+                exit_info = sys.exc_info()
+                f.write(str(exit_info[1]) + '\n')
+                traceback.print_tb(tb=exit_info[2], file=f)
                 f.close()
+                print('\nERROR ENCOUNTERED!!CHECK ERROR FILE!!\n')
                 
 config_file = config_directory + '/' + ticker + '.csv'
 f = open(config_file, 'w')

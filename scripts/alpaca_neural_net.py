@@ -46,7 +46,7 @@ def delete_files_in_folder(directory):
 
 def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
-    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=4000):
+    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
     '''
     # N_STEPS = Window size or the sequence length
     # Lookup step = 1 is the next day
@@ -103,9 +103,6 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     model.load_weights(model_path)
     # evaluate the model
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
-    #mean_absolute_error = data["column_scaler"][test_var].inverse_transform(mae.reshape(1, -1))[0][0]
-    print('mse:', mse)
-    print('mae:', mae)
     mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
     # predict the future price
     future_price = predict(model, data, N_STEPS)
