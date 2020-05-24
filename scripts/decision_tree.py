@@ -48,13 +48,13 @@ def find_percents_and_accs(symbols):
                     f.write(str(key) + ': ' + str(values[key]) + '\n')
                 f.close()
         else:
-            # try:
-            percents[symbol], accuracy[symbol] = make_neural_net(symbol)
-            # except:
-            #     f = open(error_file, 'a')
-            #     f.write('problem with a non configged stock of ticker: ' + symbol + '\n')
-            #     f.write(str(sys.exc_info()[1]) + '\n')
-            #     f.close()
+            try:
+                percents[symbol], accuracy[symbol] = make_neural_net(symbol)
+            except:
+                f = open(error_file, 'a')
+                f.write('problem with a non configged stock of ticker: ' + symbol + '\n')
+                f.write(str(sys.exc_info()[1]) + '\n')
+                f.close()
     return percents, accuracy
 
 
