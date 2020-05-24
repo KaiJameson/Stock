@@ -8,7 +8,8 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, real_api_secret_key
-from environment import test_var, reports_directory, graph_directory, money
+from environment import test_var, reports_directory, graph_directory
+from environment import test_money as money
 from time_functions import get_time_string
 import numpy as np
 import pandas as pd
