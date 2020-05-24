@@ -76,11 +76,7 @@ def read_attributes(file):
 
 
 check_directories()
-<<<<<<< HEAD
 symbols = ['VTR']
-=======
-symbols = ['APDN']
->>>>>>> c0fbc275a6d602918aeff71ece934de45e8d440a
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)

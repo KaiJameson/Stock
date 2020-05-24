@@ -111,8 +111,12 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
     train = tf.data.Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     test = tf.data.Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
+    
     train = train.batch(64)
     test = test.batch(64)
+
+    train = train.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    test = test.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     # return the result
     return result, train, test
 
@@ -182,12 +186,11 @@ def plot_graph(model, data, ticker='default'):
     plot_dir = graph_directory + '/' + ticker
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
-    plot_name = plot_dir + '/' + get_time_string() + '.png'
+    plot_name = plot_dir + '/' + test_var + '_' + get_time_string() + '.png'
     plt.plot(real_y_values, c='b')
     plt.plot(predicted_y_values, c='r')
     plt.xlabel("Days")
     plt.ylabel("Price")
-    plt.title(ticker + '_' + tes)
     plt.legend(["Actual Price", "Predicted Price"])
     plt.savefig(plot_name)
     plt.close()
