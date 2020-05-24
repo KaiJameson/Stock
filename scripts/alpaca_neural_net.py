@@ -82,9 +82,10 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     results_folder = 'results'
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
-    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE)
+    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, batch_size=BATCH_SIZE)
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
+
     history = model.fit(train,
                         batch_size=BATCH_SIZE,
                         epochs=EPOCHS,
@@ -94,7 +95,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
 
     model.save(os.path.join("results", model_name) + ".h5")
     #before testing, no shuffle
-    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False)
+    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE)
 
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,

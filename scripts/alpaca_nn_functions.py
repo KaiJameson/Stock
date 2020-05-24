@@ -51,7 +51,7 @@ def make_dataframe(symbol, timeframe='day', limit=1000):
 
 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
-                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid']):
+                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid'], batch_size=64):
     # see if ticker is already a loaded stock from yahoo finance
     if isinstance(ticker, str):
         # load data from alpaca
@@ -99,6 +99,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     result['last_sequence'] = last_sequence
     # construct the X's and y's
     X, y = [], []
+
     for seq, target in sequence_data:
         X.append(seq)
         y.append(target)
@@ -112,11 +113,13 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     train = tf.data.Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     test = tf.data.Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
     
-    train = train.batch(64)
-    test = test.batch(64)
+    train = train.batch(batch_size)
+    test = test.batch(batch_size)
 
     train = train.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     test = test.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+
+
     # return the result
     return result, train, test
 
