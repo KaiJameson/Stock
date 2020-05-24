@@ -27,7 +27,7 @@
 
 ### Owned Stocks
 * Owned stocks will be listed in the trades directory in owned.csv
- * owned stocks will have the form of ticker, shares, price per share, purchase date
+ * This file will have the first line be the amount of money you currently have to spend and every subsequent line will be in the form of ticker, shares, price per share, purchase date 
 * A history of buys will be listed in the trades/buys/ directory
  * buys will in the form of ticker, shares, price per share
 * A history of sells will be listed in the trades/sells/ directory
