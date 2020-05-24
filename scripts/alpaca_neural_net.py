@@ -88,7 +88,9 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     history = model.fit(train,
                         batch_size=BATCH_SIZE,
                         epochs=EPOCHS,
-                        verbose=1)
+                        verbose=2,
+                        use_multiprocessing=True
+                        )
 
     model.save(os.path.join("results", model_name) + ".h5")
     #before testing, no shuffle
@@ -100,12 +102,10 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     model_path = os.path.join("results", model_name) + ".h5"
     model.load_weights(model_path)
     # evaluate the model
-
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
     #mean_absolute_error = data["column_scaler"][test_var].inverse_transform(mae.reshape(1, -1))[0][0]
     print('mse:', mse)
     print('mae:', mae)
-    
     mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
     # predict the future price
     future_price = predict(model, data, N_STEPS)
