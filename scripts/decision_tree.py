@@ -7,7 +7,7 @@ import logging
 import sys
 from environment import stock_decisions_directory, error_file, config_directory
 from functions import check_directories
-
+import traceback
 
 
 def read_in_stocks(file):
@@ -42,7 +42,9 @@ def find_percents_and_accs(symbols):
             except:
                 f = open(error_file, 'a')
                 f.write('problem with configged stock: ' + symbol + '\n')
-                f.write(str(sys.exc_info()[1]) + '\n')
+                exit_info = sys.exc_info()
+                f.write(str(exit_info[1]) + '\n')
+                traceback.print_tb(tb=exit_info[2], file=f)
                 f.write('listing the dictionary below\n')
                 for key in values:
                     f.write(str(key) + ': ' + str(values[key]) + '\n')
@@ -53,7 +55,9 @@ def find_percents_and_accs(symbols):
             except:
                 f = open(error_file, 'a')
                 f.write('problem with a non configged stock of ticker: ' + symbol + '\n')
-                f.write(str(sys.exc_info()[1]) + '\n')
+                exit_info = sys.exc_info()
+                f.write(str(exit_info[1]) + '\n')
+                traceback.print_tb(tb=exit_info[2], file=f)
                 f.close()
     return percents, accuracy
 
@@ -76,7 +80,7 @@ def read_attributes(file):
 
 
 check_directories()
-symbols = ['VTR']
+symbols = ['AMZN']
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)
