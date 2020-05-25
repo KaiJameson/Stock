@@ -8,7 +8,7 @@ from environment import config_directory, tuning_status_file, error_file
 import traceback
 check_directories()
 start_time = time.time()
-ticker = 'APDN'
+ticker = 'TGI'
 
 EPOCHS = 2000
 UNITS = [256, 448, 768]
@@ -21,7 +21,7 @@ best_step = N_STEPS[0]
 best_unit = UNITS[0]
 best_drop = DROPOUT[0]
 
-tuning_status_file = 'status.txt'
+tuning_status_file = ticker + '.txt'
 if not os.path.isfile(tuning_status_file):
     f = open(tuning_status_file, 'w')
     f.close()
@@ -76,6 +76,14 @@ end_time = time.time()
 total_time = end_time - start_time
 total_minutes = total_time / 60
 f.write('it took ' + str(total_minutes) + ' minutes to complete\n')
+
+print("The bests are:")
+print('UNITS: '+str(best_unit)+'\n')
+print('DROPOUT: '+str(best_drop)+'\n')
+print('N_STEPS: '+str(best_step)+'\n')
+print('EPOCHS: 2000\n')
+print("and it took " + str(total_minutes) + " minutes to complete\n")
+
 f.close()
 
 
