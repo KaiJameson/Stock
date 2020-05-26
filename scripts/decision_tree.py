@@ -39,6 +39,8 @@ def find_percents_and_accs(symbols):
             try:
                 percents[symbol], accuracy[symbol] = make_neural_net(symbol,
                     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
+            except KeyboardInterrupt:
+                sys.exit(-1)
             except:
                 f = open(error_file, 'a')
                 f.write('problem with configged stock: ' + symbol + '\n')
@@ -52,6 +54,8 @@ def find_percents_and_accs(symbols):
         else:
             try:
                 percents[symbol], accuracy[symbol] = make_neural_net(symbol)
+            except KeyboardInterrupt:
+                sys.exit(-1)
             except:
                 f = open(error_file, 'a')
                 f.write('problem with a non configged stock of ticker: ' + symbol + '\n')
@@ -81,11 +85,7 @@ def read_attributes(file):
 
 
 check_directories()
-<<<<<<< HEAD
-symbols = ['AMD']
-=======
-symbols = ['AAPL']
->>>>>>> d955f5f5419cfa545db5da8477c9db57f1f61f12
+symbols = ['VUZI']
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)

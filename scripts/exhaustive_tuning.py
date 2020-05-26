@@ -1,14 +1,14 @@
-from alpaca_neural_net import make_neural_net
+from alpaca_neural_net import tuning_neural_net
 import os
 import sys
 import subprocess
 import time
 from functions import check_directories
-from environment import config_directory, tuning_status_file, error_file
+from environment import config_directory, tuning_directory, error_file
 import traceback
 check_directories()
 start_time = time.time()
-ticker = 'TGI'
+ticker = 'PENN'
 
 EPOCHS = 2000
 UNITS = [256, 448, 768]
@@ -33,7 +33,7 @@ for step in N_STEPS:
         for drop in DROPOUT:
             try:
                 s = time.time()
-                perc, acc = make_neural_net(ticker, N_STEPS=step, UNITS=unit, DROPOUT=drop, EPOCHS=EPOCHS)
+                acc = tuning_neural_net(ticker, N_STEPS=step, UNITS=unit, DROPOUT=drop, EPOCHS=EPOCHS)
                 e = time.time()
                 m = (e - s) / 60
                 f = open(tuning_status_file, 'a')
@@ -50,6 +50,8 @@ for step in N_STEPS:
                     best_step = step
                     best_unit = unit
                     best_drop = drop
+            except KeyboardInterrupt:
+                sys.exit(-1)
             except:
                 f = open(error_file, 'a')
                 f.write('problem with running exhaustive tuning on these settings for ticker ' + ticker + '\n')

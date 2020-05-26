@@ -117,7 +117,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     report_dir = reports_directory + '/' + ticker
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
-    curr_price = plot_graph(model, data, ticker=ticker)
+    curr_price = plot_graph(model, data, ticker)
     file_name = report_dir +'/' + get_time_string() + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
@@ -134,5 +134,69 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score:" + str(acc) + '\n')
     f.close()
     return percent, acc
+
+
+def tuning_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
+    N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
+    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
+    '''
+    # N_STEPS = Window size or the sequence length
+    # Lookup step = 1 is the next day
+    # TEST_SIZE = 0.2 is 20%
+    # N_LAYERS = how many hidden neural layers
+    # CELL = type of cell
+    # UNITS = number of neurons per layer
+    # DROPOUT = % dropout
+    # BIDIRECTIONAL = does it test backwards or not
+    # LOSS = "huber_loss"
+    # OPTIMIZER = "adam"
+    # BATCH_SIZE
+    # EPOCHS = how many times the machine trains
+    '''
+    tf.config.optimizer.set_jit(True)
+
+    policy = mixed_precision.Policy('mixed_float16')
+    mixed_precision.set_policy(policy)
+
+    # set seed, so we can get the same results after rerunning several times
+    np.random.seed(random_seed)
+    tf.random.set_seed(random_seed)
+    random.seed(random_seed)
+    # date now
+    date_now = time.strftime("%Y-%m-%d")
+    #ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
+    # model name to save, making it as unique as possible based on parameters
+    model_name = f"{date_now}_{ticker}-{LOSS}-{OPTIMIZER}-{CELL.__name__}-seq-{N_STEPS}-step-{LOOKUP_STEP}-layers-{N_LAYERS}-units-{UNITS}"
+    if BIDIRECTIONAL:
+        model_name += "-b"
+    # create these folders if they does not exist
+    results_folder = 'results'
+    if not os.path.isdir(results_folder):
+       os.mkdir(results_folder)
+    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, batch_size=BATCH_SIZE)
+    model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
+                        dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
+
+    history = model.fit(train,
+                        batch_size=BATCH_SIZE,
+                        epochs=EPOCHS,
+                        verbose=2,
+                        use_multiprocessing=True
+                        )
+
+    model.save(os.path.join("results", model_name) + ".h5")
+    #before testing, no shuffle
+    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE)
+
+    # construct the model
+    model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
+                        dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
+    model_path = os.path.join("results", model_name) + ".h5"
+    model.load_weights(model_path)
+    delete_files_in_folder(results_folder)
+    os.rmdir(results_folder)
+    tf.keras.backend.clear_session()
+    acc = get_accuracy(model, data, LOOKUP_STEP)
+    return acc
 
 
