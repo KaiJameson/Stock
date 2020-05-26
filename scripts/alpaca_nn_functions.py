@@ -22,9 +22,12 @@ import random
 import datetime
 import math 
 
-def make_dataframe(symbol, timeframe='day', limit=1000, time=None):
+def make_dataframe(symbol, timeframe='day', limit=1000, end_date=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
-    barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
+    if end_date is not None:
+        barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit, until=end_date)
+    else:
+        barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
     items = barset.items()
     data = {}
     for symbol, bar in items:
@@ -85,12 +88,11 @@ def other_dataframe():
 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
                 test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid'],
-                batch_size=64, time=None):
+                batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
-        
-        if time is not None:
-            df = make_dataframe(ticker, time=time)
+        if end_date is not None:
+            df = make_dataframe(ticker, end_date=end_date)
         else:
             df = make_dataframe(ticker)
     elif isinstance(ticker, pd.DataFrame):
@@ -207,7 +209,7 @@ def predict(model, data, n_steps, classification=False):
     return predicted_val
 
 
-def plot_graph(model, data, ticker='default'):
+def plot_graph(model, data, ticker):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)
@@ -231,6 +233,7 @@ def plot_graph(model, data, ticker='default'):
     plt.plot(predicted_y_values, c='r')
     plt.xlabel("Days")
     plt.ylabel("Price")
+    plt.title(ticker)
     plt.legend(["Actual Price", "Predicted Price"])
     plt.savefig(plot_name)
     plt.close()
