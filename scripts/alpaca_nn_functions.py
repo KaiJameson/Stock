@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, real_api_secret_key
-from environment import test_var, reports_directory, graph_directory
+from environment import test_var, reports_directory, graph_directory, back_test_days
 from environment import test_money as money
 from time_functions import get_time_string
 import numpy as np
@@ -22,7 +22,73 @@ import random
 import datetime
 import math 
 
-def make_dataframe(symbol, timeframe='day', limit=1000, end_date=None):
+
+def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
+    
+    # predict the future price
+    future_price = predict(model, data, N_STEPS)
+
+    curr_price = plot_graph(model, data, ticker, back_test_days)
+    
+
+    mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
+    mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
+
+    total_minutes = total_time / 60
+    report_dir = reports_directory + '/' + ticker
+    if not os.path.isdir(report_dir):
+        os.mkdir(report_dir)
+    
+    file_name = report_dir +'/' + get_time_string() + '.txt'
+    f = open(file_name, 'a')
+    f.write("The test var was " + test_var + '\n')
+    f.write("The mean absolute error is: " + str(mean_absolute_error) + '\n')
+    f.write('Total time to run was: ' + str(round(total_minutes, 2)) + '\n')
+    f.write('The price at run time was: ' + str(curr_price) + '\n')
+    f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
+    
+    percent = future_price / curr_price
+    if curr_price < future_price:
+        f.write('That would mean a growth of: ' + str(round((percent - 1) * 100, 2)) + "%\n")
+        f.write('I would buy this stock.\n')
+    elif curr_price > future_price:
+        f.write('That would mean a loss of: ' + str(abs(round((percent - 1) * 100, 2))) + "%\n")
+        f.write('I would sell this stock.\n')
+    
+    f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score: " + str(accuracy) + '\n')
+    f.close()
+
+    return percent
+
+def deleteFiles(dirObject , dirPath):
+    if dirObject.is_dir(follow_symlinks=False):
+        name = os.fsdecode(dirObject.name)
+        newDir = dirPath+"/"+name
+        moreFiles = os.scandir(newDir)
+        for file in moreFiles:
+            if file.is_dir(follow_symlinks=False):
+                deleteFiles(file, newDir)
+                os.rmdir(newDir+"/"+os.fsdecode(file.name))
+            else:
+                os.remove(newDir+"/"+os.fsdecode(file.name))
+        os.rmdir(newDir)
+    else:
+        os.remove(dirPath+"/"+os.fsdecode(dirObject.name))
+
+
+def delete_files_in_folder(directory):
+    try:
+        files = os.scandir(directory)
+        for file in files:
+            deleteFiles(file, directory)
+    except:
+        f = open(error_file, 'a')
+        f.write("problem with deleting files in folder: " + directory + "\n")
+        f.write(sys.exc_info()[1] + '\n')
+        f.close()
+
+def make_dataframe(symbol, timeframe='day', limit=1000, time=None):
+
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
         barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit, until=end_date)
@@ -209,7 +275,8 @@ def predict(model, data, n_steps, classification=False):
     return predicted_val
 
 
-def plot_graph(model, data, ticker):
+
+def plot_graph(model, data, ticker='default', back_test_days=100):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)

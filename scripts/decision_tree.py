@@ -1,4 +1,4 @@
-from alpaca_neural_net import make_neural_net
+from alpaca_neural_net import decision_neural_net
 import os
 import pandas as pd
 from time_functions import get_time_string
@@ -37,8 +37,10 @@ def find_percents_and_accs(symbols):
                 parts = line.strip().split(',')
                 values[parts[0]] = parts[1]
             try:
-                percents[symbol], accuracy[symbol] = make_neural_net(symbol,
-                    UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
+                # percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
+                #     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
+                percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
+                    UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=10)
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
@@ -55,7 +57,7 @@ def find_percents_and_accs(symbols):
                 f.close()
         else:
             try:
-                percents[symbol], accuracy[symbol] = make_neural_net(symbol)
+                percents[symbol], accuracy[symbol] = decision_neural_net(symbol, UNITS=10)
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
@@ -89,7 +91,9 @@ def read_attributes(file):
 
 
 check_directories()
+
 symbols = ['RGS']
+
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)
