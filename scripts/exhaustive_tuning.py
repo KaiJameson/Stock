@@ -8,7 +8,7 @@ from environment import config_directory, tuning_status_file, error_file
 import traceback
 check_directories()
 start_time = time.time()
-ticker = 'TGI'
+ticker = 'NRZ'
 
 EPOCHS = 2000
 UNITS = [256, 448, 768]

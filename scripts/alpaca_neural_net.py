@@ -127,10 +127,10 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
     
     if curr_price < future_price:
-        f.write('That would mean a growth of: ' + str(round(((future_price/curr_price) - 1), 2)) + "\n")
+        f.write('That would mean a growth of: ' + str(round(((future_price/curr_price) - 1) * 100, 2)) + "%\n")
         f.write('I would buy this stock.\n')
     elif curr_price > future_price:
-        f.write('That would mean a loss of: ' + str(abs(round(((future_price/curr_price) - 1), 2))) + "\n")
+        f.write('That would mean a loss of: ' + str(abs(round((((future_price/curr_price) - 1) * 100), 2))) + "%\n")
         f.write('I would sell this stock.\n')
     percent = future_price / curr_price
     acc = get_accuracy(model, data, LOOKUP_STEP)
