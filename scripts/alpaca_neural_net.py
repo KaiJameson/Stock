@@ -122,16 +122,19 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
     f.write("The mean absolute error is: " + str(mean_absolute_error) + '\n')
-    f.write('Total time to run was: ' + str(total_minutes) + '\n')
+    f.write('Total time to run was: ' + str(round(total_minutes, 2)) + '\n')
     f.write('The price at run time was: ' + str(curr_price) + '\n')
-    f.write('The predicted price for tomorrow is ' + str(future_price) + '\n')
+    f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
+    
     if curr_price < future_price:
-        f.write('i would buy this stock\n')
+        f.write('That would mean a growth of: ' + str(round(((future_price/curr_price) - 1) * 100, 2)) + "%\n")
+        f.write('I would buy this stock.\n')
     elif curr_price > future_price:
-        f.write('i would sell this stock\n')
+        f.write('That would mean a loss of: ' + str(abs(round((((future_price/curr_price) - 1) * 100), 2))) + "%\n")
+        f.write('I would sell this stock.\n')
     percent = future_price / curr_price
     acc = get_accuracy(model, data, LOOKUP_STEP)
-    f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score:" + str(acc) + '\n')
+    f.write(str(LOOKUP_STEP) + ":" + "Accuracy Score: " + str(acc) + '\n')
     f.close()
     return percent, acc
 
