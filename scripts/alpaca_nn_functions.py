@@ -22,7 +22,7 @@ import random
 import datetime
 import math 
 
-def make_dataframe(symbol, timeframe='day', limit=1000):
+def make_dataframe(symbol, timeframe='day', limit=1000, time=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
     items = barset.items()
@@ -84,12 +84,15 @@ def other_dataframe():
 
 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
-                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid'], batch_size=64):
-    # see if ticker is already a loaded stock from yahoo finance
+                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid'],
+                batch_size=64, time=None):
     if isinstance(ticker, str):
         # load data from alpaca
-        df = make_dataframe(ticker)
-        #df = other_dataframe()
+        
+        if time is not None:
+            df = make_dataframe(ticker, time=time)
+        else:
+            df = make_dataframe(ticker)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
