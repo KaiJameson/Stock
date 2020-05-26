@@ -8,7 +8,7 @@ from environment import config_directory, tuning_status_file, error_file
 import traceback
 check_directories()
 start_time = time.time()
-ticker = 'TGI'
+ticker = 'NRZ'
 
 EPOCHS = 2000
 UNITS = [256, 448, 768]
@@ -37,13 +37,13 @@ for step in N_STEPS:
                 e = time.time()
                 m = (e - s) / 60
                 f = open(tuning_status_file, 'a')
-                f.write("finished another run\n")
-                f.write("this run took " + str(m) + ' minutes to run\n')
+                f.write("Finished another run.\n")
+                f.write("This run took " + str(m) + ' minutes to run.\n')
                 f.write('\tUNITS:'+str(unit)+'\n')
                 f.write('\tDROPOUT:'+str(drop)+'\n')
                 f.write('\tN_STEPS:'+str(step)+'\n')
                 f.write('\tEPOCHS:' + str(EPOCHS) + '\n')
-                f.write('acc for this run is ' + str(acc) + '\n')
+                f.write('The accuracy for this run is ' + str(acc) + '\n')
                 f.close()
                 if acc > best_acc:
                     best_acc = acc
@@ -52,7 +52,7 @@ for step in N_STEPS:
                     best_drop = drop
             except:
                 f = open(error_file, 'a')
-                f.write('problem with running exhaustive tuning on these settings for ticker ' + ticker + '\n')
+                f.write('Problem with running exhaustive tuning on these settings for ticker ' + ticker + '\n')
                 f.write('\tUNITS:'+str(unit)+'\n')
                 f.write('\tDROPOUT:'+str(drop)+'\n')
                 f.write('\tN_STEPS:'+str(step)+'\n')
@@ -68,21 +68,21 @@ f = open(config_file, 'w')
 f.write('UNITS,'+str(best_unit)+'\n')
 f.write('DROPOUT,'+str(best_drop)+'\n')
 f.write('N_STEPS,'+str(best_step)+'\n')
-f.write('EPOCHS,2000\n')
+f.write('EPOCHS,' + str(EPOCHS) + '\n')
 f.close()
 f = open(tuning_status_file, 'a')
 f.write('\nDone with ' + ticker + '\n')
 end_time = time.time()
 total_time = end_time - start_time
 total_minutes = total_time / 60
-f.write('it took ' + str(total_minutes) + ' minutes to complete\n')
+f.write('It took ' + str(total_minutes) + ' minutes to complete.\n')
 
 print("The bests are:")
 print('UNITS: '+str(best_unit)+'\n')
 print('DROPOUT: '+str(best_drop)+'\n')
 print('N_STEPS: '+str(best_step)+'\n')
-print('EPOCHS: 2000\n')
-print("and it took " + str(total_minutes) + " minutes to complete\n")
+print('EPOCHS:' + str(EPOCHS) + '\n')
+print("and it took " + str(total_minutes) + " minutes to complete.\n")
 
 f.close()
 
