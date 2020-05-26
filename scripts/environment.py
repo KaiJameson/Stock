@@ -10,6 +10,7 @@ graph_directory = '../plots'
 random_seed = 314
 trades_dir = '../trades'
 tuning_directory = '../tuning_info'
+back_test_days = 100
 
 
 
