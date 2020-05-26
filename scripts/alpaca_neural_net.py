@@ -21,12 +21,12 @@ def deleteFiles(dirObject , dirPath):
         name = os.fsdecode(dirObject.name)
         newDir = dirPath+"/"+name
         moreFiles = os.scandir(newDir)
-        for file in moreFiles:
-            if file.is_dir(follow_symlinks=False):
+        for f in moreFiles:
+            if f.is_dir(follow_symlinks=False):
                 deleteFiles(file, newDir)
-                os.rmdir(newDir+"/"+os.fsdecode(file.name))
+                os.rmdir(newDir+"/"+os.fsdecode(f.name))
             else:
-                os.remove(newDir+"/"+os.fsdecode(file.name))
+                os.remove(newDir+"/"+os.fsdecode(f.name))
         os.rmdir(newDir)
     else:
         os.remove(dirPath+"/"+os.fsdecode(dirObject.name))
@@ -35,8 +35,8 @@ def deleteFiles(dirObject , dirPath):
 def delete_files_in_folder(directory):
     try:
         files = os.scandir(directory)
-        for file in files:
-            deleteFiles(file, directory)
+        for f in files:
+            deleteFiles(f, directory)
     except:
         f = open(error_file, 'a')
         f.write("problem with deleting files in folder: " + directory + "\n")
@@ -118,7 +118,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
     curr_price = plot_graph(model, data, ticker)
-    file_name = report_dir +'/' + get_time_string() + '.txt'
+    file_name = report_dir + '/' + test_var + '_' + get_time_string() + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
     f.write("The mean absolute error is: " + str(mean_absolute_error) + '\n')
@@ -139,7 +139,7 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     return percent, acc
 
 
-def tuning_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
+def tuning_neural_net(ticker, end_date, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
     '''
@@ -176,7 +176,10 @@ def tuning_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     results_folder = 'results'
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
-    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, batch_size=BATCH_SIZE)
+    data, train, test = load_data(
+        ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
+        test_size=TEST_SIZE, batch_size=BATCH_SIZE, end_date=end_date
+    )
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
 
@@ -189,7 +192,12 @@ def tuning_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
 
     model.save(os.path.join("results", model_name) + ".h5")
     #before testing, no shuffle
-    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE)
+    data, train, test = load_data(
+        ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
+        test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE,
+        end_date=end_date
+    )
+
 
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
