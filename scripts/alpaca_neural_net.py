@@ -14,6 +14,7 @@ import random
 import sys
 import time
 
+
 def decision_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
@@ -30,7 +31,7 @@ def decision_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     return percent, acc
 
 
-def tuning_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
+def tuning_neural_net(ticker, end_date, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
     
@@ -78,7 +79,10 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     results_folder = 'results'
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
-    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, batch_size=BATCH_SIZE)
+    data, train, test = load_data(
+        ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
+        test_size=TEST_SIZE, batch_size=BATCH_SIZE, end_date=end_date
+    )
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
 
@@ -91,7 +95,12 @@ def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
 
     model.save(os.path.join("results", model_name) + ".h5")
     #before testing, no shuffle
-    data, train, test = load_data(ticker, N_STEPS, lookup_step=LOOKUP_STEP, test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE)
+    data, train, test = load_data(
+        ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
+        test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE,
+        end_date=end_date
+    )
+
 
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,

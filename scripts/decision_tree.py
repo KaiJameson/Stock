@@ -42,6 +42,8 @@ def find_percents_and_accs(symbols):
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
                     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=10)
             except KeyboardInterrupt:
+                print('I acknowledge that you want this to stop')
+                print('Thy will be done')
                 sys.exit(-1)
             except:
                 f = open(error_file, 'a')
@@ -57,6 +59,8 @@ def find_percents_and_accs(symbols):
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol, UNITS=10)
             except KeyboardInterrupt:
+                print('I acknowledge that you want this to stop')
+                print('Thy will be done')
                 sys.exit(-1)
             except:
                 f = open(error_file, 'a')
@@ -87,7 +91,9 @@ def read_attributes(file):
 
 
 check_directories()
-symbols = ['DOOO']
+
+symbols = ['RGS']
+
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)
