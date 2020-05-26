@@ -81,7 +81,11 @@ def read_attributes(file):
 
 
 check_directories()
+<<<<<<< HEAD
 symbols = ['AMD']
+=======
+symbols = ['AAPL']
+>>>>>>> d955f5f5419cfa545db5da8477c9db57f1f61f12
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)

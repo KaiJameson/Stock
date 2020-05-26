@@ -1,7 +1,7 @@
 
 
 test_money = 10000
-test_var = 'open'
+test_var = 'close'
 reports_directory = '../reports'
 error_file = '../error_file.txt'
 tuning_status_file = '../status.txt'

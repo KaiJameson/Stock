@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.data import Dataset
+from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
@@ -142,14 +144,14 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     # split the dataset
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
-    train = tf.data.Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
-    test = tf.data.Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
+    train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
+    test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
     
     train = train.batch(batch_size)
     test = test.batch(batch_size)
 
-    train = train.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-    test = test.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    train = train.prefetch(buffer_size=AUTOTUNE)
+    test = test.prefetch(buffer_size=AUTOTUNE)
 
 
     # return the result
