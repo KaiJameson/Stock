@@ -1,5 +1,5 @@
 import os
-from environment import reports_directory, config_directory, stock_decisions_directory, graph_directory
+from environment import reports_directory, config_directory, stock_decisions_directory, graph_directory, tuning_directory
 
 
 def check_directories():
@@ -11,7 +11,8 @@ def check_directories():
         os.mkdir(stock_decisions_directory)
     if not os.path.isdir(graph_directory):
         os.mkdir(graph_directory)
-
+    if not os.path.isdir(tuning_directory):
+        os.mkdir(tuning_directory)
 
 
 
