@@ -51,12 +51,43 @@ def make_dataframe(symbol, timeframe='day', limit=1000):
     return df
 
 
+def other_dataframe():
+    api = tradeapi.REST(real_api_key_id, real_api_secret_key)
+    line_count = 0
+    f = open('../daysback.csv', 'r')
+    open_values = []
+    close_values = []
+    low_values = []
+    high_values = []
+    mid_values = []
+    data = {}
+    for line in f:
+        if line_count % 2 == 0:
+            line_count += 1
+            continue
+        info = line.strip().split(',')
+        open_values.append(float(info[0]))
+        low_values.append(float(info[1]))
+        high_values.append(float(info[2]))
+        close_values.append(float(info[3]))
+        mid_values.append(float(info[4]))
+        line_count += 1
+    data['open'] = open_values
+    data['low'] = low_values
+    data['high'] = high_values
+    data['close'] = close_values
+    data['mid'] = mid_values
+    df = pd.DataFrame(data=data)
+    return df
+
+
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
                 test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid'], batch_size=64):
     # see if ticker is already a loaded stock from yahoo finance
     if isinstance(ticker, str):
         # load data from alpaca
         df = make_dataframe(ticker)
+        #df = other_dataframe()
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
