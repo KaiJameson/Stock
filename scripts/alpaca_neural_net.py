@@ -20,9 +20,9 @@ def decision_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
 
     start_time = time.time()
-    data, model, acc = make_neural_net(ticker, N_STEPS, LOOKUP_STEP, TEST_SIZE, 
-    N_LAYERS, CELL, UNITS, DROPOUT, BIDIRECTIONAL, LOSS,
-    OPTIMIZER, BATCH_SIZE, EPOCHS)
+    data, model, acc = make_neural_net(ticker, end_date=None, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
+    N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
+    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000)
 
     end_time = time.time()
     total_time = end_time - start_time
@@ -35,13 +35,13 @@ def tuning_neural_net(ticker, end_date, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
     
-    data, model, acc = make_neural_net(ticker, N_STEPS, LOOKUP_STEP, TEST_SIZE, 
+    data, model, acc = make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, 
     N_LAYERS, CELL, UNITS, DROPOUT, BIDIRECTIONAL, LOSS,
     OPTIMIZER, BATCH_SIZE, EPOCHS)
     
     return acc
 
-def make_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
+def make_neural_net(ticker, end_date=None, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
     N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
     OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
     '''
