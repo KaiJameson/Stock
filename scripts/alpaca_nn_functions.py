@@ -157,7 +157,6 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
-        print(end_date)
         if end_date is not None:
             df = make_dataframe(ticker, end_date=end_date)
         else:

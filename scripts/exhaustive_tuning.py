@@ -10,14 +10,13 @@ import datetime
 import pandas as pd
 
 
-def print_params(file_name, unit, drop, step, epoch, indent=''):
+def print_params(file_name, middle_punct, unit, drop, step, epoch, indent=''):
     f = open(file_name, 'a')
-    f.write(indent + 'UNITS:'+str(unit)+'\n')
-    f.write(indent + 'DROPOUT:'+str(drop)+'\n')
-    f.write(indent + 'N_STEPS:'+str(step)+'\n')
-    f.write(indent + 'EPOCHS:' + str(epoch) + '\n')
+    f.write(indent + 'UNITS' + middle_punct + str(unit) + '\n')
+    f.write(indent + 'DROPOUT' + middle_punct + str(drop) + '\n')
+    f.write(indent + 'N_STEPS' + middle_punct + str(step) + '\n')
+    f.write(indent + 'EPOCHS' + middle_punct + str(epoch) + '\n')
     f.close()
-
 
 check_directories()
 start_time = time.time()
@@ -65,8 +64,8 @@ for step in N_STEPS:
                 f.write("Finished another run.\n")
                 f.write("This run took " + str(m) + ' minutes to run.\n')
                 f.close()
-                print_params(tuning_status_file, unit, drop, step, EPOCHS, indent='\t')
-                f = open(tuning_status_file)
+                print_params(tuning_status_file, ': ', unit, drop, step, EPOCHS, indent='\t')
+                f = open(tuning_status_file, 'a')
                 f.write('The accuracy for this run is ' + str(acc) + '\n')
                 f.close()
                 if acc > best_acc:
@@ -91,7 +90,7 @@ for step in N_STEPS:
                 print('\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n')
                 
 config_file = config_directory + '/' + ticker + '.csv'
-print_params(config_file, unit, drop, step, EPOCHS)
+print_params(config_file, ',', best_unit, best_drop, best_step, EPOCHS)
 f = open(tuning_status_file, 'a')
 f.write('\nDone with ' + ticker + '\n')
 end_time = time.time()
@@ -107,7 +106,3 @@ print('DROPOUT: '+str(best_drop)+'\n')
 print('N_STEPS: '+str(best_step)+'\n')
 print('EPOCHS:' + str(EPOCHS) + '\n')
 print(time_message)
-
-
-
-
