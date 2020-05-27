@@ -9,6 +9,7 @@ from environment import test_var, reports_directory, random_seed, error_file, ba
 from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, nn_report
 from functions import delete_files_in_folder
 from datetime import datetime
+from environment import defaults
 import numpy as np
 import pandas as pd
 import os
@@ -17,9 +18,21 @@ import sys
 import time
 
 
-def decision_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
-    N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
-    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
+def decision_neural_net(
+    ticker, 
+    N_STEPS=defaults['N_STEPS'], 
+    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
+    TEST_SIZE=defaults['TEST_SIZE'], 
+    N_LAYERS=defaults['N_LAYERS'], 
+    CELL=defaults['CELL'], 
+    UNITS=defaults['UNITS'], 
+    DROPOUT=defaults['DROPOUT'], 
+    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
+    LOSS=defaults['LOSS'],
+    OPTIMIZER=defaults['OPTIMIZER'], 
+    BATCH_SIZE=defaults['BATCH_SIZE'], 
+    EPOCHS=defaults['EPOCHS']):
+#description of these parameters located inside environment.py
 
     start_time = time.time()
     data, model, acc = make_neural_net(
@@ -36,9 +49,20 @@ def decision_neural_net(ticker, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2,
     return percent, acc
 
 
-def tuning_neural_net(ticker, end_date, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
-    N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
-    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
+def tuning_neural_net(ticker, end_date, 
+    N_STEPS=defaults['N_STEPS'], 
+    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
+    TEST_SIZE=defaults['TEST_SIZE'], 
+    N_LAYERS=defaults['N_LAYERS'], 
+    CELL=defaults['CELL'], 
+    UNITS=defaults['UNITS'], 
+    DROPOUT=defaults['DROPOUT'], 
+    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
+    LOSS=defaults['LOSS'],
+    OPTIMIZER=defaults['OPTIMIZER'], 
+    BATCH_SIZE=defaults['BATCH_SIZE'], 
+    EPOCHS=defaults['EPOCHS']):
+#description of these parameters located inside environment.py
     
     data, model, acc = make_neural_net(
         ticker, end_date=end_date, 
@@ -50,23 +74,21 @@ def tuning_neural_net(ticker, end_date, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.
     
     return acc
 
-def make_neural_net(ticker, end_date=None, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE=0.2, 
-    N_LAYERS=3, CELL=LSTM, UNITS=448, DROPOUT=0.3, BIDIRECTIONAL=True, LOSS="huber_loss",
-    OPTIMIZER="adam", BATCH_SIZE=64, EPOCHS=2000):
-    '''
-    # N_STEPS = Window size or the sequence length
-    # Lookup step = 1 is the next day
-    # TEST_SIZE = 0.2 is 20%
-    # N_LAYERS = how many hidden neural layers
-    # CELL = type of cell
-    # UNITS = number of neurons per layer
-    # DROPOUT = % dropout
-    # BIDIRECTIONAL = does it test backwards or not
-    # LOSS = "huber_loss"
-    # OPTIMIZER = "adam"
-    # BATCH_SIZE
-    # EPOCHS = how many times the machine trains
-    '''
+def make_neural_net(ticker, end_date=None, 
+    N_STEPS=defaults['N_STEPS'], 
+    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
+    TEST_SIZE=defaults['TEST_SIZE'], 
+    N_LAYERS=defaults['N_LAYERS'], 
+    CELL=defaults['CELL'], 
+    UNITS=defaults['UNITS'], 
+    DROPOUT=defaults['DROPOUT'], 
+    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
+    LOSS=defaults['LOSS'],
+    OPTIMIZER=defaults['OPTIMIZER'], 
+    BATCH_SIZE=defaults['BATCH_SIZE'], 
+    EPOCHS=defaults['EPOCHS']):
+#description of these parameters located inside environment.py
+
     tf.config.optimizer.set_jit(True)
 
     policy = mixed_precision.Policy('mixed_float16')

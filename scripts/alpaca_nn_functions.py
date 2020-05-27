@@ -24,22 +24,22 @@ import math
 
 
 def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
-    
+    time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
-
-    curr_price = plot_graph(model, data, ticker, back_test_days)
+    report_dir = reports_directory + '/' + ticker
+    if not os.path.isdir(report_dir):
+        os.mkdir(report_dir)
+    curr_price = plot_graph(model, data, ticker, back_test_days, time_string)
     
 
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
     mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
 
     total_minutes = total_time / 60
-    report_dir = reports_directory + '/' + ticker
-    if not os.path.isdir(report_dir):
-        os.mkdir(report_dir)
     
-    file_name = report_dir +'/' + get_time_string() + '.txt'
+    
+    file_name = report_dir +'/' + time_string + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
     f.write("The mean absolute error is: " + str(mean_absolute_error) + '\n')
@@ -250,7 +250,7 @@ def predict(model, data, n_steps, classification=False):
 
 
 
-def plot_graph(model, data, ticker, back_test_days=100):
+def plot_graph(model, data, ticker, back_test_days, time_string):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)
@@ -260,7 +260,7 @@ def plot_graph(model, data, ticker, back_test_days=100):
     real_y_values = y_test[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
-    file_name = reports_directory + '/' + ticker + '/' + get_time_string() + '.txt'
+    file_name = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     f = open(file_name, 'w')
     f.write(ticker + ': ' + test_var)
     f.write('spencer wanted me to have: $' + str(spencer_money) + '\n')

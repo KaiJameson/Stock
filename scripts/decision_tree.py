@@ -92,7 +92,7 @@ def read_attributes(file):
 
 check_directories()
 
-symbols = ['SUM', 'UNFI', 'RICK']
+symbols = ['IDN', 'TGI', 'PLYM']
 
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
