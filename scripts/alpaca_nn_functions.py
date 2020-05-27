@@ -283,8 +283,8 @@ def plot_graph(model, data, ticker='default', back_test_days=100):
     y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
     y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
     # last 200 days, feel free to edit that
-    real_y_values = y_test[-100:]
-    predicted_y_values = y_pred[-100:]
+    real_y_values = y_test[-back_test_days:]
+    predicted_y_values = y_pred[-back_test_days:]
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
     file_name = reports_directory + '/' + ticker + '/' + get_time_string() + '.txt'
     f = open(file_name, 'w')
