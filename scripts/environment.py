@@ -12,6 +12,21 @@ trades_dir = '../trades'
 tuning_directory = '../tuning_info'
 back_test_days = 100
 
+'''
+# N_STEPS = Window size or the sequence length
+# Lookup step = 1 is the next day
+# TEST_SIZE = 0.2 is 20%
+# N_LAYERS = how many hidden neural layers
+# CELL = type of cell
+# UNITS = number of neurons per layer
+# DROPOUT = % dropout
+# BIDIRECTIONAL = does it test backwards or not
+# LOSS = "huber_loss"
+# OPTIMIZER = "adam"
+# BATCH_SIZE
+# EPOCHS = how many times the machine trains
+'''
+
 defaults = {
     'N_STEPS': 300,
     'LOOKUP_STEP': 1,

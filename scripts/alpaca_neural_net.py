@@ -31,6 +31,7 @@ def decision_neural_net(
     OPTIMIZER=defaults['OPTIMIZER'], 
     BATCH_SIZE=defaults['BATCH_SIZE'], 
     EPOCHS=defaults['EPOCHS']):
+#description of these parameters located inside environment.py
 
     start_time = time.time()
     data, model, acc = make_neural_net(
@@ -60,6 +61,7 @@ def tuning_neural_net(ticker, end_date,
     OPTIMIZER=defaults['OPTIMIZER'], 
     BATCH_SIZE=defaults['BATCH_SIZE'], 
     EPOCHS=defaults['EPOCHS']):
+#description of these parameters located inside environment.py
     
     data, model, acc = make_neural_net(
         ticker, end_date=end_date, 
@@ -84,20 +86,8 @@ def make_neural_net(ticker, end_date=None,
     OPTIMIZER=defaults['OPTIMIZER'], 
     BATCH_SIZE=defaults['BATCH_SIZE'], 
     EPOCHS=defaults['EPOCHS']):
-    '''
-    # N_STEPS = Window size or the sequence length
-    # Lookup step = 1 is the next day
-    # TEST_SIZE = 0.2 is 20%
-    # N_LAYERS = how many hidden neural layers
-    # CELL = type of cell
-    # UNITS = number of neurons per layer
-    # DROPOUT = % dropout
-    # BIDIRECTIONAL = does it test backwards or not
-    # LOSS = "huber_loss"
-    # OPTIMIZER = "adam"
-    # BATCH_SIZE
-    # EPOCHS = how many times the machine trains
-    '''
+#description of these parameters located inside environment.py
+
     tf.config.optimizer.set_jit(True)
 
     policy = mixed_precision.Policy('mixed_float16')
