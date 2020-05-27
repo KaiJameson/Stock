@@ -6,7 +6,8 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from sklearn import preprocessing
 from time_functions import get_time_string
 from environment import test_var, reports_directory, random_seed, error_file, back_test_days
-from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, deleteFiles, delete_files_in_folder, nn_report
+from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, nn_report
+from functions import delete_files_in_folder
 import numpy as np
 import pandas as pd
 import os
