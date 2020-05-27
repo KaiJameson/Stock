@@ -55,6 +55,7 @@ def find_percents_and_accs(symbols):
                 for key in values:
                     f.write(str(key) + ': ' + str(values[key]) + '\n')
                 f.close()
+                print('\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n')
         else:
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol, UNITS=10)
