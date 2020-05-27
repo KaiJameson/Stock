@@ -8,6 +8,7 @@ from time_functions import get_time_string
 from environment import test_var, reports_directory, random_seed, error_file, back_test_days
 from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, nn_report
 from functions import delete_files_in_folder
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import os
@@ -94,11 +95,16 @@ def make_neural_net(ticker, end_date=None, N_STEPS=300, LOOKUP_STEP=1, TEST_SIZE
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
 
+    # logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    # tboard_callback = tf.keras.callbacks.TensorBoard(log_dir= logs, histogram_freq=1)                    
+    #callbacks = [tboard_callback]
     history = model.fit(train,
                         batch_size=BATCH_SIZE,
                         epochs=EPOCHS,
                         verbose=2,
-                        use_multiprocessing=True
+                        use_multiprocessing=True,
+                        
                         )
 
     model.save(os.path.join("results", model_name) + ".h5")
