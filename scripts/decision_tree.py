@@ -57,7 +57,7 @@ def find_percents_and_accs(symbols):
                 print('\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n')
         else:
             try:
-                percents[symbol], accuracy[symbol] = decision_neural_net(symbol, UNITS=10)
+                percents[symbol], accuracy[symbol] = decision_neural_net(symbol)
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
@@ -92,7 +92,7 @@ def read_attributes(file):
 
 check_directories()
 
-symbols = ['NAIL']
+symbols = ['IDN', 'TGI', 'PLYM']
 
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
