@@ -87,7 +87,7 @@ def delete_files_in_folder(directory):
         f.write(sys.exc_info()[1] + '\n')
         f.close()
 
-def make_dataframe(symbol, timeframe='day', limit=1000, time=None):
+def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
 
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
@@ -157,6 +157,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
+        print(end_date)
         if end_date is not None:
             df = make_dataframe(ticker, end_date=end_date)
         else:
