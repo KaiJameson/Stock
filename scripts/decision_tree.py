@@ -37,10 +37,9 @@ def find_percents_and_accs(symbols):
                 parts = line.strip().split(',')
                 values[parts[0]] = parts[1]
             try:
-                # percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
-                #     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
-                    UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=10)
+                    UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
+                
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
