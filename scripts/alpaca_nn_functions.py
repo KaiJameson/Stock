@@ -60,32 +60,6 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
 
     return percent
 
-def deleteFiles(dirObject , dirPath):
-    if dirObject.is_dir(follow_symlinks=False):
-        name = os.fsdecode(dirObject.name)
-        newDir = dirPath+"/"+name
-        moreFiles = os.scandir(newDir)
-        for file in moreFiles:
-            if file.is_dir(follow_symlinks=False):
-                deleteFiles(file, newDir)
-                os.rmdir(newDir+"/"+os.fsdecode(file.name))
-            else:
-                os.remove(newDir+"/"+os.fsdecode(file.name))
-        os.rmdir(newDir)
-    else:
-        os.remove(dirPath+"/"+os.fsdecode(dirObject.name))
-
-
-def delete_files_in_folder(directory):
-    try:
-        files = os.scandir(directory)
-        for file in files:
-            deleteFiles(file, directory)
-    except:
-        f = open(error_file, 'a')
-        f.write("problem with deleting files in folder: " + directory + "\n")
-        f.write(sys.exc_info()[1] + '\n')
-        f.close()
 
 def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
 
@@ -277,7 +251,7 @@ def predict(model, data, n_steps, classification=False):
 
 
 
-def plot_graph(model, data, ticker='default', back_test_days=100):
+def plot_graph(model, data, ticker, back_test_days=100):
     y_test = data["y_test"]
     X_test = data["X_test"]
     y_pred = model.predict(X_test)
@@ -289,6 +263,7 @@ def plot_graph(model, data, ticker='default', back_test_days=100):
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
     file_name = reports_directory + '/' + ticker + '/' + get_time_string() + '.txt'
     f = open(file_name, 'w')
+    f.write(ticker + ': ' + test_var)
     f.write('spencer wanted me to have: $' + str(spencer_money) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
     f.write('money made from using real vs predicted: $' + str(money_made) + '\n')
