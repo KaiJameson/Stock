@@ -1,4 +1,4 @@
-
+from tensorflow.keras.layers import LSTM
 
 test_money = 10000
 test_var = 'close'
@@ -12,7 +12,20 @@ trades_dir = '../trades'
 tuning_directory = '../tuning_info'
 back_test_days = 100
 
-
+defaults = {
+    'N_STEPS': 300,
+    'LOOKUP_STEP': 1,
+    'TEST_SIZE': 0.2,
+    'N_LAYERS': 3,
+    'CELL': LSTM,
+    'UNITS': 448,
+    'DROPOUT': 0.3,
+    'BIDIRECTIONAL': True,
+    'LOSS': 'huber_loss',
+    'OPTIMIZER': 'adam',
+    'BATCH_SIZE': 64,
+    'EPOCHS': 2000,
+}
 
 
 
