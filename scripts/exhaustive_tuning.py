@@ -24,7 +24,7 @@ start_time = time.time()
 ticker = 'NAIL'
 
 
-EPOCHS = 2000
+EPOCHS = 10
 UNITS = [256, 448, 768]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.3, .35, .4]
@@ -66,7 +66,7 @@ for step in N_STEPS:
                 f.write("This run took " + str(m) + ' minutes to run.\n')
                 f.close()
                 print_params(tuning_status_file, unit, drop, step, EPOCHS, indent='\t')
-                f = open(tuning_status_file)
+                f = open(tuning_status_file, 'a')
                 f.write('The accuracy for this run is ' + str(acc) + '\n')
                 f.close()
                 if acc > best_acc:
@@ -107,7 +107,3 @@ print('DROPOUT: '+str(best_drop)+'\n')
 print('N_STEPS: '+str(best_step)+'\n')
 print('EPOCHS:' + str(EPOCHS) + '\n')
 print(time_message)
-
-
-
-
