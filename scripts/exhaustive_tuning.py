@@ -10,12 +10,13 @@ import datetime
 import pandas as pd
 
 
-def print_params(file_name, middle_punct, unit, drop, step, epoch, indent=''):
+
+def print_params(file_name, unit, drop, step, epoch, indent='', punct=','):
     f = open(file_name, 'a')
-    f.write(indent + 'UNITS' + middle_punct + str(unit) + '\n')
-    f.write(indent + 'DROPOUT' + middle_punct + str(drop) + '\n')
-    f.write(indent + 'N_STEPS' + middle_punct + str(step) + '\n')
-    f.write(indent + 'EPOCHS' + middle_punct + str(epoch) + '\n')
+    f.write(indent + 'UNITS' + punct + str(unit) + '\n')
+    f.write(indent + 'DROPOUT' + punct + str(drop) + '\n')
+    f.write(indent + 'N_STEPS' + punct + str(step) + '\n')
+    f.write(indent + 'EPOCHS' + punct + str(epoch) + '\n')
     f.close()
 
 check_directories()
@@ -44,7 +45,9 @@ best_acc = 0
 best_step = N_STEPS[0]
 best_unit = UNITS[0]
 best_drop = DROPOUT[0]
-
+done_dir = tuning_directory + '/done'
+if not os.path.isdir(done_dir):
+    os.mkdir(done_dir)
 tuning_status_file = tuning_directory + '/' + ticker + '.txt'
 if not os.path.isfile(tuning_status_file):
     f = open(tuning_status_file, 'w')
@@ -64,7 +67,7 @@ for step in N_STEPS:
                 f.write("Finished another run.\n")
                 f.write("This run took " + str(m) + ' minutes to run.\n')
                 f.close()
-                print_params(tuning_status_file, ': ', unit, drop, step, EPOCHS, indent='\t')
+                print_params(tuning_status_file, unit, drop, step, EPOCHS, indent='\t', punct=': ')
                 f = open(tuning_status_file, 'a')
                 f.write('The accuracy for this run is ' + str(acc) + '\n')
                 f.close()
@@ -81,7 +84,7 @@ for step in N_STEPS:
                 f = open(error_file, 'a')
                 f.write('Problem with running exhaustive tuning on these settings for ticker ' + ticker + '\n')
                 f.close()
-                print_params(error_file, unit, drop, step, EPOCHS, indent='\t')
+                print_params(error_file, unit, drop, step, EPOCHS, indent='\t', punct=': ')
                 exit_info = sys.exc_info()
                 f = open(error_file, 'a')
                 f.write(str(exit_info[1]) + '\n')
