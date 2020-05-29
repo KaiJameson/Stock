@@ -1,0 +1,2 @@
+0.8893094931271477 VUZI now
+has an accuracy of 0.6690647482014388
