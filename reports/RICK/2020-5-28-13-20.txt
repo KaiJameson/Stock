@@ -1,0 +1,11 @@
+RICK: close
+spencer wanted me to have: $7178.464606181455
+money made from using real vs predicted: $99539.57870000003
+The test var was close
+The mean absolute error is: 7.67565445806831
+Total time to run was: 11.63
+The price at run time was: 14.399999999999999
+The predicted price for tomorrow is: 14.516
+That would mean a growth of: 0.8%
+I would buy this stock.
+1:Accuracy Score: 0.8129496402877698
