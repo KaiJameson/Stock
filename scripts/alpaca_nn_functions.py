@@ -27,6 +27,15 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
+    X_test = data["X_test"]
+    y_test = data["y_test"]
+    y_pred = model.predict(X_test)
+    y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
+    y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
+    print("real values:")
+    print(y_test)
+    print("Y predict:")
+    print(y_pred)
     report_dir = reports_directory + '/' + ticker
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
@@ -61,7 +70,7 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     return percent
 
 
-def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
+def make_dataframe(symbol, timeframe='day', limit=100, time=None, end_date=None):
 
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
@@ -188,16 +197,15 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
     # reshape X to fit the neural network
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     # split the dataset
-    result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
+    result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)    
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
     
     train = train.batch(batch_size)
     test = test.batch(batch_size)
 
-    train = train.prefetch(buffer_size=AUTOTUNE)
-    test = test.prefetch(buffer_size=AUTOTUNE)
-
+    # train = train.prefetch(buffer_size=AUTOTUNE)
+    # test = test.prefetch(buffer_size=AUTOTUNE)
 
     # return the result
     return result, train, test
@@ -228,7 +236,6 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
         # add dropout after each layer
         model.add(Dropout(dropout))
     model.add(Dense(1, activation="linear"))
-    #print('i am going to compile this model and return it')
     model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
     return model
 
@@ -296,7 +303,8 @@ def get_accuracy(model, data, lookup_step):
 def decide_trades(money, data1, data2):
     stocks_owned = 0
     for i in range(1,len(data1)):
-        now_price = data1[i-1]
+        
+        now_price = data1[i]
         if data2[i] > now_price:
             stocks_can_buy = money // now_price
             if stocks_can_buy > 0:

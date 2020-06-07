@@ -21,7 +21,7 @@ def print_params(file_name, unit, drop, step, epoch, indent='', punct=','):
 
 check_directories()
 start_time = time.time()
-ticker = 'NAIL'
+ticker = 'TGI'
 
 
 EPOCHS = 2000
