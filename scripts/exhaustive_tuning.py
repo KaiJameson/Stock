@@ -127,6 +127,9 @@ def print_params(file_name, unit, drop, step, epoch, indent='', punct=','):
     f.write(indent + 'EPOCHS' + punct + str(epoch) + '\n')
     f.close()
 
+check_directories()
+start_time = time.time()
+ticker = 'TGI'
 
 def get_end_date():
     tz = 'US/EASTERN'
