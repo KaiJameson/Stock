@@ -120,8 +120,9 @@ def make_neural_net(ticker, end_date=None,
 
     logs = "logs/" + get_time_string()
 
+    checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch= '100,200')      
-               
+    early_stop = tf.keras.callbacks.EarlyStopping(patience=300)
     
     
     history = model.fit(train,
@@ -129,7 +130,8 @@ def make_neural_net(ticker, end_date=None,
                         epochs=EPOCHS,
                         verbose=2,
                         use_multiprocessing=True,
-                        callbacks = [tboard_callback]   
+                        validation_data=test,
+                        callbacks = [tboard_callback, checkpointer, early_stop]   
                         )
 
     model.save(os.path.join("results", model_name) + ".h5")

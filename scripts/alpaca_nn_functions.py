@@ -70,7 +70,7 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     return percent
 
 
-def make_dataframe(symbol, timeframe='day', limit=100, time=None, end_date=None):
+def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
 
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
