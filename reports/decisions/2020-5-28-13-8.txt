@@ -1,2 +1,0 @@
-1.008029513888889 RICK now
-has an accuracy of 0.8129496402877698

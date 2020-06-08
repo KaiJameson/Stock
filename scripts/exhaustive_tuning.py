@@ -8,7 +8,7 @@ from environment import config_directory, tuning_directory, error_file
 import traceback
 import datetime
 import pandas as pd
-ticker = 'TGI'
+ticker = 'AMD'
 check_directories()
 EPOCHS = 2000
 UNITS = [256, 448, 768]

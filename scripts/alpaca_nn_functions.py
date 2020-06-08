@@ -26,11 +26,10 @@ import math
 def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     time_string = get_time_string()
     # predict the future price
-    future_price = predict(model, data, N_STEPS)
     report_dir = reports_directory + '/' + ticker
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
-    curr_price = plot_graph(model, data, ticker, back_test_days, time_string)
+    curr_price, future_price = plot_graph(model, data, ticker, back_test_days, time_string)
     
 
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
@@ -259,6 +258,10 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     # last 200 days, feel free to edit that
     real_y_values = y_test[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
+    # f = open('please.txt', 'w')
+    # f.write(str(real_y_values) + '\n')
+    # f.write(str(predicted_y_values))
+    # f.close()
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
     file_name = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     f = open(file_name, 'w')
@@ -279,7 +282,7 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     plt.legend(["Actual Price", "Predicted Price"])
     plt.savefig(plot_name)
     plt.close()
-    return real_y_values[-1]
+    return real_y_values[-1], predicted_y_values[-1]
 
 
 def get_accuracy(model, data, lookup_step):
@@ -295,8 +298,8 @@ def get_accuracy(model, data, lookup_step):
 
 def decide_trades(money, data1, data2):
     stocks_owned = 0
-    for i in range(1,len(data1)):
-        now_price = data1[i-1]
+    for i in range(0,len(data1)):
+        now_price = data1[i]
         if data2[i] > now_price:
             stocks_can_buy = money // now_price
             if stocks_can_buy > 0:
