@@ -1,0 +1,11 @@
+PLYM: close
+spencer wanted me to have: $7902.097902097901
+money made from using real vs predicted: $41059.761099999996
+The test var was close
+The mean absolute error is: 8.147363499533386
+Total time to run was: 7.95
+The price at run time was: 14.689999999999998
+The predicted price for tomorrow is: 14.91
+That would mean a growth of: 1.47%
+I would buy this stock.
+1:Accuracy Score: 0.8202247191011236

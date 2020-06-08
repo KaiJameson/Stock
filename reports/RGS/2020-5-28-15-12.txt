@@ -1,0 +1,11 @@
+RGS: close
+spencer wanted me to have: $7035.205047318613
+money made from using real vs predicted: $83804.972
+The test var was close
+The mean absolute error is: 4.919943435266614
+Total time to run was: 12.36
+The price at run time was: 11.1508
+The predicted price for tomorrow is: 11.14
+That would mean a loss of: 0.09%
+I would sell this stock.
+1:Accuracy Score: 0.785234899328859
