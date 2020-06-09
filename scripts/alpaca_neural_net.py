@@ -36,7 +36,7 @@ def decision_neural_net(
 #description of these parameters located inside environment.py
 
     start_time = time.time()
-    data, model, acc = make_neural_net(
+    data, model, acc, mae = make_neural_net(
         ticker, N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
         BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS,
@@ -45,7 +45,7 @@ def decision_neural_net(
 
     end_time = time.time()
     total_time = end_time - start_time
-    percent = nn_report(ticker, total_time, model, data, acc, N_STEPS, LOOKUP_STEP)
+    percent = nn_report(ticker, total_time, model, data, acc, mae, N_STEPS, LOOKUP_STEP)
 
     return percent, acc
 
@@ -65,7 +65,7 @@ def tuning_neural_net(ticker, end_date,
     EPOCHS=defaults['EPOCHS']):
 #description of these parameters located inside environment.py
     
-    data, model, acc = make_neural_net(
+    data, model, acc, mae = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
@@ -148,12 +148,14 @@ def make_neural_net(ticker, end_date=None,
         end_date=end_date
     )
 
-
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
     model_path = os.path.join("results", model_name + ".h5")
     model.load_weights(model_path)
+
+    mse, mae = model.evaluate(test, verbose=0)
+    mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
     
     delete_files_in_folder(results_folder)
     os.rmdir(results_folder)
@@ -161,4 +163,4 @@ def make_neural_net(ticker, end_date=None,
 
     acc = get_accuracy(model, data, LOOKUP_STEP)
 
-    return data, model, acc
+    return data, model, acc, mae
