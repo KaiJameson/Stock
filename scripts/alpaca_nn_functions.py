@@ -43,6 +43,7 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     
 
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
+    print([[mae]])
     mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
 
     total_minutes = total_time / 60
@@ -303,7 +304,6 @@ def get_accuracy(model, data, lookup_step):
 def decide_trades(money, data1, data2):
     stocks_owned = 0
     for i in range(1,len(data1)):
-        
         now_price = data1[i]
         if data2[i] > now_price:
             stocks_can_buy = money // now_price
