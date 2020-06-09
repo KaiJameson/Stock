@@ -91,7 +91,7 @@ def make_neural_net(ticker, end_date=None,
 #description of these parameters located inside environment.py
 
     tf.keras.backend.clear_session()
-    # tf.config.optimizer.set_jit(True)
+    tf.config.optimizer.set_jit(True)
 
     policy = mixed_precision.Policy('mixed_float16')
     mixed_precision.set_policy(policy)
@@ -122,10 +122,12 @@ def make_neural_net(ticker, end_date=None,
     logs = "logs/" + get_time_string()
 
     checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
+    
     if save_logs:
         tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch='100,200') 
     else:
         tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch=0)
+
     early_stop = tf.keras.callbacks.EarlyStopping(patience=250)
     
     
@@ -138,7 +140,7 @@ def make_neural_net(ticker, end_date=None,
                         callbacks = [tboard_callback, checkpointer, early_stop]   
                         )
 
-    model.save(os.path.join("results", model_name + ".h5"))
+    
     #before testing, no shuffle
     data, train, test = load_data(
         ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
