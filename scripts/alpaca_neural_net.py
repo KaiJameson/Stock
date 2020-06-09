@@ -90,6 +90,7 @@ def make_neural_net(ticker, end_date=None,
     EPOCHS=defaults['EPOCHS']):
 #description of these parameters located inside environment.py
 
+    tf.keras.backend.clear_session()
     tf.config.optimizer.set_jit(True)
 
     policy = mixed_precision.Policy('mixed_float16')
@@ -134,7 +135,7 @@ def make_neural_net(ticker, end_date=None,
                         callbacks = [tboard_callback, checkpointer, early_stop]   
                         )
 
-    model.save(os.path.join("results", model_name) + ".h5")
+    model.save(os.path.join("results", model_name + ".h5"))
     #before testing, no shuffle
     data, train, test = load_data(
         ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
@@ -146,12 +147,12 @@ def make_neural_net(ticker, end_date=None,
     # construct the model
     model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
                         dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
-    model_path = os.path.join("results", model_name) + ".h5"
+    model_path = os.path.join("results", model_name + ".h5")
     model.load_weights(model_path)
     
     delete_files_in_folder(results_folder)
     os.rmdir(results_folder)
-    tf.keras.backend.clear_session()
+    
 
     acc = get_accuracy(model, data, LOOKUP_STEP)
 
