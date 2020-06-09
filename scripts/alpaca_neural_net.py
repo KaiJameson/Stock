@@ -122,7 +122,7 @@ def make_neural_net(ticker, end_date=None,
 
     checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch= '100,200')      
-    early_stop = tf.keras.callbacks.EarlyStopping(patience=300)
+    early_stop = tf.keras.callbacks.EarlyStopping(patience=250)
     
     
     history = model.fit(train,
