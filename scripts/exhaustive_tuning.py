@@ -8,7 +8,7 @@ from environment import config_directory, tuning_directory, error_file
 import traceback
 import datetime
 import pandas as pd
-ticker = 'TGI'
+ticker = 'FORM'
 check_directories()
 EPOCHS = 2000
 UNITS = [256, 448, 768]
@@ -26,7 +26,7 @@ tuning_status_file = tuning_directory + '/' + ticker + '.txt'
 if not os.path.isfile(tuning_status_file):
     f = open(tuning_status_file, 'w')
     f.close()
-done_message = 'You are done tuning this stock'
+done_message = 'You are done tuning this stock.'
 def get_info():
     if not os.path.isfile(f_name):
         if os.path.isfile(file_name):
@@ -57,11 +57,11 @@ def get_info():
             print('INFO:', info)
             return info
         else:
-            best_acc = 0
+            best_mae = 0
             best_step = N_STEPS[0]
             best_unit = UNITS[0]
             best_drop = DROPOUT[0]
-            info = (2 * [best_acc, best_step, best_unit, best_drop]) + [get_end_date()]
+            info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
             info[4] = 0
             print('NEW INFO:', info)
             return info
@@ -73,7 +73,7 @@ def get_info():
 
 def write_info(info, total_time=0):
     '''
-    best acc
+    best mae
     best n step
     best unit
     best drop
@@ -192,7 +192,7 @@ while not done:
         info[6] = unit
         step = N_STEPS[step_index]
         info[5] = step
-        acc = tuning_neural_net(
+        mae = tuning_neural_net(
             ticker, 
             end_date=info[8], 
             N_STEPS=step, 
@@ -202,9 +202,9 @@ while not done:
         )
         end_time = time.time()
         total_time = end_time - start_time
-        if acc > info[0]:
-            #acc, step, unit, drop
-            info[0] = acc
+        if mae > info[0]:
+            #mae, step, unit, drop
+            info[0] = mae
             info[1] = step
             info[2] = unit
             info[3] = drop
@@ -215,7 +215,7 @@ while not done:
         f.close()
         print_params(tuning_status_file, unit, drop, step, EPOCHS, indent='\t', punct=': ')
         f = open(tuning_status_file, 'a')
-        f.write('The accuracy for this run is ' + str(acc) + '\n')
+        f.write('The mean absolute error for this run is ' + str(mae) + '\n')
         f.close()
         write_info(info, total_time=total_time)
     except KeyboardInterrupt:

@@ -73,7 +73,7 @@ def tuning_neural_net(ticker, end_date,
         OPTIMIZER=OPTIMIZER, BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS
     )
     
-    return acc
+    return mae
 
 def make_neural_net(ticker, end_date=None, 
     N_STEPS=defaults['N_STEPS'], 
@@ -128,7 +128,7 @@ def make_neural_net(ticker, end_date=None,
     else:
         tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch=0)
 
-    early_stop = tf.keras.callbacks.EarlyStopping(patience=250)
+    early_stop = tf.keras.callbacks.EarlyStopping(patience=400)
     
     
     history = model.fit(train,
@@ -148,9 +148,6 @@ def make_neural_net(ticker, end_date=None,
         end_date=end_date
     )
 
-    # construct the model
-    model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
-                        dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
     model_path = os.path.join("results", model_name + ".h5")
     model.load_weights(model_path)
 
