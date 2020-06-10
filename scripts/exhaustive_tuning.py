@@ -32,7 +32,7 @@ def get_info():
         if os.path.isfile(file_name):
             '''
             Structure of this file will be
-            best accuracy (f0.22)
+            best mae (f0.22)
             best n_step (50)
             best unit (448)
             best dropout (f0.3)
