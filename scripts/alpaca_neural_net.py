@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from sklearn import preprocessing
 from time_functions import get_time_string
-from environment import test_var, reports_directory, random_seed, error_file, back_test_days
+from environment import test_var, reports_directory, random_seed, error_file, back_test_days, save_logs
 from alpaca_nn_functions import load_data, create_model, predict, accuracy_score, plot_graph, get_accuracy, nn_report
 from functions import delete_files_in_folder
 from time_functions import get_time_string
@@ -36,7 +36,7 @@ def decision_neural_net(
 #description of these parameters located inside environment.py
 
     start_time = time.time()
-    data, model, acc = make_neural_net(
+    data, model, acc, mae = make_neural_net(
         ticker, N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
         BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS,
@@ -45,7 +45,7 @@ def decision_neural_net(
 
     end_time = time.time()
     total_time = end_time - start_time
-    percent = nn_report(ticker, total_time, model, data, acc, N_STEPS, LOOKUP_STEP)
+    percent = nn_report(ticker, total_time, model, data, acc, mae, N_STEPS, LOOKUP_STEP)
 
     return percent, acc
 
@@ -65,7 +65,7 @@ def tuning_neural_net(ticker, end_date,
     EPOCHS=defaults['EPOCHS']):
 #description of these parameters located inside environment.py
     
-    data, model, acc = make_neural_net(
+    data, model, acc, mae = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
@@ -73,7 +73,7 @@ def tuning_neural_net(ticker, end_date,
         OPTIMIZER=OPTIMIZER, BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS
     )
     
-    return acc
+    return mae
 
 def make_neural_net(ticker, end_date=None, 
     N_STEPS=defaults['N_STEPS'], 
@@ -90,6 +90,7 @@ def make_neural_net(ticker, end_date=None,
     EPOCHS=defaults['EPOCHS']):
 #description of these parameters located inside environment.py
 
+    tf.keras.backend.clear_session()
     tf.config.optimizer.set_jit(True)
 
     policy = mixed_precision.Policy('mixed_float16')
@@ -121,8 +122,13 @@ def make_neural_net(ticker, end_date=None,
     logs = "logs/" + get_time_string()
 
     checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
-    tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch= '100,200')      
-    early_stop = tf.keras.callbacks.EarlyStopping(patience=300)
+    
+    if save_logs:
+        tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch='100,200') 
+    else:
+        tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch=0)
+
+    early_stop = tf.keras.callbacks.EarlyStopping(patience=400)
     
     
     history = model.fit(train,
@@ -134,7 +140,7 @@ def make_neural_net(ticker, end_date=None,
                         callbacks = [tboard_callback, checkpointer, early_stop]   
                         )
 
-    model.save(os.path.join("results", model_name) + ".h5")
+    
     #before testing, no shuffle
     data, train, test = load_data(
         ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
@@ -142,17 +148,16 @@ def make_neural_net(ticker, end_date=None,
         end_date=end_date
     )
 
-
-    # construct the model
-    model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
-                        dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
-    model_path = os.path.join("results", model_name) + ".h5"
+    model_path = os.path.join("results", model_name + ".h5")
     model.load_weights(model_path)
+
+    mse, mae = model.evaluate(test, verbose=0)
+    mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
     
     delete_files_in_folder(results_folder)
     os.rmdir(results_folder)
-    tf.keras.backend.clear_session()
+    
 
     acc = get_accuracy(model, data, LOOKUP_STEP)
 
-    return data, model, acc
+    return data, model, acc, mae

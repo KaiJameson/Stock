@@ -23,7 +23,7 @@ import datetime
 import math 
 
 
-def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
+def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_STEP):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -40,10 +40,6 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
     curr_price = plot_graph(model, data, ticker, back_test_days, time_string)
-    
-
-    mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
-    mean_absolute_error = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
 
     total_minutes = total_time / 60
     
@@ -51,7 +47,7 @@ def nn_report(ticker, total_time, model, data, accuracy, N_STEPS, LOOKUP_STEP):
     file_name = report_dir +'/' + time_string + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
-    f.write("The mean absolute error is: " + str(mean_absolute_error) + '\n')
+    f.write("The mean absolute error is: " + str(mae) + '\n')
     f.write('Total time to run was: ' + str(round(total_minutes, 2)) + '\n')
     f.write('The price at run time was: ' + str(curr_price) + '\n')
     f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
@@ -303,7 +299,6 @@ def get_accuracy(model, data, lookup_step):
 def decide_trades(money, data1, data2):
     stocks_owned = 0
     for i in range(1,len(data1)):
-        
         now_price = data1[i]
         if data2[i] > now_price:
             stocks_can_buy = money // now_price
