@@ -10,7 +10,7 @@ import datetime
 import pandas as pd
 ticker = 'FORM'
 check_directories()
-EPOCHS = 20
+EPOCHS = 2000
 UNITS = [256, 448, 768]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.3, .35, .4]
@@ -129,7 +129,6 @@ def print_params(file_name, unit, drop, step, epoch, indent='', punct=','):
 
 check_directories()
 start_time = time.time()
-ticker = 'TGI'
 
 def get_end_date():
     tz = 'US/EASTERN'
