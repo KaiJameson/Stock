@@ -302,11 +302,7 @@ def get_accuracy(model, data, lookup_step):
 
 def decide_trades(money, data1, data2):
     stocks_owned = 0
-<<<<<<< HEAD
     for i in range(0,len(data1)):
-=======
-    for i in range(1,len(data1)):
->>>>>>> 05bf06e4a5239b335ff6bb9adb5fd7e302a23168
         now_price = data1[i]
         if data2[i] > now_price:
             stocks_can_buy = money // now_price
