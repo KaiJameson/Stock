@@ -286,7 +286,7 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     plt.legend(["Actual Price", "Predicted Price"])
     plt.savefig(plot_name)
     plt.close()
-    return real_y_values[-1], predicted_y_values[-1]
+    return real_y_values[-1]
 
 
 def get_accuracy(model, data, lookup_step):
