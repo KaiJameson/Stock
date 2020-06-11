@@ -81,23 +81,31 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
         low_values = []
         high_values = []
         mid_values = []
+        volume = []
         for day in bar:
             open_price = day.o
             close_price = day.c
             low_price = day.l
             high_price = day.h
             mid_price = (low_price + high_price) / 2
+            vol = day.v
             open_values.append(open_price)
             close_values.append(close_price)
             low_values.append(low_price)
             high_values.append(high_price)
             mid_values.append(mid_price)
+            volume.append(vol)
         data['open'] = open_values
         data['low'] = low_values
         data['high'] = high_values
         data['close'] = close_values
         data['mid'] = mid_values
+        data['volume'] = volume
     df = pd.DataFrame(data=data)
+    roll = df.close.rolling(window=10).mean()
+    
+    df['rolling_avg'] = roll
+    print(df)
     return df
 
 
@@ -131,8 +139,8 @@ def other_dataframe():
     return df
 
 
-def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,
-                test_size=0.2, feature_columns=['open', 'low', 'high', 'close', 'mid'],
+def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,test_size=0.2, 
+feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'rolling_avg'],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
