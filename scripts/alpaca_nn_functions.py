@@ -105,37 +105,6 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
     roll = df.close.rolling(window=10).mean()
     
     df['rolling_avg'] = roll
-    print(df)
-    return df
-
-
-def other_dataframe():
-    api = tradeapi.REST(real_api_key_id, real_api_secret_key)
-    line_count = 0
-    f = open('../daysback.csv', 'r')
-    open_values = []
-    close_values = []
-    low_values = []
-    high_values = []
-    mid_values = []
-    data = {}
-    for line in f:
-        if line_count % 2 == 0:
-            line_count += 1
-            continue
-        info = line.strip().split(',')
-        open_values.append(float(info[0]))
-        low_values.append(float(info[1]))
-        high_values.append(float(info[2]))
-        close_values.append(float(info[3]))
-        mid_values.append(float(info[4]))
-        line_count += 1
-    data['open'] = open_values
-    data['low'] = low_values
-    data['high'] = high_values
-    data['close'] = close_values
-    data['mid'] = mid_values
-    df = pd.DataFrame(data=data)
     return df
 
 
