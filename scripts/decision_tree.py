@@ -92,7 +92,7 @@ def read_attributes(file):
 
 check_directories()
 
-symbols = ['AGYS', 'VIOT', 'VCRA', 'ON']
+symbols = ['FORM']
 
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):

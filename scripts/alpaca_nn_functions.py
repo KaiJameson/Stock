@@ -102,14 +102,14 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
         data['mid'] = mid_values
         data['volume'] = volume
     df = pd.DataFrame(data=data)
-    roll = df.close.rolling(window=10).mean()
+    # roll = df.close.rolling(window=10).mean()
     
-    df['rolling_avg'] = roll
+    # df['rolling_avg'] = roll
     return df
 
-
+# , 'rolling_avg'
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,test_size=0.2, 
-feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'rolling_avg'],
+feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
