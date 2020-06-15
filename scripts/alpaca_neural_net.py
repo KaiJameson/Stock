@@ -128,7 +128,7 @@ def make_neural_net(ticker, end_date=None,
     else:
         tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch=0)
 
-    early_stop = tf.keras.callbacks.EarlyStopping(patience=400)
+    early_stop = tf.keras.callbacks.EarlyStopping(patience=500)
     
     
     history = model.fit(train,

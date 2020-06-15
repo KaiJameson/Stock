@@ -37,7 +37,7 @@ defaults = {
     'CELL': LSTM,
     'UNITS': 448,
     'DROPOUT': 0.3,
-    'BIDIRECTIONAL': True,
+    'BIDIRECTIONAL': False,
     'LOSS': 'huber_loss',
     'OPTIMIZER': 'adam',
     'BATCH_SIZE': 64,
