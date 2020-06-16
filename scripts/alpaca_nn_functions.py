@@ -243,9 +243,9 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     file_name = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     f = open(file_name, 'w')
     f.write(ticker + ': ' + test_var + '\n')
-    f.write('spencer wanted me to have: $' + str(spencer_money) + '\n')
+    f.write('Spencer wanted me to have: $' + str(spencer_money) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
-    f.write('money made from using real vs predicted: $' + str(money_made) + '\n')
+    f.write('Money made from using real vs predicted: $' + str(money_made) + '\n')
     f.close()
     plot_dir = graph_directory + '/' + ticker
     if not os.path.isdir(plot_dir):
