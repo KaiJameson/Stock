@@ -130,12 +130,7 @@ def read_attributes(file):
 
 check_directories()
 
-<<<<<<< HEAD
-symbols = ['ON']
-
-=======
 symbols = ['FORM', 'HPE', 'FLEX', 'GPRO']
->>>>>>> 408eefbae1ad4d422b56085e06edfa1472b752c5
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)
