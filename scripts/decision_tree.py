@@ -1,4 +1,6 @@
+from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_neural_net import decision_neural_net
+import alpaca_trade_api as tradeapi
 import os
 import pandas as pd
 from time_functions import get_time_string
@@ -8,7 +10,7 @@ import sys
 from environment import stock_decisions_directory, error_file, config_directory
 from functions import check_directories
 import traceback
-
+api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
 
 def read_in_stocks(file):
     f = open(file, 'r')
@@ -25,7 +27,15 @@ def read_in_stocks(file):
     return money, stocks_owned
 
 
+def getOwnedStocks():
+    positions = api.list_positions()
+    owned = {}
+    for position in positions:
+        owned[position.symbol] = position.qty
+    return owned
+
 def find_percents_and_accs(symbols):
+    owned = getOwnedStocks()
     percents = {}
     accuracy = {}
     for symbol in symbols:
@@ -39,7 +49,35 @@ def find_percents_and_accs(symbols):
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
                     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
-                
+                if accuracy[symbol] >= .7:
+                    try:
+                        qty = owned[symbol]
+                        if percents[symbol] < 1:
+                            api.submit_order(
+                                symbol=symbol,
+                                qty=qty,
+                                side='sell',
+                                type='market',
+                                time_in_force='day'
+                            )
+                    except KeyError:
+                        if percents[symbol] > 1:
+                            barset = api.get_barset(symbol, 'day', limit=1)
+                            current_price = 0
+                            for symbol, bars in barset.items():
+                                for bar in bars:
+                                    current_price = bar.c
+                            if current_price == 0:
+                                print('\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n')
+                            else:
+                                buy_qty = 200 // current_price
+                                api.submit_order(
+                                    symbol=symbol,
+                                    qty=buy_qty,
+                                    side='buy',
+                                    type='market',
+                                    time_in_force='day'
+                                )
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
@@ -93,7 +131,6 @@ def read_attributes(file):
 check_directories()
 
 symbols = ['FORM', 'HPE', 'FLEX', 'GPRO']
-#symbols = ['PENN']
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)
