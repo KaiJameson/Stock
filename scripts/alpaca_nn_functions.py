@@ -239,10 +239,6 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     # last 200 days, feel free to edit that
     real_y_values = y_test[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
-    # f = open('please.txt', 'w')
-    # f.write(str(real_y_values) + '\n')
-    # f.write(str(predicted_y_values))
-    # f.close()
     spencer_money = money * (real_y_values[-1]/real_y_values[0])
     file_name = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     f = open(file_name, 'w')
