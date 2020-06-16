@@ -8,12 +8,15 @@ from environment import config_directory, tuning_directory, error_file
 import traceback
 import datetime
 import pandas as pd
-ticker = 'FORM'
+
+ticker = 'HPE'
+
 check_directories()
 EPOCHS = 2000
 UNITS = [256, 448, 768]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.3, .35, .4]
+
 done_dir = tuning_directory + '/done'
 if not os.path.isdir(done_dir):
     os.mkdir(done_dir)
@@ -85,7 +88,7 @@ def write_info(info, total_time=0):
     '''
     if info[5] == N_STEPS[-1] and info[6] == UNITS[-1] and info[7] == DROPOUT[-1]:
         config_file = config_directory + '/' + ticker + '.csv'
-        print_params(config_file, info[2], info[3], info[1], EPOCHS, punct=',')
+        print_params(config_file, info[1], info[2], info[3], EPOCHS, punct=',')
         if os.path.isfile(file_name):
             os.remove(file_name)
         f = open(tuning_status_file, 'a')
@@ -99,7 +102,7 @@ def write_info(info, total_time=0):
         f.write(time_message)
         f.write('The best mean absolute error was ' + str(info[0]) + '\n')
         f.close()
-        print_params(f_name, info[2], info[3], info[1], EPOCHS, punct=': ')
+        print_params(f_name, info[1], info[2], info[3],  EPOCHS, punct=': ')
         print('THIS FILE IS DONE TUNING')
     else:
         f = open(file_name, 'w')
@@ -119,11 +122,11 @@ def write_info(info, total_time=0):
         f.close()
         return total_time
 
-def print_params(file_name, unit, drop, step, epoch, indent='', punct=','):
+def print_params(file_name, step, unit, drop, epoch, indent='', punct=','):
     f = open(file_name, 'a')
+    f.write(indent + 'N_STEPS' + punct + str(step) + '\n')
     f.write(indent + 'UNITS' + punct + str(unit) + '\n')
     f.write(indent + 'DROPOUT' + punct + str(drop) + '\n')
-    f.write(indent + 'N_STEPS' + punct + str(step) + '\n')
     f.write(indent + 'EPOCHS' + punct + str(epoch) + '\n')
     f.close()
 
@@ -201,20 +204,26 @@ while not done:
         )
         end_time = time.time()
         total_time = end_time - start_time
-        if mae > info[0]:
+        if mae < info[0]:
             #mae, step, unit, drop
             info[0] = mae
             info[1] = step
             info[2] = unit
             info[3] = drop
+        elif info[0] == 0:
+            info[0] = mae
+            info[1] = step
+            info[2] = unit
+            info[3] = drop
+
         m = total_time / 60
         f = open(tuning_status_file, 'a')
         f.write("Finished another run.\n")
         f.write("This run took " + str(m) + ' minutes to run.\n')
         f.close()
-        print_params(tuning_status_file, unit, drop, step, EPOCHS, indent='\t', punct=': ')
+        print_params(tuning_status_file, step, unit, drop, EPOCHS, indent='\t', punct=': ')
         f = open(tuning_status_file, 'a')
-        f.write('The mean absolute error for this run is ' + str(mae) + '\n')
+        f.write('The mean absolute error for this run is: ' + str(round(mae, 4)) + '\n')
         f.close()
         write_info(info, total_time=total_time)
     except KeyboardInterrupt:
@@ -224,9 +233,9 @@ while not done:
     except:
         exit_info = sys.exc_info()
         f = open(error_file, 'a')
-        f.write('Problem with running exhaustive tuning on these settings for ticker ' + ticker + '\n')
+        f.write('Problem with running exhaustive tuning on these settings for ticker: ' + ticker + '\n')
         f.close()
-        print_params(error_file, unit, drop, step, EPOCHS, indent='\t', punct=': ')
+        print_params(error_file, step, unit, drop, EPOCHS, indent='\t', punct=': ')
         f = open(error_file, 'a')
         f.write(str(exit_info[1]) + '\n')
         traceback.print_tb(tb=exit_info[2], file=f)
