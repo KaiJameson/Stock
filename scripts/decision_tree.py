@@ -50,39 +50,39 @@ def find_percents_and_accs(symbols):
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
                     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
-                if accuracy[symbol] >= .7:
-                    try:
-                        qty = owned[symbol]
-                        if percents[symbol] < 1:
-                            sell = api.submit_order(
-                                symbol=symbol,
-                                qty=qty,
-                                side='sell',
-                                type='market',
-                                time_in_force='day'
-                            )
-                            print("\nSELLING:", sell)
-                            print("\n\n")
-                    except KeyError:
-                        if percents[symbol] > 1:
-                            barset = api.get_barset(symbol, 'day', limit=1)
-                            current_price = 0
-                            for symbol, bars in barset.items():
-                                for bar in bars:
-                                    current_price = bar.c
-                            if current_price == 0:
-                                print('\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n')
-                            else:
-                                buy_qty = 200 // current_price
-                                buy = api.submit_order(
-                                    symbol=symbol,
-                                    qty=buy_qty,
-                                    side='buy',
-                                    type='market',
-                                    time_in_force='day'
-                                )
-                                print("\nBUYING:", buy)
-                                print("\n\n")
+            #     if accuracy[symbol] >= .7:
+            #         try:
+            #             qty = owned[symbol]
+            #             if percents[symbol] < 1:
+            #                 sell = api.submit_order(
+            #                     symbol=symbol,
+            #                     qty=qty,
+            #                     side='sell',
+            #                     type='market',
+            #                     time_in_force='day'
+            #                 )
+            #                 print("\nSELLING:", sell)
+            #                 print("\n\n")
+            #         except KeyError:
+            #             if percents[symbol] > 1:
+            #                 barset = api.get_barset(symbol, 'day', limit=1)
+            #                 current_price = 0
+            #                 for symbol, bars in barset.items():
+            #                     for bar in bars:
+            #                         current_price = bar.c
+            #                 if current_price == 0:
+            #                     print('\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n')
+            #                 else:
+            #                     buy_qty = 200 // current_price
+            #                     buy = api.submit_order(
+            #                         symbol=symbol,
+            #                         qty=buy_qty,
+            #                         side='buy',
+            #                         type='market',
+            #                         time_in_force='day'
+            #                     )
+            #                     print("\nBUYING:", buy)
+            #                     print("\n\n")
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
