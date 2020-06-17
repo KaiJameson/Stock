@@ -9,3 +9,4 @@ information/
 old/
 error_file.txt
 scripts/testing.py
+scripts/symbols.py

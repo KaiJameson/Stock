@@ -1,5 +1,6 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_neural_net import decision_neural_net
+from symbols import decision_symbols
 import alpaca_trade_api as tradeapi
 import os
 import pandas as pd
@@ -53,13 +54,15 @@ def find_percents_and_accs(symbols):
                     try:
                         qty = owned[symbol]
                         if percents[symbol] < 1:
-                            api.submit_order(
+                            sell = api.submit_order(
                                 symbol=symbol,
                                 qty=qty,
                                 side='sell',
                                 type='market',
                                 time_in_force='day'
                             )
+                            print("\nSELLING:", sell)
+                            print("\n\n")
                     except KeyError:
                         if percents[symbol] > 1:
                             barset = api.get_barset(symbol, 'day', limit=1)
@@ -71,13 +74,15 @@ def find_percents_and_accs(symbols):
                                 print('\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n')
                             else:
                                 buy_qty = 200 // current_price
-                                api.submit_order(
+                                buy = api.submit_order(
                                     symbol=symbol,
                                     qty=buy_qty,
                                     side='buy',
                                     type='market',
                                     time_in_force='day'
                                 )
+                                print("\nBUYING:", buy)
+                                print("\n\n")
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
@@ -130,7 +135,8 @@ def read_attributes(file):
 
 check_directories()
 
-symbols = ['TSLA']
+symbols = decision_symbols
+
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)

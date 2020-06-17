@@ -34,10 +34,8 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
     print("real values:")
     print(y_test)
-    print(str(len(y_test)))
     print("Y predict:")
     print(y_pred)
-    print(str(len(y_pred)))
     report_dir = reports_directory + '/' + ticker
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
@@ -51,9 +49,9 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
     f.write("The mean absolute error is: " + str(round(mae, 4)) + '\n')
-    f.write('Total time to run was: ' + str(round(total_minutes, 2)) + '\n')
+    f.write('Total time to run was: ' + str(round(total_minutes, 2)) + ' minutes.\n')
     f.write('The price at run time was: ' + str(round(curr_price, 2)) + '\n')
-    f.write('The predicted price for tomorrow is: ' + str(round(future_price, 2)) + '\n')
+    f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
     
     percent = future_price / curr_price
     if curr_price < future_price:
