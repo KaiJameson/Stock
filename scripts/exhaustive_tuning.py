@@ -1,4 +1,5 @@
 from alpaca_neural_net import tuning_neural_net
+from symbols import exhaustive_symbols
 import os
 import sys
 import subprocess
@@ -9,7 +10,7 @@ import traceback
 import datetime
 import pandas as pd
 
-ticker = 'HPE'
+ticker = exhaustive_symbols
 
 check_directories()
 EPOCHS = 2000
@@ -194,7 +195,8 @@ while not done:
         info[6] = unit
         step = N_STEPS[step_index]
         info[5] = step
-        mae = tuning_neural_net(
+
+        acc, mae = tuning_neural_net(
             ticker, 
             end_date=info[8], 
             N_STEPS=step, 
@@ -202,6 +204,7 @@ while not done:
             DROPOUT=drop, 
             EPOCHS=EPOCHS
         )
+        
         end_time = time.time()
         total_time = end_time - start_time
         if mae < info[0]:
@@ -224,6 +227,7 @@ while not done:
         print_params(tuning_status_file, step, unit, drop, EPOCHS, indent='\t', punct=': ')
         f = open(tuning_status_file, 'a')
         f.write('The mean absolute error for this run is: ' + str(round(mae, 4)) + '\n')
+        f.write('The accuracy for this this run is: ' + str(round(acc, 2)) + '\n')
         f.close()
         write_info(info, total_time=total_time)
     except KeyboardInterrupt:

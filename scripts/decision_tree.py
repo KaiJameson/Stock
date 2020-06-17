@@ -1,5 +1,6 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_neural_net import decision_neural_net
+from symbols import decision_symbols
 import alpaca_trade_api as tradeapi
 import os
 import pandas as pd
@@ -134,8 +135,8 @@ def read_attributes(file):
 
 check_directories()
 
-symbols = ['GPRO']
-#symbols = ['PENN']
+symbols = decision_symbols
+
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)

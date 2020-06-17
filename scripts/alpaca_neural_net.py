@@ -32,15 +32,16 @@ def decision_neural_net(
     LOSS=defaults['LOSS'],
     OPTIMIZER=defaults['OPTIMIZER'], 
     BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS']):
+    EPOCHS=defaults['EPOCHS'],
+    PATIENCE=defaults['PATIENCE']):
 #description of these parameters located inside environment.py
 
     start_time = time.time()
     data, model, acc, mae = make_neural_net(
         ticker, N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
-        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS,
-        OPTIMIZER=OPTIMIZER, BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS
+        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
+        BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS, PATIENCE=PATIENCE
     )
 
     end_time = time.time()
@@ -62,18 +63,19 @@ def tuning_neural_net(ticker, end_date,
     LOSS=defaults['LOSS'],
     OPTIMIZER=defaults['OPTIMIZER'], 
     BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS']):
+    EPOCHS=defaults['EPOCHS'],
+    PATIENCE=defaults['PATIENCE']):
 #description of these parameters located inside environment.py
     
     data, model, acc, mae = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
-        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS,
-        OPTIMIZER=OPTIMIZER, BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS
+        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
+        BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS, PATIENCE=PATIENCE
     )
     
-    return mae
+    return acc, mae
 
 def make_neural_net(ticker, end_date=None, 
     N_STEPS=defaults['N_STEPS'], 
@@ -87,7 +89,8 @@ def make_neural_net(ticker, end_date=None,
     LOSS=defaults['LOSS'],
     OPTIMIZER=defaults['OPTIMIZER'], 
     BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS']):
+    EPOCHS=defaults['EPOCHS'],
+    PATIENCE=defaults['PATIENCE']):
 #description of these parameters located inside environment.py
 
     tf.keras.backend.clear_session()
@@ -128,7 +131,7 @@ def make_neural_net(ticker, end_date=None,
     else:
         tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch=0)
 
-    early_stop = tf.keras.callbacks.EarlyStopping(patience=500)
+    early_stop = tf.keras.callbacks.EarlyStopping(patience=PATIENCE)
     
     
     history = model.fit(train,
