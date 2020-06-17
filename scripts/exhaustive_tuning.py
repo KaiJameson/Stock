@@ -9,7 +9,7 @@ import traceback
 import datetime
 import pandas as pd
 
-ticker = 'HPE'
+ticker = 'PAAS'
 
 check_directories()
 EPOCHS = 2000
