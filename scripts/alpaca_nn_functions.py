@@ -34,8 +34,10 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
     print("real values:")
     print(y_test)
+    print(str(len(y_test)))
     print("Y predict:")
     print(y_pred)
+    print(str(len(y_pred)))
     report_dir = reports_directory + '/' + ticker
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
@@ -43,14 +45,15 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
 
     total_minutes = total_time / 60
     
+    print("future price" + str(future_price))
     
     file_name = report_dir +'/' + time_string + '.txt'
     f = open(file_name, 'a')
     f.write("The test var was " + test_var + '\n')
-    f.write("The mean absolute error is: " + str(mae) + '\n')
+    f.write("The mean absolute error is: " + str(round(mae, 4)) + '\n')
     f.write('Total time to run was: ' + str(round(total_minutes, 2)) + '\n')
-    f.write('The price at run time was: ' + str(curr_price) + '\n')
-    f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
+    f.write('The price at run time was: ' + str(round(curr_price, 2)) + '\n')
+    f.write('The predicted price for tomorrow is: ' + str(round(future_price, 2)) + '\n')
     
     percent = future_price / curr_price
     if curr_price < future_price:
@@ -169,6 +172,7 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
     y = np.array(y)
     # reshape X to fit the neural network
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
+    
     # split the dataset
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)    
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
@@ -243,9 +247,11 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     file_name = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     f = open(file_name, 'w')
     f.write(ticker + ': ' + test_var + '\n')
-    f.write('Spencer wanted me to have: $' + str(spencer_money) + '\n')
+    f.write('Spencer wanted me to have: $' + str(round(spencer_money, 2)) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
-    f.write('Money made from using real vs predicted: $' + str(money_made) + '\n')
+    f.write('Money made from using real vs predicted: $' + str(round(money_made, 2)) + '\n')
+    per_mon = perfect_money(money, real_y_values)
+    f.write('Money made from being perfect: $' + str(round(per_mon, 2)) + '\n')
     f.close()
     plot_dir = graph_directory + '/' + ticker
     if not os.path.isdir(plot_dir):
@@ -275,22 +281,44 @@ def get_accuracy(model, data, lookup_step):
 
 def decide_trades(money, data1, data2):
     stocks_owned = 0
-    for i in range(0,len(data1)):
+    for i in range(0 , len(data1) - 1):
         now_price = data1[i]
-        if data2[i] > now_price:
+        predict_price = data2[i + 1]
+        if predict_price > now_price:
             stocks_can_buy = money // now_price
             if stocks_can_buy > 0:
                 money -= stocks_can_buy * now_price
                 stocks_owned += stocks_can_buy
-        elif data2[i] < now_price:
+        elif predict_price < now_price:
             money += now_price * stocks_owned
             stocks_owned = 0
     if stocks_owned != 0:
         money += stocks_owned * data1[len(data1)-1]
     return money
 
+def perfect_money(money, data):
+    stonks_owned = 0;
+    for i in range(0, len(data) - 1):
+        now_price = data[i]
+        tommorow_price = data[i + 1]
+        if tommorow_price > now_price:
+            stonks_can_buy = money // now_price
+            if stonks_can_buy > 0:
+                money -= stonks_can_buy * now_price
+                stonks_owned += stonks_can_buy
+        elif tommorow_price < now_price:
+            money += now_price * stonks_owned
+            stonks_owned = 0
+    if stonks_owned != 0:
+        money += stonks_owned * data[len(data) - 1]
+    return money
 
 if __name__ == '__main__':
-    ticker = 'TSLA'
-    load_data(ticker, n_steps=100)
+    
+    real_price = ([ 110, 100, 110, 100, 110, 100,])
+    predict =([ 110, 100, 110, 100, 110, 100])
+   
+    money = 100
+    print(str(decide_trades(money, real_price, predict)))
+    print(str(perfect_money(money, real_price)))
 
