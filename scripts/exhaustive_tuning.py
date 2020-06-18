@@ -66,6 +66,7 @@ def get_info():
             best_unit = UNITS[0]
             best_drop = DROPOUT[0]
             info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
+            print('\n''\n''\n''\n' + get_end_date() + '\n''\n''\n''\n')
             info[4] = 0
             print('NEW INFO:', info)
             return info

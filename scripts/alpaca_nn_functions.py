@@ -44,23 +44,31 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     pddf = pd.DataFrame(data=the_diffs)
     pddf = pddf.values
 
-    report_dir = reports_directory + '/' + ticker
-    if not os.path.isdir(report_dir):
-        os.mkdir(report_dir)
-    curr_price = plot_graph(model, data, ticker, back_test_days, time_string)
+    report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
+    if not os.path.isdir(reports_directory):
+        os.mkdir(reports_directory)
+    plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
 
     total_minutes = total_time / 60
-    
-    print("future price: " + str(future_price))
-    
-    file_name = report_dir +'/' + time_string + '.txt'
-    f = open(file_name, 'a')
+
+    real_y_values = y_test[-back_test_days:]
+    predicted_y_values = y_pred[-back_test_days:]
+
+    curr_price = real_y_values[-1]
+
+    spencer_money = money * (real_y_values[-1]/real_y_values[0])
+    f = open(report_dir, 'a')
+    f.write(ticker + ': ' + test_var + '\n')
+    f.write('Spencer wanted me to have: $' + str(round(spencer_money, 2)) + '\n')
+    money_made = decide_trades(money, real_y_values, predicted_y_values)
+    f.write('Money made from using real vs predicted: $' + str(round(money_made, 2)) + '\n')
+    per_mon = perfect_money(money, real_y_values)
+    f.write('Money made from being perfect: $' + str(round(per_mon, 2)) + '\n')
     f.write("The test var was " + test_var + '\n')
     f.write("The mean absolute error is: " + str(round(mae, 4)) + '\n')
     f.write('Total time to run was: ' + str(round(total_minutes, 2)) + ' minutes.\n')
     f.write('The price at run time was: ' + str(round(curr_price, 2)) + '\n')
     f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
-    f.write('The average away from the real is: ' + str(round(pddf.mean(), 2)) + '%\n')
     
     percent = future_price / curr_price
     if curr_price < future_price:
@@ -70,6 +78,7 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
         f.write('That would mean a loss of: ' + str(abs(round((percent - 1) * 100, 2))) + "%\n")
         f.write('I would sell this stock.\n')
     
+    f.write('The average away from the real is: ' + str(round(pddf.mean(), 2)) + '%\n')
     f.write("Accuracy Score: " + str(round(accuracy * 100, 2)) + '%\n')
     f.close()
 
@@ -241,25 +250,10 @@ def predict(model, data, n_steps, classification=False):
 
 
 
-def plot_graph(model, data, ticker, back_test_days, time_string):
-    y_test = data["y_test"]
-    X_test = data["X_test"]
-    y_pred = model.predict(X_test)
-    y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
-    y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
-    # last 200 days, feel free to edit that
+def plot_graph(y_test, y_pred, ticker, back_test_days, time_string):
     real_y_values = y_test[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
-    spencer_money = money * (real_y_values[-1]/real_y_values[0])
-    file_name = reports_directory + '/' + ticker + '/' + time_string + '.txt'
-    f = open(file_name, 'w')
-    f.write(ticker + ': ' + test_var + '\n')
-    f.write('Spencer wanted me to have: $' + str(round(spencer_money, 2)) + '\n')
-    money_made = decide_trades(money, real_y_values, predicted_y_values)
-    f.write('Money made from using real vs predicted: $' + str(round(money_made, 2)) + '\n')
-    per_mon = perfect_money(money, real_y_values)
-    f.write('Money made from being perfect: $' + str(round(per_mon, 2)) + '\n')
-    f.close()
+    
     plot_dir = graph_directory + '/' + ticker
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
@@ -272,7 +266,7 @@ def plot_graph(model, data, ticker, back_test_days, time_string):
     plt.legend(["Actual Price", "Predicted Price"])
     plt.savefig(plot_name)
     plt.close()
-    return real_y_values[-1]
+    
 
 
 def get_accuracy(model, data, lookup_step):
