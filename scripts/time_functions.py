@@ -2,7 +2,8 @@ import platform
 import time
 import datetime
 import pandas as pd
-
+from api_key import paper_api_key_id, paper_api_secret_key
+import alpaca_trade_api as tradeapi
 
 def get_start_end():
     operating_sys = platform.system()
@@ -42,3 +43,27 @@ def get_time_string():
     minute = n.minute
     s = f"{year}-{month}-{day}-{hour}-{minute}"
     return s
+
+def get_end_date():
+    tz = 'US/EASTERN'
+    now = time.time()
+    n = datetime.datetime.fromtimestamp(now)
+    date = n.date()
+    year = date.year
+    month = date.month
+    day = date.day
+    end_date = datetime.datetime(year, month, day)
+    end_date = time.mktime(end_date.timetuple())
+    end_date = pd.Timestamp(end_date, unit='s', tz=tz).isoformat()
+    return end_date
+
+
+def get_trade_day_back(last_day, days_back):
+    tz = 'US/EASTERN'
+    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    calendar = api.get_calendar(end=last_day)
+    reverse_calendar = calendar[::-1]
+    trade_day = reverse_calendar[days_back]
+    time_int = time.mktime(trade_day.timetuple())
+    trade_date = pd.Timestamp(time_int, unit='s', tz=tz).isoformat()
+    return trade_date
