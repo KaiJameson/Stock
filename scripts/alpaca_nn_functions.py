@@ -60,7 +60,7 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     f.write('Total time to run was: ' + str(round(total_minutes, 2)) + ' minutes.\n')
     f.write('The price at run time was: ' + str(round(curr_price, 2)) + '\n')
     f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
-    f.write('The average away from the real is: ' + str(round(pddf.mean(), 2)) + '\n')
+    f.write('The average away from the real is: ' + str(round(pddf.mean(), 2)) + '%\n')
     
     percent = future_price / curr_price
     if curr_price < future_price:
@@ -70,7 +70,7 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
         f.write('That would mean a loss of: ' + str(abs(round((percent - 1) * 100, 2))) + "%\n")
         f.write('I would sell this stock.\n')
     
-    f.write("Accuracy Score: " + str(round(accuracy * 100, 2)) + '\n')
+    f.write("Accuracy Score: " + str(round(accuracy * 100, 2)) + '%\n')
     f.close()
 
     return percent

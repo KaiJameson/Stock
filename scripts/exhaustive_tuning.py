@@ -227,7 +227,7 @@ while not done:
         print_params(tuning_status_file, step, unit, drop, EPOCHS, indent='\t', punct=': ')
         f = open(tuning_status_file, 'a')
         f.write('The mean absolute error for this run is: ' + str(round(mae, 4)) + '\n')
-        f.write('The accuracy for this this run is: ' + str(round(acc * 100, 2)) + '\n')
+        f.write('The accuracy for this this run is: ' + str(round(acc * 100, 2)) + '%\n')
         f.close()
         write_info(info, total_time=total_time)
     except KeyboardInterrupt:
