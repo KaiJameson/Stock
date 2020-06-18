@@ -13,10 +13,14 @@ import pandas as pd
 ticker = exhaustive_symbols
 
 check_directories()
-EPOCHS = 2000
+EPOCHS = 20
 UNITS = [256, 448, 768]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.3, .35, .4]
+
+avg_mae = []
+avg_acc = []
+avg_time = []
 
 done_dir = tuning_directory + '/done'
 if not os.path.isdir(done_dir):
@@ -31,6 +35,7 @@ if not os.path.isfile(tuning_status_file):
     f = open(tuning_status_file, 'w')
     f.close()
 done_message = 'You are done tuning this stock.'
+
 def get_info():
     if not os.path.isfile(f_name):
         if os.path.isfile(file_name):
@@ -66,7 +71,6 @@ def get_info():
             best_unit = UNITS[0]
             best_drop = DROPOUT[0]
             info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
-            print('\n''\n''\n''\n' + get_end_date() + '\n''\n''\n''\n')
             info[4] = 0
             print('NEW INFO:', info)
             return info
@@ -182,12 +186,18 @@ def get_indexs(info):
 done = False
 while not done:
     try:
-        print('\nStarting a new iteration\n')
         info = get_info()
         if info == '':
             print(done_message)
+            f = open(tuning_status_file, 'a')
+            f.write("The average accuracy was: " + str(round(pd.DataFrame(data=avg_acc).values.mean() * 100, 2)) + '%\n')
+            f.write("The average mae was: " + str(round(pd.DataFrame(data=avg_mae).values.mean(), 4)) + '\n')
+            f.write("The average time was: " + str(round(pd.DataFrame(data=avg_time).values.mean(), 2)) + " minutes.\n")
+            f.close()
             done = True
             break
+
+        print('\nStarting a new iteration:\n')
         drop_index, unit_index, step_index = get_indexs(info)
         start_time = time.time()
         drop = DROPOUT[drop_index]
@@ -208,6 +218,12 @@ while not done:
 
         end_time = time.time()
         total_time = end_time - start_time
+        m = total_time / 60
+
+        avg_acc.append(acc)
+        avg_mae.append(mae)
+        avg_time.append(m)
+        
         if mae < info[0]:
             #mae, step, unit, drop
             info[0] = mae
@@ -220,7 +236,7 @@ while not done:
             info[2] = unit
             info[3] = drop
 
-        m = total_time / 60
+        
         f = open(tuning_status_file, 'a')
         f.write("Finished another run.\n")
         f.write("This run took " + str(m) + ' minutes to run.\n')

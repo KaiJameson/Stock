@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, real_api_secret_key
-from environment import test_var, reports_directory, graph_directory, back_test_days
+from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot
 from environment import test_money as money
 from time_functions import get_time_string
 import numpy as np
@@ -47,7 +47,9 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     if not os.path.isdir(reports_directory):
         os.mkdir(reports_directory)
-    plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
+
+    if to_plot:
+        plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
 
     total_minutes = total_time / 60
 
@@ -56,7 +58,7 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
 
     curr_price = real_y_values[-1]
 
-    spencer_money = money * (real_y_values[-1]/real_y_values[0])
+    spencer_money = money * (curr_price/real_y_values[0])
     f = open(report_dir, 'a')
     f.write(ticker + ': ' + test_var + '\n')
     f.write('Spencer wanted me to have: $' + str(round(spencer_money, 2)) + '\n')
