@@ -8,7 +8,7 @@ from time_functions import get_time_string
 import threading
 import logging
 import sys
-from environment import stock_decisions_directory, error_file, config_directory
+from environment import stock_decisions_directory, error_file, config_directory, do_the_trades
 from functions import check_directories
 import traceback
 api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
@@ -50,7 +50,8 @@ def find_percents_and_accs(symbols):
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol,
                     UNITS=int(values['UNITS']), DROPOUT=float(values['DROPOUT']), N_STEPS=int(values['N_STEPS']), EPOCHS=int(values['EPOCHS']))
-                decide_trades(symbol, owned, accuracy[symbol], percents[symbol])
+                if do_the_trades:
+                    decide_trades(symbol, owned, accuracy[symbol], percents[symbol])
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
