@@ -119,6 +119,9 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
     # df['rolling_avg'] = roll
     print(df)
     print(other_df)
+    frames = [other_df, df]
+    df = pd.concat(frames) 
+    print(df)
     return df
 
 # , 'rolling_avg'
