@@ -64,6 +64,6 @@ def get_trade_day_back(last_day, days_back):
     calendar = api.get_calendar(end=last_day)
     reverse_calendar = calendar[::-1]
     trade_day = reverse_calendar[days_back]
-    time_int = time.mktime(trade_day.timetuple())
+    time_int = time.mktime(trade_day.date.timetuple())
     trade_date = pd.Timestamp(time_int, unit='s', tz=tz).isoformat()
     return trade_date
