@@ -45,8 +45,9 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     pddf = pddf.values
 
     report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
-    if not os.path.isdir(reports_directory):
-        os.mkdir(reports_directory)
+    reports_folder = reports_directory + '/' + ticker
+    if not os.path.isdir(reports_folder):
+        os.mkdir(reports_folder)
 
     if to_plot:
         plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
@@ -118,9 +119,11 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
     
     # df['rolling_avg'] = roll
     print(df)
-    print(other_df)
-    frames = [other_df, df]
-    df = pd.concat(frames) 
+    # print(other_df)
+    
+    if limit > 1000:
+        frames = [other_df, df]
+        df = pd.concat(frames) 
     print(df)
     return df
 
