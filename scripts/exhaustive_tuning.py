@@ -1,5 +1,5 @@
 from alpaca_neural_net import tuning_neural_net
-from symbols import exhaustive_symbols, year, month, day
+from symbols import exhaustive_symbols, exhaust_year, exhaust_month, exhaust_day
 import os
 import sys
 import subprocess
@@ -141,7 +141,7 @@ start_time = time.time()
 
 def get_end_date():
     tz = 'US/EASTERN'
-    end_date = datetime.datetime(year, month, day)
+    end_date = datetime.datetime(exhaust_year, exhaust_month, exhaust_day)
     end_date = time.mktime(end_date.timetuple())
     end_date = pd.Timestamp(end_date, unit='s', tz=tz).isoformat()
     return end_date
