@@ -70,7 +70,7 @@ def find_percents_and_accs(symbols):
         else:
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol)
-                 if do_the_trades:
+                if do_the_trades:
                     decide_trades(symbol, owned, accuracy[symbol], percents[symbol])
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')

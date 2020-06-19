@@ -45,8 +45,9 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     pddf = pddf.values
 
     report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
-    if not os.path.isdir(reports_directory):
-        os.mkdir(reports_directory)
+    reports_folder = reports_directory + '/' + ticker
+    if not os.path.isdir(reports_folder):
+        os.mkdir(reports_folder)
 
     if to_plot:
         plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
@@ -103,8 +104,8 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
             items = barset.items() 
             df = get_values(items)
     else:
-        if limit>1000:
-            barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
+        if limit > 1000:
+            barset = api.get_barset(symbols=symbol, timeframe='day', limit=1000)
             items = barset.items() 
             df = get_values(items)
             new_end_date = get_trade_day_back(get_end_date(), limit-1000)
@@ -117,6 +118,13 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
     # roll = df.close.rolling(window=10).mean()
     
     # df['rolling_avg'] = roll
+    print(df)
+    # print(other_df)
+    
+    if limit > 1000:
+        frames = [other_df, df]
+        df = pd.concat(frames) 
+    print(df)
     return df
 
 # , 'rolling_avg'
@@ -158,9 +166,9 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, end_date=end_date)
+            df = make_dataframe(ticker, limit=2000, end_date=end_date)
         else:
-            df = make_dataframe(ticker)
+            df = make_dataframe(ticker, limit=2000)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
