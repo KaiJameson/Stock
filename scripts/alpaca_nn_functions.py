@@ -12,7 +12,7 @@ import alpaca_trade_api as tradeapi
 from api_key import real_api_key_id, real_api_secret_key
 from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot
 from environment import test_money as money
-from time_functions import get_time_string
+from time_functions import get_time_string, get_end_date, get_trade_day_back
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -45,8 +45,9 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     pddf = pddf.values
 
     report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
-    if not os.path.isdir(reports_directory):
-        os.mkdir(reports_directory)
+    reports_folder = reports_directory + '/' + ticker
+    if not os.path.isdir(reports_folder):
+        os.mkdir(reports_folder)
 
     if to_plot:
         plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
@@ -91,10 +92,44 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
 
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
-        barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit, until=end_date)
+        if limit > 1000:
+            barset = api.get_barset(symbols=symbol, timeframe='day', limit=1000, until=end_date)
+            items = barset.items() 
+            df = get_values(items)
+            new_end_date = get_trade_day_back(end_date, limit-1000)
+            other_barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit-1000, end=new_end_date)
+            other_df = get_values(other_barset.items()) 
+        else:
+            barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit, until=end_date)
+            items = barset.items() 
+            df = get_values(items)
     else:
-        barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
-    items = barset.items()
+        if limit > 1000:
+            barset = api.get_barset(symbols=symbol, timeframe='day', limit=1000)
+            items = barset.items() 
+            df = get_values(items)
+            new_end_date = get_trade_day_back(get_end_date(), limit-1000)
+            other_barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit-1000, end=new_end_date)
+            other_df = get_values(other_barset.items()) 
+        else:
+            barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
+            items = barset.items() 
+            df = get_values(items)
+    # roll = df.close.rolling(window=10).mean()
+    
+    # df['rolling_avg'] = roll
+    print(df)
+    # print(other_df)
+    
+    if limit > 1000:
+        frames = [other_df, df]
+        df = pd.concat(frames) 
+    print(df)
+    return df
+
+# , 'rolling_avg'
+
+def get_values(items):
     data = {}
     for symbol, bar in items:
         open_values = []
@@ -123,21 +158,17 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
         data['mid'] = mid_values
         data['volume'] = volume
     df = pd.DataFrame(data=data)
-    # roll = df.close.rolling(window=10).mean()
-    
-    # df['rolling_avg'] = roll
     return df
 
-# , 'rolling_avg'
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,test_size=0.2, 
 feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, end_date=end_date)
+            df = make_dataframe(ticker, limit=2000, end_date=end_date)
         else:
-            df = make_dataframe(ticker)
+            df = make_dataframe(ticker, limit=2000)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker

@@ -70,6 +70,8 @@ def find_percents_and_accs(symbols):
         else:
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol)
+                if do_the_trades:
+                    decide_trades(symbol, owned, accuracy[symbol], percents[symbol])
             except KeyboardInterrupt:
                 print('I acknowledge that you want this to stop')
                 print('Thy will be done')
@@ -134,9 +136,6 @@ def decide_trades(symbol, owned, accuracy, percent):
         exit_info = sys.exc_info()
         f.write(str(exit_info[1]) + '\n')
         traceback.print_tb(tb=exit_info[2], file=f)
-        f.write('listing the dictionary below\n')
-        for key in values:
-            f.write(str(key) + ': ' + str(values[key]) + '\n')
         f.close()
         print('\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n')
 
