@@ -32,7 +32,7 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
     y_pred = model.predict(X_test)
     y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
     y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
-    print("real values:")
+    print("Real values:")
     print(y_test)
     print("Y predict:")
     print(y_pred)
@@ -118,7 +118,7 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
     # roll = df.close.rolling(window=10).mean()
     
     # df['rolling_avg'] = roll
-    print(df)
+    # print(df)
     # print(other_df)
     
     if limit > 1000:
@@ -160,15 +160,15 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1,test_size=0.2, 
+def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
 feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, limit=2000, end_date=end_date)
+            df = make_dataframe(ticker, limit=1000, end_date=end_date)
         else:
-            df = make_dataframe(ticker, limit=2000)
+            df = make_dataframe(ticker, limit=1000)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
@@ -223,18 +223,22 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     
     # split the dataset
-    result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)    
+    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
+    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.5, shuffle=shuffle)   
+    
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
+    valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
     
     train = train.batch(batch_size)
+    valid = valid.batch(batch_size)
     test = test.batch(batch_size)
 
     # train = train.prefetch(buffer_size=AUTOTUNE)
     # test = test.prefetch(buffer_size=AUTOTUNE)
 
     # return the result
-    return result, train, test
+    return result, train, valid, test
 
 
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
@@ -283,8 +287,8 @@ def predict(model, data, n_steps, classification=False):
 
 
 
-def plot_graph(y_test, y_pred, ticker, back_test_days, time_string):
-    real_y_values = y_test[-back_test_days:]
+def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
+    real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
     
     plot_dir = graph_directory + '/' + ticker

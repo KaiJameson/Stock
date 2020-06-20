@@ -13,7 +13,7 @@ import pandas as pd
 ticker = exhaustive_symbols
 
 check_directories()
-EPOCHS = 20
+EPOCHS = 2000
 UNITS = [256, 448, 768]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.3, .35, .4]
