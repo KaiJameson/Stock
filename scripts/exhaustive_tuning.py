@@ -14,9 +14,9 @@ ticker = exhaustive_symbols
 
 check_directories()
 EPOCHS = 2000
-UNITS = [256, 448, 768]
-N_STEPS = [50, 100, 150, 200, 250, 300]
-DROPOUT = [.3, .35, .4]
+UNITS = [128, 256, 448, 768]
+N_STEPS = [50, 100, 150, 200, 250, 300, 350, 400]
+DROPOUT = [.25, .3, .35, .4, .45, .5]
 
 avg_mae = []
 avg_acc = []

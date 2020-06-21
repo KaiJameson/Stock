@@ -166,9 +166,9 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, limit=1000, end_date=end_date)
+            df = make_dataframe(ticker, limit=2000, end_date=end_date)
         else:
-            df = make_dataframe(ticker, limit=1000)
+            df = make_dataframe(ticker, limit=2000)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker

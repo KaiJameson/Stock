@@ -48,9 +48,9 @@ defaults = {
     'BIDIRECTIONAL': False,
     'LOSS': 'huber_loss',
     'OPTIMIZER': 'adam',
-    'BATCH_SIZE': 64,
+    'BATCH_SIZE': 128,
     'EPOCHS': 2000,
-    'PATIENCE': 500,
+    'PATIENCE': 400,
 }
 
 
