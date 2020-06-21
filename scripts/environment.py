@@ -17,18 +17,24 @@ do_the_trades = False
 to_plot = True
 
 '''
-# N_STEPS = Window size or the sequence length
-# Lookup step = 1 is the next day
-# TEST_SIZE = 0.2 is 20%
-# N_LAYERS = how many hidden neural layers
-# CELL = type of cell
-# UNITS = number of neurons per layer
-# DROPOUT = % dropout
-# BIDIRECTIONAL = does it test backwards or not
+# N_STEPS = Window size or the sequence length.
+# Lookup step = How many days the model will be trying to predict
+# into the future.
+# TEST_SIZE = How much of the data will be split between validation
+# and testing. 0.2 is 20%.
+# N_LAYERS = How many hidden neural layers the model will have.
+# CELL = Type of cell used in each layer.
+# UNITS = Number of neurons per layer.
+# DROPOUT = % dropout, cells that are dropped in that training batch
+# will not be used to make the output. 
+# BIDIRECTIONAL = Whether or not the LSTM cells' memory can flow 
+# forward in time if False or forwards and backwards in time
 # LOSS = "huber_loss"
 # OPTIMIZER = "adam"
-# BATCH_SIZE
-# EPOCHS = how many times the machine trains
+# BATCH_SIZE = How many sets of data are ran together.
+# EPOCHS = How many times the machine trains.
+# PATIENCE = How many epochs of no improvement in the validation 
+# loss it takes before the training loop is ended early.
 '''
 
 defaults = {
@@ -42,7 +48,7 @@ defaults = {
     'BIDIRECTIONAL': False,
     'LOSS': 'huber_loss',
     'OPTIMIZER': 'adam',
-    'BATCH_SIZE': 64,
+    'BATCH_SIZE': 128,
     'EPOCHS': 2000,
     'PATIENCE': 400,
 }
