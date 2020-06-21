@@ -115,7 +115,7 @@ def make_neural_net(ticker, end_date=None,
     results_folder = 'results'
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
-    data, train, test = load_data(
+    data, train, valid, test = load_data(
         ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
         test_size=TEST_SIZE, batch_size=BATCH_SIZE, end_date=end_date
     )
@@ -139,13 +139,13 @@ def make_neural_net(ticker, end_date=None,
                         epochs=EPOCHS,
                         verbose=2,
                         use_multiprocessing=True,
-                        validation_data=test,
+                        validation_data=valid,
                         callbacks = [tboard_callback, checkpointer, early_stop]   
                         )
 
     
     #before testing, no shuffle
-    data, train, test = load_data(
+    data, train, valid, test = load_data(
         ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
         test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE,
         end_date=end_date
