@@ -110,7 +110,7 @@ def decide_trades(symbol, owned, accuracy, percent):
             print("\nSELLING:", sell)
             print("\n\n")
     except KeyError:
-        if accuracy >= .7:
+        if accuracy >= .65:
             if percent > 1:
                 barset = api.get_barset(symbol, 'day', limit=1)
                 current_price = 0

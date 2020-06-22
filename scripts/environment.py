@@ -13,7 +13,7 @@ tuning_directory = '../tuning_info'
 back_test_days = 100
 data_directory = '../data'
 save_logs = False
-do_the_trades = False
+do_the_trades = True
 to_plot = True
 
 '''
