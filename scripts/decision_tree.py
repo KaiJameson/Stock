@@ -1,6 +1,6 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_neural_net import decision_neural_net
-from symbols import decision_symbols
+from symbols import decision_symbols, do_the_trades
 import alpaca_trade_api as tradeapi
 import os
 import pandas as pd
@@ -8,7 +8,7 @@ from time_functions import get_time_string
 import threading
 import logging
 import sys
-from environment import stock_decisions_directory, error_file, config_directory, do_the_trades
+from environment import stock_decisions_directory, error_file, config_directory
 from functions import check_directories
 import traceback
 api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
