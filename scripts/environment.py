@@ -7,6 +7,7 @@ error_file = '../error_file.txt'
 config_directory = '../config'
 stock_decisions_directory = reports_directory + '/decisions'
 graph_directory = '../plots'
+model_saveload_directory = '../models'
 random_seed = 314
 trades_dir = '../trades'
 tuning_directory = '../tuning_info'
@@ -32,12 +33,14 @@ to_plot = True
 # will not be used to make the output. 
 # BIDIRECTIONAL = Whether or not the LSTM cells' memory can flow 
 # forward in time if False or forwards and backwards in time
-# LOSS = "huber_loss"
-# OPTIMIZER = "adam"
+# LOSS = 'huber_loss'
+# OPTIMIZER = 'adam'
 # BATCH_SIZE = How many sets of data are ran together.
 # EPOCHS = How many times the machine trains.
 # PATIENCE = How many epochs of no improvement in the validation 
 # loss it takes before the training loop is ended early.
+# SAVELOAD = Whether or not to temporarily save the weights of the 
+# model or to save the whole thing 
 '''
 
 defaults = {
@@ -54,6 +57,7 @@ defaults = {
     'BATCH_SIZE': 128,
     'EPOCHS': 2000,
     'PATIENCE': 400,
+    'SAVELOAD':False,
 }
 
 
