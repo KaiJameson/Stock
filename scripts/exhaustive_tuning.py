@@ -13,10 +13,10 @@ import pandas as pd
 ticker = exhaustive_symbols
 
 check_directories()
-EPOCHS = 20
+EPOCHS = 2000
 UNITS = [128, 256, 448]
-N_STEPS = [150, 200]
-DROPOUT = [.35, .4]
+N_STEPS = [150, 200, 250, 300, 350, 400, 450, 500]
+DROPOUT = [.35, .4, .45]
 
 iteration_num = len(UNITS) * len(N_STEPS) * len(DROPOUT)
 
