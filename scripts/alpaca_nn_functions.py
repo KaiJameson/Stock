@@ -111,15 +111,15 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
             barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
             items = barset.items() 
             df = get_values(items)
-    # roll = df.close.rolling(window=10).mean()
     
-    # df['rolling_avg'] = roll
-    # print(df)
-    # print(other_df)
     
     if limit > 1000:
         frames = [other_df, df]
         df = pd.concat(frames) 
+
+    # roll = df.close.rolling(window=10).mean()
+    
+    # df['rolling_avg'] = roll
     print(df)
     return df
 
@@ -155,6 +155,7 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
+# , 'rolling_avg'
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
 feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
                 batch_size=64, end_date=None):

@@ -13,14 +13,12 @@ import pandas as pd
 ticker = exhaustive_symbols
 
 check_directories()
-EPOCHS = 2000
+EPOCHS = 20
 UNITS = [128, 256, 448]
-N_STEPS = [150, 200, 250, 300, 350, 400, 450, 500]
-DROPOUT = [.35, .4, .45]
+N_STEPS = [150, 200]
+DROPOUT = [.35, .4]
 
-avg_mae = []
-avg_acc = []
-avg_time = []
+iteration_num = len(UNITS) * len(N_STEPS) * len(DROPOUT)
 
 done_dir = tuning_directory + '/done'
 if not os.path.isdir(done_dir):
@@ -50,6 +48,8 @@ def get_info():
             recent unit (448)
             recent dropout (f0.4)
             end_date
+            total accuracy
+            total mae
             '''
             f = open(file_name, 'r')
             info = []
@@ -60,7 +60,7 @@ def get_info():
                     info.append(int(line.strip('i').strip()))
                 else:
                     info.append(line.strip())
-            if len(info) != 9:
+            if len(info) != 11:
                 #TODO: RAISE ERROR
                 print('YOU NEED TO RAISE AN ERROR HERE')
             print('INFO:', info)
@@ -72,6 +72,7 @@ def get_info():
             best_drop = DROPOUT[0]
             info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
             info[4] = 0
+            info = info + [0, 0]
             print('NEW INFO:', info)
             return info
     else:
@@ -80,7 +81,7 @@ def get_info():
             os.remove(file_name)
         return ''
 
-def write_info(info, total_time=0):
+def write_info(info, total_time=0, total_acc=0, total_mae=0):
     '''
     best mae
     best n step
@@ -91,6 +92,8 @@ def write_info(info, total_time=0):
     recent unit
     recent dropout
     end_date
+    total accuracy
+    total mae
     '''
     if info[5] == N_STEPS[-1] and info[6] == UNITS[-1] and info[7] == DROPOUT[-1]:
         config_file = config_directory + '/' + ticker + '.csv'
@@ -102,17 +105,23 @@ def write_info(info, total_time=0):
         total_minutes = info[4] / 60
         time_message = 'It took ' + str(total_minutes) + ' minutes to complete.\n'
         f.write(time_message)
+        f.write("The average time was: " + str(round(info[4] / iteration_num, 2)) + " minutes.\n")
+        f.write("The average accuracy was: " + str(round((info[9] / iteration_num) * 100, 2)) + '%\n')
+        f.write("The average mae was: " + str(round(info[10] / iteration_num, 4)) + '\n')
         f.close()
         f = open(f_name, 'w')
         f.write('Done with this ticker\n')
         f.write(time_message)
         f.write('The best mean absolute error was ' + str(info[0]) + '\n')
+        
         f.close()
         print_params(f_name, info[1], info[2], info[3],  EPOCHS, punct=': ')
         print('THIS FILE IS DONE TUNING')
     else:
         f = open(file_name, 'w')
         info[4] += total_time
+        info[9] += total_acc
+        info[10] += total_mae
         print('WRITING TO FILE NAME WITH INFO:', info)
         for num in info:
             if isinstance(num, float):
@@ -183,11 +192,6 @@ while not done:
         info = get_info()
         if info == '':
             print(done_message)
-            f = open(tuning_status_file, 'a')
-            f.write("The average accuracy was: " + str(round(pd.DataFrame(data=avg_acc).values.mean() * 100, 2)) + '%\n')
-            f.write("The average mae was: " + str(round(pd.DataFrame(data=avg_mae).values.mean(), 4)) + '\n')
-            f.write("The average time was: " + str(round(pd.DataFrame(data=avg_time).values.mean(), 2)) + " minutes.\n")
-            f.close()
             done = True
             break
 
@@ -214,10 +218,6 @@ while not done:
         total_time = end_time - start_time
         m = total_time / 60
 
-        avg_acc.append(acc)
-        avg_mae.append(mae)
-        avg_time.append(m)
-        
         if mae < info[0]:
             #mae, step, unit, drop
             info[0] = mae
@@ -240,7 +240,7 @@ while not done:
         f.write('The mean absolute error for this run is: ' + str(round(mae, 4)) + '\n')
         f.write('The accuracy for this this run is: ' + str(round(acc * 100, 2)) + '%\n')
         f.close()
-        write_info(info, total_time=total_time)
+        write_info(info, total_time=total_time, total_acc=acc, total_mae=mae)
     except KeyboardInterrupt:
         print('I acknowledge that you want this to stop')
         print('Thy will be done')
