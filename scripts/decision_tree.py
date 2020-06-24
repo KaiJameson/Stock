@@ -152,7 +152,6 @@ check_directories()
 
 symbols = decision_symbols
 
->>>>>>> b3ef5d255057e7e5fc80fb9dcf36660c15582f0b
 file_name = stock_decisions_directory + '/' + get_time_string() + '.txt'
 if not os.path.isdir(stock_decisions_directory):
     os.mkdir(stock_decisions_directory)

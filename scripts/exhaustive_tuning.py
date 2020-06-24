@@ -9,17 +9,13 @@ from environment import config_directory, tuning_directory, error_file
 import traceback
 import datetime
 import pandas as pd
-<<<<<<< HEAD
-ticker = 'FLEX'
-=======
 
 ticker = exhaustive_symbols
 
->>>>>>> 30533db9071ce8c67a34dd2ce98d0a2f2472c788
 check_directories()
 EPOCHS = 2000
-UNITS = [128, 256, 448, 768]
-N_STEPS = [50, 100, 150, 200, 250, 300, 350, 400]
+UNITS = [768]
+N_STEPS = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
 DROPOUT = [.25, .3, .35, .4, .45, .5]
 
 avg_mae = []
@@ -163,21 +159,23 @@ def get_indexs(info):
     unit_index = UNITS.index(info[6])
     start_unit = unit_index
     print('UNIT_INDEX:', unit_index)
+    step_index = N_STEPS.index(info[5])
     if drop_index == 0:
         print('INCREMENTING UNIT')
         unit_index = (unit_index + 1) % len(UNITS)
         print('UNIT_INDEX:', unit_index)
-    step_index = N_STEPS.index(info[5])
-    start_step = step_index
-    print('STEP_INDEX:', step_index)
-    if unit_index == 0 and start_unit != 0:
         print('INCREMENTING STEP')
         step_index = (step_index + 1) % len(N_STEPS)
         print('STEP_INDEX:', step_index)
-    if step_index == 0 and start_step != 0:
-        write_info(info)
-        print('SHOULD NOT HAVE MADE IT HERE')
-        sys.exit(-1)
+    
+    # start_step = step_index
+    print('STEP_INDEX:', step_index)
+    # if unit_index == 0 and start_unit != 0:
+        
+    # if step_index == 0 and start_step != 0:
+    #     write_info(info)
+    #     print('SHOULD NOT HAVE MADE IT HERE')
+    #     sys.exit(-1)
     return drop_index, unit_index, step_index
 
 
