@@ -13,7 +13,6 @@ tuning_directory = '../tuning_info'
 back_test_days = 100
 data_directory = '../data'
 save_logs = False
-do_the_trades = True
 to_plot = True
 
 '''
@@ -43,8 +42,8 @@ defaults = {
     'TEST_SIZE': 0.2,
     'N_LAYERS': 3,
     'CELL': LSTM,
-    'UNITS': 448,
-    'DROPOUT': 0.3,
+    'UNITS': 256,
+    'DROPOUT': 0.4,
     'BIDIRECTIONAL': False,
     'LOSS': 'huber_loss',
     'OPTIMIZER': 'adam',

@@ -23,26 +23,12 @@ import datetime
 import math 
 
 
-def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_STEP):
+def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
-    X_test = data["X_test"]
-    y_test = data["y_test"]
-    y_pred = model.predict(X_test)
-    y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
-    y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
-    print("Real values:")
-    print(y_test)
-    print("Y predict:")
-    print(y_pred)
-
-    the_diffs = []
-    for i in range(len(y_test) - 1):
-        per_diff = (abs(y_test[i] - y_pred[i])/y_test[i]) * 100
-        the_diffs.append(per_diff)
-    pddf = pd.DataFrame(data=the_diffs)
-    pddf = pddf.values
+    
+    y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
 
     report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
     reports_folder = reports_directory + '/' + ticker
@@ -50,11 +36,11 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
         os.mkdir(reports_folder)
 
     if to_plot:
-        plot_graph(y_test, y_pred, ticker, back_test_days, time_string)
+        plot_graph(y_real, y_pred, ticker, back_test_days, time_string)
 
     total_minutes = total_time / 60
 
-    real_y_values = y_test[-back_test_days:]
+    real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
 
     curr_price = real_y_values[-1]
@@ -81,15 +67,25 @@ def nn_report(ticker, total_time, model, data, accuracy, mae, N_STEPS, LOOKUP_ST
         f.write('That would mean a loss of: ' + str(abs(round((percent - 1) * 100, 2))) + "%\n")
         f.write('I would sell this stock.\n')
     
-    f.write('The average away from the real is: ' + str(round(pddf.mean(), 2)) + '%\n')
-    f.write("Accuracy Score: " + str(round(accuracy * 100, 2)) + '%\n')
+    f.write('The average away from the real is: ' + str(percent_from_real(y_real, y_pred)) + '%\n')
+    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + '%\n')
+    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + '%\n')
+    f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + '%\n')
     f.close()
 
     return percent
 
 
-def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
+def percent_from_real(y_real, y_predict):
+    the_diffs = []
+    for i in range(len(y_real) - 1):
+        per_diff = (abs(y_real[i] - y_predict[i])/y_real[i]) * 100
+        the_diffs.append(per_diff)
+    pddf = pd.DataFrame(data=the_diffs)
+    pddf = pddf.values
+    return round(pddf.mean(), 2)
 
+def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
         if limit > 1000:
@@ -115,19 +111,18 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
             barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
             items = barset.items() 
             df = get_values(items)
-    # roll = df.close.rolling(window=10).mean()
     
-    # df['rolling_avg'] = roll
-    # print(df)
-    # print(other_df)
     
     if limit > 1000:
         frames = [other_df, df]
         df = pd.concat(frames) 
+
+    # roll = df.close.rolling(window=10).mean()
+    
+    # df['rolling_avg'] = roll
     print(df)
     return df
 
-# , 'rolling_avg'
 
 def get_values(items):
     data = {}
@@ -160,6 +155,7 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
+# , 'rolling_avg'
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
 feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
                 batch_size=64, end_date=None):
@@ -305,16 +301,16 @@ def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     plt.close()
     
 
+def get_accuracy(y_real, y_pred, lookup_step):
+    y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_pred[lookup_step:]))
+    y_real = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_real[lookup_step:]))
+    return accuracy_score(y_real, y_pred)
 
-def get_accuracy(model, data, lookup_step):
-    y_test = data["y_test"]
-    X_test = data["X_test"]
-    y_pred = model.predict(X_test)
-    y_test = np.squeeze(data["column_scaler"][test_var].inverse_transform(np.expand_dims(y_test, axis=0)))
-    y_pred = np.squeeze(data["column_scaler"][test_var].inverse_transform(y_pred))
-    y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-lookup_step], y_pred[lookup_step:]))
-    y_test = list(map(lambda current, future: int(float(future) > float(current)), y_test[:-lookup_step], y_test[lookup_step:]))
-    return accuracy_score(y_test, y_pred)
+def return_real_predict(model, X_data, y_data, column_scaler):
+    y_pred = model.predict(X_data)
+    y_real = np.squeeze(column_scaler.inverse_transform(np.expand_dims(y_data, axis=0)))
+    y_pred = np.squeeze(column_scaler.inverse_transform(y_pred))
+    return y_real, y_pred
 
 
 def decide_trades(money, data1, data2):
