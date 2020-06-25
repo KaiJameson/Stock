@@ -22,8 +22,8 @@ def save_models(symbols):
                 saveload_neural_net(symbol, SAVELOAD=True)
 
         except KeyboardInterrupt:
-            print("I acknowledge that you want this to stop")
-            print("Thy will be done")
+            print("I acknowledge that you want this to stop.")
+            print("Thy will be done.")
             sys.exit(-1)
         except:
             f = open(error_file, "a")

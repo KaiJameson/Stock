@@ -48,9 +48,9 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
 
     spencer_money = money * (curr_price/real_y_values[0])
     f = open(report_dir, "a")
-    f.write("~~~~~~~" + ticker + "~~~~~~~" "\n")
-    f.write("Spencer wanteds to have: $" + str(round(spencer_money, 2)) + "\n")
-    money_made = decide_trades(money, real_y_values, predicted_y_values)
+    f.write("~~~~~~~" + ticker + "~~~~~~~\n")
+    f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
+    money_made = model_money(money, real_y_values, predicted_y_values)
     f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
     per_mon = perfect_money(money, real_y_values)
     f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
@@ -122,9 +122,12 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     
     # df["rolling_avg"] = roll
     
-    upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
-    df["upper_band"] = upperband
-    df["lower_band"] = lowerband
+    # upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
+    # df["upper_band"] = upperband
+    # df["lower_band"] = lowerband
+
+    on_bal_vol = ta.OBV(df.close, df.volume)
+    df["OBV"] = on_bal_vol
     print(df)
     return df
 
@@ -162,7 +165,7 @@ def get_values(items):
 
 # , "rolling_avg"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "upper_band", "lower_band"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "OBV"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -368,7 +371,7 @@ def return_real_predict(model, X_data, y_data, column_scaler):
     return y_real, y_pred
 
 
-def decide_trades(money, data1, data2):
+def model_money(money, data1, data2):
     stocks_owned = 0
     for i in range(0 , len(data1) - 1):
         now_price = data1[i]
@@ -408,6 +411,6 @@ if __name__ == "__main__":
     predict =([ 110, 100, 110, 100, 110, 100])
    
     money = 100
-    print(str(decide_trades(money, real_price, predict)))
+    print(str(model_money(money, real_price, predict)))
     print(str(perfect_money(money, real_price)))
 

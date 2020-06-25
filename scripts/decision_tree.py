@@ -46,8 +46,8 @@ def find_percents_and_accs(symbols):
                 if do_the_trades:
                     decide_trades(symbol, owned, accuracy[symbol], percents[symbol])
             except KeyboardInterrupt:
-                print("I acknowledge that you want this to stop")
-                print("Thy will be done")
+                print("I acknowledge that you want this to stop.")
+                print("Thy will be done.")
                 sys.exit(-1)
             except:
                 f = open(error_file, "a")
@@ -63,11 +63,12 @@ def find_percents_and_accs(symbols):
         else:
             try:
                 percents[symbol], accuracy[symbol] = decision_neural_net(symbol)
+                print(str(percents[symbol]))
                 if do_the_trades:
                     decide_trades(symbol, owned, accuracy[symbol], percents[symbol])
             except KeyboardInterrupt:
-                print("I acknowledge that you want this to stop")
-                print("Thy will be done")
+                print("I acknowledge that you want this to stop.")
+                print("Thy will be done.")
                 sys.exit(-1)
             except:
                 f = open(error_file, "a")

@@ -9,7 +9,6 @@ stock_decisions_directory = reports_directory + "/decisions"
 graph_directory = "../plots"
 model_saveload_directory = "../models"
 random_seed = 314
-trades_dir = "../trades"
 tuning_directory = "../tuning_info"
 back_test_days = 100
 data_directory = "../data"
