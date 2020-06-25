@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
-from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from sklearn import preprocessing
 from time_functions import get_time_string
@@ -23,20 +23,20 @@ import time
 
 def decision_neural_net(
     ticker, 
-    N_STEPS=defaults['N_STEPS'], 
-    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
-    TEST_SIZE=defaults['TEST_SIZE'], 
-    N_LAYERS=defaults['N_LAYERS'], 
-    CELL=defaults['CELL'], 
-    UNITS=defaults['UNITS'], 
-    DROPOUT=defaults['DROPOUT'], 
-    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
-    LOSS=defaults['LOSS'],
-    OPTIMIZER=defaults['OPTIMIZER'], 
-    BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS'],
-    PATIENCE=defaults['PATIENCE'],
-    SAVELOAD=defaults['SAVELOAD']):
+    N_STEPS=defaults["N_STEPS"], 
+    LOOKUP_STEP=defaults["LOOKUP_STEP"], 
+    TEST_SIZE=defaults["TEST_SIZE"], 
+    N_LAYERS=defaults["N_LAYERS"], 
+    CELL=defaults["CELL"], 
+    UNITS=defaults["UNITS"], 
+    DROPOUT=defaults["DROPOUT"], 
+    BIDIRECTIONAL=defaults["BIDIRECTIONAL"], 
+    LOSS=defaults["LOSS"],
+    OPTIMIZER=defaults["OPTIMIZER"], 
+    BATCH_SIZE=defaults["BATCH_SIZE"], 
+    EPOCHS=defaults["EPOCHS"],
+    PATIENCE=defaults["PATIENCE"],
+    SAVELOAD=defaults["SAVELOAD"]):
 #description of these parameters located inside environment.py
 
     start_time = time.time()
@@ -56,20 +56,20 @@ def decision_neural_net(
 
 
 def tuning_neural_net(ticker, end_date, 
-    N_STEPS=defaults['N_STEPS'], 
-    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
-    TEST_SIZE=defaults['TEST_SIZE'], 
-    N_LAYERS=defaults['N_LAYERS'], 
-    CELL=defaults['CELL'], 
-    UNITS=defaults['UNITS'], 
-    DROPOUT=defaults['DROPOUT'], 
-    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
-    LOSS=defaults['LOSS'],
-    OPTIMIZER=defaults['OPTIMIZER'], 
-    BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS'],
-    PATIENCE=defaults['PATIENCE'],
-    SAVELOAD=defaults['SAVELOAD']):
+    N_STEPS=defaults["N_STEPS"], 
+    LOOKUP_STEP=defaults["LOOKUP_STEP"], 
+    TEST_SIZE=defaults["TEST_SIZE"], 
+    N_LAYERS=defaults["N_LAYERS"], 
+    CELL=defaults["CELL"], 
+    UNITS=defaults["UNITS"], 
+    DROPOUT=defaults["DROPOUT"], 
+    BIDIRECTIONAL=defaults["BIDIRECTIONAL"], 
+    LOSS=defaults["LOSS"],
+    OPTIMIZER=defaults["OPTIMIZER"], 
+    BATCH_SIZE=defaults["BATCH_SIZE"], 
+    EPOCHS=defaults["EPOCHS"],
+    PATIENCE=defaults["PATIENCE"],
+    SAVELOAD=defaults["SAVELOAD"]):
 #description of these parameters located inside environment.py
     
     data, model, test_acc, valid_acc, train_acc, mae = make_neural_net(
@@ -81,23 +81,23 @@ def tuning_neural_net(ticker, end_date,
         SAVELOAD=SAVELOAD
     )
     
-    return test_acc, mae
+    return test_acc, valid_acc, train_acc, mae
 
 def saveload_neural_net(ticker, end_date, 
-    N_STEPS=defaults['N_STEPS'], 
-    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
-    TEST_SIZE=defaults['TEST_SIZE'], 
-    N_LAYERS=defaults['N_LAYERS'], 
-    CELL=defaults['CELL'], 
-    UNITS=defaults['UNITS'], 
-    DROPOUT=defaults['DROPOUT'], 
-    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
-    LOSS=defaults['LOSS'],
-    OPTIMIZER=defaults['OPTIMIZER'], 
-    BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS'],
-    PATIENCE=defaults['PATIENCE'],
-    SAVELOAD=defaults['SAVELOAD']):
+    N_STEPS=defaults["N_STEPS"], 
+    LOOKUP_STEP=defaults["LOOKUP_STEP"], 
+    TEST_SIZE=defaults["TEST_SIZE"], 
+    N_LAYERS=defaults["N_LAYERS"], 
+    CELL=defaults["CELL"], 
+    UNITS=defaults["UNITS"], 
+    DROPOUT=defaults["DROPOUT"], 
+    BIDIRECTIONAL=defaults["BIDIRECTIONAL"], 
+    LOSS=defaults["LOSS"],
+    OPTIMIZER=defaults["OPTIMIZER"], 
+    BATCH_SIZE=defaults["BATCH_SIZE"], 
+    EPOCHS=defaults["EPOCHS"],
+    PATIENCE=defaults["PATIENCE"],
+    SAVELOAD=defaults["SAVELOAD"]):
 
     data, model, test_acc, valid_acc, train_acc, mae = make_neural_net(
         ticker, end_date=end_date, 
@@ -110,26 +110,26 @@ def saveload_neural_net(ticker, end_date,
 
 
 def make_neural_net(ticker, end_date=None, 
-    N_STEPS=defaults['N_STEPS'], 
-    LOOKUP_STEP=defaults['LOOKUP_STEP'], 
-    TEST_SIZE=defaults['TEST_SIZE'], 
-    N_LAYERS=defaults['N_LAYERS'], 
-    CELL=defaults['CELL'], 
-    UNITS=defaults['UNITS'], 
-    DROPOUT=defaults['DROPOUT'], 
-    BIDIRECTIONAL=defaults['BIDIRECTIONAL'], 
-    LOSS=defaults['LOSS'],
-    OPTIMIZER=defaults['OPTIMIZER'], 
-    BATCH_SIZE=defaults['BATCH_SIZE'], 
-    EPOCHS=defaults['EPOCHS'],
-    PATIENCE=defaults['PATIENCE'],
-    SAVELOAD=defaults['SAVELOAD']):
+    N_STEPS=defaults["N_STEPS"], 
+    LOOKUP_STEP=defaults["LOOKUP_STEP"], 
+    TEST_SIZE=defaults["TEST_SIZE"], 
+    N_LAYERS=defaults["N_LAYERS"], 
+    CELL=defaults["CELL"], 
+    UNITS=defaults["UNITS"], 
+    DROPOUT=defaults["DROPOUT"], 
+    BIDIRECTIONAL=defaults["BIDIRECTIONAL"], 
+    LOSS=defaults["LOSS"],
+    OPTIMIZER=defaults["OPTIMIZER"], 
+    BATCH_SIZE=defaults["BATCH_SIZE"], 
+    EPOCHS=defaults["EPOCHS"],
+    PATIENCE=defaults["PATIENCE"],
+    SAVELOAD=defaults["SAVELOAD"]):
     #description of these parameters located inside environment.py
 
     tf.keras.backend.clear_session()
     tf.config.optimizer.set_jit(True)
 
-    policy = mixed_precision.Policy('mixed_float16')
+    policy = mixed_precision.Policy("mixed_float16")
     mixed_precision.set_policy(policy)
 
     # set seed, so we can get the same results after rerunning several times
@@ -145,7 +145,7 @@ def make_neural_net(ticker, end_date=None,
     if BIDIRECTIONAL:
         model_name += "-b"
     # create these folders if they do not exist
-    results_folder = 'results'
+    results_folder = "results"
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
     data, train, valid, test = load_data(
@@ -158,16 +158,16 @@ def make_neural_net(ticker, end_date=None,
     logs = "logs/" + get_time_string()
 
     if SAVELOAD:
-        checkpointer = ModelCheckpoint(model_saveload_directory + '/' + ticker + ".h5", save_weights_only=False, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + ticker + ".h5", save_weights_only=False, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
-        tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch='100,200') 
+        tboard_callback = TensorBoard(log_dir=logs, profile_batch="100,200") 
     else:
-        tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, profile_batch=0)
+        tboard_callback = TensorBoard(log_dir=logs, profile_batch=0)
 
-    early_stop = tf.keras.callbacks.EarlyStopping(patience=PATIENCE)
+    early_stop = EarlyStopping(patience=PATIENCE)
     
     
     history = model.fit(train,
@@ -199,11 +199,11 @@ def make_neural_net(ticker, end_date=None,
         delete_files_in_folder(results_folder)
         os.rmdir(results_folder)
         
+        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
+        train_acc = get_accuracy(y_train_real, y_train_pred, LOOKUP_STEP)
         y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
         valid_acc = get_accuracy(y_valid_real, y_valid_pred, LOOKUP_STEP)
         y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
         test_acc = get_accuracy(y_test_real, y_test_pred, LOOKUP_STEP)
-        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
-        train_acc = get_accuracy(y_train_real, y_train_pred, LOOKUP_STEP)
 
     return data, model, test_acc, valid_acc, train_acc, mae

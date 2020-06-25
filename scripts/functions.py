@@ -39,9 +39,9 @@ def delete_files_in_folder(directory):
         for f in files:
             deleteFiles(f, directory)
     except:
-        f = open(error_file, 'a')
+        f = open(error_file, "a")
         f.write("problem with deleting files in folder: " + directory + "\n")
-        f.write(sys.exc_info()[1] + '\n')
+        f.write(sys.exc_info()[1] + "\n")
         f.close()
 
 

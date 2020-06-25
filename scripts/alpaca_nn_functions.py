@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
 import alpaca_trade_api as tradeapi
-from api_key import real_api_key_id, real_api_secret_key
+from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot
 from environment import test_money as money
 from time_functions import get_time_string, get_end_date, get_trade_day_back
@@ -31,8 +31,8 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
     
     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
 
-    report_dir = reports_directory + '/' + ticker + '/' + time_string + '.txt'
-    reports_folder = reports_directory + '/' + ticker
+    report_dir = reports_directory + "/" + ticker + "/" + time_string + ".txt"
+    reports_folder = reports_directory + "/" + ticker
     if not os.path.isdir(reports_folder):
         os.mkdir(reports_folder)
 
@@ -47,31 +47,31 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
     curr_price = real_y_values[-1]
 
     spencer_money = money * (curr_price/real_y_values[0])
-    f = open(report_dir, 'a')
-    f.write('~~~~~~~' + ticker + '~~~~~~~' '\n')
-    f.write('Spencer wanted me to have: $' + str(round(spencer_money, 2)) + '\n')
+    f = open(report_dir, "a")
+    f.write("~~~~~~~" + ticker + "~~~~~~~" "\n")
+    f.write("Spencer wanteds to have: $" + str(round(spencer_money, 2)) + "\n")
     money_made = decide_trades(money, real_y_values, predicted_y_values)
-    f.write('Money made from using real vs predicted: $' + str(round(money_made, 2)) + '\n')
+    f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
     per_mon = perfect_money(money, real_y_values)
-    f.write('Money made from being perfect: $' + str(round(per_mon, 2)) + '\n')
-    f.write("The test var was " + test_var + '\n')
-    f.write("The mean absolute error is: " + str(round(mae, 4)) + '\n')
-    f.write('Total time to run was: ' + str(round(total_minutes, 2)) + ' minutes.\n')
-    f.write('The price at run time was: ' + str(round(curr_price, 2)) + '\n')
-    f.write('The predicted price for tomorrow is: ' + str(future_price) + '\n')
+    f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
+    f.write("The test var was " + test_var + "\n")
+    f.write("The mean absolute error is: " + str(round(mae, 4)) + "\n")
+    f.write("Total time to run was: " + str(round(total_minutes, 2)) + " minutes.\n")
+    f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
+    f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
     
     percent = future_price / curr_price
     if curr_price < future_price:
-        f.write('That would mean a growth of: ' + str(round((percent - 1) * 100, 2)) + "%\n")
-        f.write('I would buy this stock.\n')
+        f.write("That would mean a growth of: " + str(round((percent - 1) * 100, 2)) + "%\n")
+        f.write("I would buy this stock.\n")
     elif curr_price > future_price:
-        f.write('That would mean a loss of: ' + str(abs(round((percent - 1) * 100, 2))) + "%\n")
-        f.write('I would sell this stock.\n')
+        f.write("That would mean a loss of: " + str(abs(round((percent - 1) * 100, 2))) + "%\n")
+        f.write("I would sell this stock.\n")
     
-    f.write('The average away from the real is: ' + str(percent_from_real(y_real, y_pred)) + '%\n')
-    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + '%\n')
-    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + '%\n')
-    f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + '%\n')
+    f.write("The average away from the real is: " + str(percent_from_real(y_real, y_pred)) + "%\n")
+    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
+    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + "%\n")
+    f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + "%\n")
     f.close()
 
     return percent
@@ -86,30 +86,30 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
-def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None):
+def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
     if end_date is not None:
         if limit > 1000:
-            barset = api.get_barset(symbols=symbol, timeframe='day', limit=1000, until=end_date)
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
             items = barset.items() 
             df = get_values(items)
             new_end_date = get_trade_day_back(end_date, limit-1000)
-            other_barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit-1000, end=new_end_date)
+            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit-1000, end=new_end_date)
             other_df = get_values(other_barset.items()) 
         else:
-            barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit, until=end_date)
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
             items = barset.items() 
             df = get_values(items)
     else:
         if limit > 1000:
-            barset = api.get_barset(symbols=symbol, timeframe='day', limit=1000)
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000)
             items = barset.items() 
             df = get_values(items)
             new_end_date = get_trade_day_back(get_end_date(), limit-1000)
-            other_barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit-1000, end=new_end_date)
+            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit-1000, end=new_end_date)
             other_df = get_values(other_barset.items()) 
         else:
-            barset = api.get_barset(symbols=symbol, timeframe='day', limit=limit)
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
             items = barset.items() 
             df = get_values(items)
     
@@ -120,11 +120,11 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
 
     # roll = df.close.rolling(window=10).mean()
     
-    # df['rolling_avg'] = roll
-    print(df.close)
+    # df["rolling_avg"] = roll
+    
     upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
-    df['upper_band'] = upperband
-    df['lower_band'] = lowerband
+    df["upper_band"] = upperband
+    df["lower_band"] = lowerband
     print(df)
     return df
 
@@ -151,18 +151,18 @@ def get_values(items):
             high_values.append(high_price)
             mid_values.append(mid_price)
             volume.append(vol)
-        data['open'] = open_values
-        data['low'] = low_values
-        data['high'] = high_values
-        data['close'] = close_values
-        data['mid'] = mid_values
-        data['volume'] = volume
+        data["open"] = open_values
+        data["low"] = low_values
+        data["high"] = high_values
+        data["close"] = close_values
+        data["mid"] = mid_values
+        data["volume"] = volume
     df = pd.DataFrame(data=data)
     return df
 
-# , 'rolling_avg'
+# , "rolling_avg"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'upper_band', 'lower_band'],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "upper_band", "lower_band"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -176,7 +176,7 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'upper_band', 
     # this will contain all the elements we want to return from this function
     result = {}
     # we will also return the original dataframe itself
-    result['df'] = df.copy()
+    result["df"] = df.copy()
     # make sure that the passed feature_columns exist in the dataframe
     for col in feature_columns:
         assert col in df.columns, f"'{col}' does not exist in the dataframe."
@@ -191,7 +191,7 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'upper_band', 
         # add the MinMaxScaler instances to the result returned
         result["column_scaler"] = column_scaler
     # add the target column (label) by shifting by `lookup_step`
-    df['future'] = df[test_var].shift(-lookup_step)
+    df["future"] = df[test_var].shift(-lookup_step)
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
     last_sequence = np.array(df[feature_columns].tail(lookup_step))
@@ -199,7 +199,7 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'upper_band', 
     df.dropna(inplace=True)
     sequence_data = []
     sequences = deque(maxlen=n_steps)
-    for entry, target in zip(df[feature_columns].values, df['future'].values):
+    for entry, target in zip(df[feature_columns].values, df["future"].values):
         sequences.append(entry)
         if len(sequences) == n_steps:
             sequence_data.append([np.array(sequences), target])
@@ -210,8 +210,8 @@ feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'upper_band', 
     # shift the last sequence by -1
     last_sequence = np.array(pd.DataFrame(last_sequence).shift(-1).dropna())
     # add to result
-    result['last_sequence'] = last_sequence
-    # construct the X's and y's
+    result["last_sequence"] = last_sequence
+    # construct the X"s and y"s
     X, y = [], []
 
     for seq, target in sequence_data:
@@ -286,18 +286,68 @@ def predict(model, data, n_steps, classification=False):
     predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
     return predicted_val
 
+def getOwnedStocks():
+    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    positions = api.list_positions()
+    owned = {}
+    for position in positions:
+        owned[position.symbol] = position.qty
+    return owned
 
+def decide_trades(symbol, owned, accuracy, percent):
+    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    try:
+        qty = owned[symbol]
+        if percent < 1:
+            sell = api.submit_order(
+                symbol=symbol,
+                qty=qty,
+                side="sell",
+                type="market",
+                time_in_force="day"
+            )
+            print("\nSELLING:", sell)
+            print("\n\n")
+    except KeyError:
+        if accuracy >= .65:
+            if percent > 1:
+                barset = api.get_barset(symbol, "day", limit=1)
+                current_price = 0
+                for symbol, bars in barset.items():
+                    for bar in bars:
+                        current_price = bar.c
+                if current_price == 0:
+                    print("\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n")
+                else:
+                    buy_qty = 200 // current_price
+                    buy = api.submit_order(
+                        symbol=symbol,
+                        qty=buy_qty,
+                        side="buy",
+                        type="market",
+                        time_in_force="day"
+                    )
+                    print("\nBUYING:", buy)
+                    print("\n\n")
+    except:
+        f = open(error_file, "a")
+        f.write("problem with configged stock: " + symbol + "\n")
+        exit_info = sys.exc_info()
+        f.write(str(exit_info[1]) + "\n")
+        traceback.print_tb(tb=exit_info[2], file=f)
+        f.close()
+        print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
 def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
     
-    plot_dir = graph_directory + '/' + ticker
+    plot_dir = graph_directory + "/" + ticker
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
-    plot_name = plot_dir + '/' + test_var + '_' + get_time_string() + '.png'
-    plt.plot(real_y_values, c='b')
-    plt.plot(predicted_y_values, c='r')
+    plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
+    plt.plot(real_y_values, c="b")
+    plt.plot(predicted_y_values, c="r")
     plt.xlabel("Days")
     plt.ylabel("Price")
     plt.title(ticker)
@@ -352,7 +402,7 @@ def perfect_money(money, data):
         money += stonks_owned * data[len(data) - 1]
     return money
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     
     real_price = ([ 110, 100, 110, 100, 110, 100,])
     predict =([ 110, 100, 110, 100, 110, 100])
