@@ -21,6 +21,7 @@ import os
 import random
 import datetime
 import math 
+import talib as ta
 
 
 def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS):
@@ -47,7 +48,7 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
 
     spencer_money = money * (curr_price/real_y_values[0])
     f = open(report_dir, 'a')
-    f.write(ticker + ': ' + test_var + '\n')
+    f.write('~~~~~~~' + ticker + '~~~~~~~' '\n')
     f.write('Spencer wanted me to have: $' + str(round(spencer_money, 2)) + '\n')
     money_made = decide_trades(money, real_y_values, predicted_y_values)
     f.write('Money made from using real vs predicted: $' + str(round(money_made, 2)) + '\n')
@@ -120,6 +121,10 @@ def make_dataframe(symbol, timeframe='day', limit=1000, time=None, end_date=None
     # roll = df.close.rolling(window=10).mean()
     
     # df['rolling_avg'] = roll
+    print(df.close)
+    upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
+    df['upper_band'] = upperband
+    df['lower_band'] = lowerband
     print(df)
     return df
 
@@ -157,7 +162,7 @@ def get_values(items):
 
 # , 'rolling_avg'
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume'],
+feature_columns=['open', 'low', 'high', 'close', 'mid', 'volume', 'upper_band', 'lower_band'],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
