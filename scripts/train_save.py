@@ -1,8 +1,8 @@
 from alpaca_neural_net import saveload_neural_net
 from symbols import load_save_symbols
+from environment import model_saveload_directory, error_file, config_directory
 import os
 import sys
-from environment import model_saveload_directory, error_file, config_directory
 
 check_directories()
 

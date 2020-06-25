@@ -1,15 +1,15 @@
 from alpaca_nn_functions import getOwnedStocks, decide_trades
 from alpaca_neural_net import decision_neural_net
 from symbols import decision_symbols, do_the_trades
-import alpaca_trade_api as tradeapi
-import os
-import pandas as pd
+from functions import check_directories
+from environment import stock_decisions_directory, error_file, config_directory
 from time_functions import get_time_string
+import alpaca_trade_api as tradeapi
+import pandas as pd
 import threading
 import logging
 import sys
-from environment import stock_decisions_directory, error_file, config_directory
-from functions import check_directories
+import os
 import traceback
 
 

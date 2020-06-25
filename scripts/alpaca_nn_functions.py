@@ -1,3 +1,5 @@
+from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
+import alpaca_trade_api as tradeapi
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
@@ -8,10 +10,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-import alpaca_trade_api as tradeapi
-from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot
-from environment import test_money as money
+from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot, test_money, excel_directory
 from time_functions import get_time_string, get_end_date, get_trade_day_back
 import numpy as np
 import pandas as pd
@@ -46,13 +45,13 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
 
     curr_price = real_y_values[-1]
 
-    spencer_money = money * (curr_price/real_y_values[0])
+    spencer_money = test_money * (curr_price/real_y_values[0])
     f = open(report_dir, "a")
     f.write("~~~~~~~" + ticker + "~~~~~~~\n")
     f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
-    money_made = model_money(money, real_y_values, predicted_y_values)
+    money_made = model_money(test_money, real_y_values, predicted_y_values)
     f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
-    per_mon = perfect_money(money, real_y_values)
+    per_mon = perfect_money(test_money, real_y_values)
     f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
     f.write("The test var was " + test_var + "\n")
     f.write("The mean absolute error is: " + str(round(mae, 4)) + "\n")
@@ -74,7 +73,16 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
     f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + "%\n")
     f.close()
 
+    excel_output(curr_price, future_price)
+
     return percent
+
+def excel_output(real_price, predicted_price):
+    date_string = get_end_date()
+    f = open(excel_directory + date_string, "a")
+    f.write(str(round(real_price, 2)) + "\t\n")
+    f.write(str(round(predicted_price, 2)) + "\t\n")
+    f.close()
 
 
 def percent_from_real(y_real, y_predict):

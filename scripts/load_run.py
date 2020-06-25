@@ -1,9 +1,9 @@
 from alpaca_nn_fuctions import load_data, predict, getOwnedStocks, decide_trades
 from symbols import load_save_symbols, do_the_trades
+from environment import model_saveload_directory, error_file, config_directory, defaults
+from tensorflow.keras.models import load_model
 import os
 import sys
-from tensorflow.keras.models import load_model
-from environment import model_saveload_directory, error_file, config_directory, defaults
 
 check_directories()
 
