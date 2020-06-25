@@ -105,7 +105,7 @@ def write_info(info, total_time=0, total_acc=0, total_mae=0):
         total_minutes = info[4] / 60
         time_message = 'It took ' + str(total_minutes) + ' minutes to complete.\n'
         f.write(time_message)
-        f.write("The average time was: " + str(round(info[4] / iteration_num, 2)) + " minutes.\n")
+        f.write("The average time was: " + str(round(total_minutes / iteration_num, 2)) + " minutes.\n")
         f.write("The average accuracy was: " + str(round((info[9] / iteration_num) * 100, 2)) + '%\n')
         f.write("The average mae was: " + str(round(info[10] / iteration_num, 4)) + '\n')
         f.close()
