@@ -1,22 +1,22 @@
 from tensorflow.keras.layers import LSTM
 
 test_money = 10000
-test_var = 'close'
-reports_directory = '../reports'
-error_file = '../error_file.txt'
-config_directory = '../config'
-stock_decisions_directory = reports_directory + '/decisions'
-graph_directory = '../plots'
-model_saveload_directory = '../models'
+test_var = "close"
+reports_directory = "../reports"
+error_file = "../error_file.txt"
+config_directory = "../config"
+stock_decisions_directory = reports_directory + "/decisions"
+graph_directory = "../plots"
+model_saveload_directory = "../models"
 random_seed = 314
-trades_dir = '../trades'
-tuning_directory = '../tuning_info'
+trades_dir = "../trades"
+tuning_directory = "../tuning_info"
 back_test_days = 100
-data_directory = '../data'
+data_directory = "../data"
 save_logs = False
 to_plot = True
 
-'''
+"""
 # N_STEPS = Window size or the sequence length.
 # Lookup step = How many days the model will be trying to predict
 # into the future.
@@ -27,33 +27,33 @@ to_plot = True
 # UNITS = Number of neurons per layer.
 # DROPOUT = % dropout, cells that are dropped in that training batch
 # will not be used to make the output. 
-# BIDIRECTIONAL = Whether or not the LSTM cells' memory can flow 
+# BIDIRECTIONAL = Whether or not the LSTM cells" memory can flow 
 # forward in time if False or forwards and backwards in time
-# LOSS = 'huber_loss'
-# OPTIMIZER = 'adam'
+# LOSS = "huber_loss"
+# OPTIMIZER = "adam"
 # BATCH_SIZE = How many sets of data are ran together.
 # EPOCHS = How many times the machine trains.
 # PATIENCE = How many epochs of no improvement in the validation 
 # loss it takes before the training loop is ended early.
 # SAVELOAD = Whether or not to temporarily save the weights of the 
 # model or to save the whole thing 
-'''
+"""
 
 defaults = {
-    'N_STEPS': 300,
-    'LOOKUP_STEP': 1,
-    'TEST_SIZE': 0.2,
-    'N_LAYERS': 3,
-    'CELL': LSTM,
-    'UNITS': 256,
-    'DROPOUT': 0.4,
-    'BIDIRECTIONAL': False,
-    'LOSS': 'huber_loss',
-    'OPTIMIZER': 'adam',
-    'BATCH_SIZE': 128,
-    'EPOCHS': 2000,
-    'PATIENCE': 400,
-    'SAVELOAD':False,
+    "N_STEPS": 300,
+    "LOOKUP_STEP": 1,
+    "TEST_SIZE": 0.2,
+    "N_LAYERS": 3,
+    "CELL": LSTM,
+    "UNITS": 256,
+    "DROPOUT": 0.4,
+    "BIDIRECTIONAL": False,
+    "LOSS": "huber_loss",
+    "OPTIMIZER": "adam",
+    "BATCH_SIZE": 128,
+    "EPOCHS": 2000,
+    "PATIENCE": 400,
+    "SAVELOAD":False,
 }
 
 
