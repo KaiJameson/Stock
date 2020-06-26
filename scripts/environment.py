@@ -12,6 +12,7 @@ error_file = "../error_file.txt"
 
 test_var = "close"
 test_money = 10000
+money_per_stock = 100
 random_seed = 314
 back_test_days = 100
 save_logs = False
@@ -54,6 +55,6 @@ defaults = {
     "BATCH_SIZE": 128,
     "EPOCHS": 2000,
     "PATIENCE": 400,
-    "SAVELOAD":False,
+    "SAVELOAD": False,
 }
 

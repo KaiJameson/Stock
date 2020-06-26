@@ -48,8 +48,3 @@ def delete_files_in_folder(directory):
         f.write(sys.exc_info()[1] + "\n")
         f.close()
 
-
-
-
-
-

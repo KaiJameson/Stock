@@ -1,16 +1,21 @@
-from alpaca_nn_fuctions import load_data, predict, getOwnedStocks, decide_trades
+from alpaca_nn_functions import load_data, predict, getOwnedStocks, decide_trades, return_real_predict, get_all_accuracies, nn_report, make_excel_file
 from symbols import load_save_symbols, do_the_trades
-from environment import model_saveload_directory, error_file, config_directory, defaults
+from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
+from functions import check_directories
 from tensorflow.keras.models import load_model
+import traceback
+import time
 import os
 import sys
 
 check_directories()
 
 def load_trade(symbols):
+    
     owned = getOwnedStocks()
     for symbol in symbols:
         try:
+            start_time = time.time()
             config_name = config_directory + "/" + symbol + ".csv"
             if os.path.isfile(config_name):
                 f = open(config_name, "r")
@@ -19,24 +24,32 @@ def load_trade(symbols):
                     parts = line.strip().split(",")
                     values[parts[0]] = parts[1]
                 N_STEPS = int(values["N_STEPS"])
-                data, train, valid, test = load_data(symbol, int(values["N_STEPS"]), shuffle=False):
+                data, train, valid, test = load_data(symbol, int(values["N_STEPS"]), shuffle=False)
             else:
                 N_STEPS = int(defaults["N_STEPS"])
-                data, train, valid, test = load_data(symbol, int(defaults["N_STEPS"]), shuffle=False):
+                data, train, valid, test = load_data(symbol, int(defaults["N_STEPS"]), shuffle=False)
+
+            LOOKUP_STEP = defaults["LOOKUP_STEP"]
 
             model = load_model(model_saveload_directory + "/" + symbol + ".h5")
             
-            predicted_price = predict(model, data, N_STEPS)
+            train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
+            
+            mse, mae = model.evaluate(test, verbose=0)
+            mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
 
-            y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
-            test_acc = get_accuracy(y_test_real, y_test_pred, LOOKUP_STEP)
-            curr_price = y_test_real[-1]
-            percent = predicted_price / curr_price
+            total_time = time.time() - start_time
+            percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS)
+
+
+            
 
             if do_the_trades:
                 decide_trades(symbol, owned, test_acc, percent)
             else:
                 print("Why are you running this if you don't want to do the trades?")
+
+            print("Finished running: " + symbol)
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop")
@@ -51,6 +64,8 @@ def load_trade(symbols):
             f.close()
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
-
-
+s = time.time()
 load_trade(load_save_symbols)
+make_excel_file()
+tt = (time.time() - s) / 60
+print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
