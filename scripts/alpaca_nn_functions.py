@@ -95,8 +95,6 @@ def make_excel_file():
 
     f.close()
     
-    
-
 def excel_output(real_price, predicted_price):
     date_string = get_date_string()
     f = open(excel_directory + "/" + date_string + "real" + ".txt", "a")
@@ -106,7 +104,6 @@ def excel_output(real_price, predicted_price):
     f = open(excel_directory + "/" + date_string + "predict" + ".txt", "a")
     f.write(str(round(predicted_price, 2)) + "\t")
     f.close()
-
 
 def percent_from_real(y_real, y_predict):
     the_diffs = []
@@ -163,11 +160,20 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # print(df.high)
     # print(df.low)
 
-    parbol_SAR = ta.SAR(df.high, df.low, .02, .018)
-    df["SAR"] = parbol_SAR
+    # parbol_SAR = ta.SAR(df.high, df.low, .02, .018)
+    # df["SAR"] = parbol_SAR
+
+    # macd, macdsignal, macdhist = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
+    # df["MACD"], df["MACD_signal"], df["MACD_hist"] = macd, macdsignal, macdhist
+
+    # rate = ta.ROC(df.close, timeperiod=10)
+    # df["ROC"] = rate 
+
+    hilbert_trans = ta.HT_TRENDMODE(df.close)
+    df["hilbert_trans"] = hilbert_trans
+
     print(df)
     return df
-
 
 def get_values(items):
     data = {}
@@ -200,9 +206,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# , "rolling_avg"
+# , "rolling_avg""SAR"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "SAR"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "hilbert_trans"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -281,7 +287,6 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "SAR"],
     # return the result
     return result, train, valid, test
 
-
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
                 loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
     model = Sequential()
@@ -309,7 +314,6 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
     model.add(Dense(1, activation="linear"))
     model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
     return model
-
 
 def predict(model, data, n_steps, classification=False):
     # retrieve the last sequence from data
