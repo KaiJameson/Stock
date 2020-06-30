@@ -160,6 +160,42 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # on_bal_vol = ta.OBV(df.close, df.volume)
     # df["OBV"] = on_bal_vol
 
+    # relative_Strength = ta.RSI(df.close)
+    # df["RSI"] = relative_Strength
+
+    # lin = ta.LINEARREG(df.close, timeperiod=14)
+    # df["LIN_REGRESS"] = lin
+
+    # beta = ta.BETA(df.high, df.low, timeperiod=5)
+    # df["BETA"] = beta
+
+    # corr = ta.CORREL(df.high, df.low, timeperiod=30)
+    # df["CORRELATION"] = corr
+
+    # flow = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
+    # df["MFI"] = flow
+
+    # will = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
+    # df["WILL"] = will
+
+    # stddev = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
+    # df["STDDEV"] = stddev
+
+    # minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
+    # df["min"] = minimum
+    # df["max"] = maximum
+
+    # time_series = ta.TSF(df.close, timeperiod=14)
+    # df["time_series_forecast"] = time_series
+
+    # channel = ta.CCI(df.high, df.low, df.close, timeperiod=14)
+    # df["commodity_channel_index"] = channel
+
+    # true = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+    # df["average_true_range"] = true
+
+    # average_dir = ta.ADX(df.high, df.low, df.close, timeperiod=14)
+    # df["average_directional_movement_index"] = average_dir
 
     # parbol_SAR = ta.SAR(df.high, df.low, .02, .018)
     # df["SAR"] = parbol_SAR
