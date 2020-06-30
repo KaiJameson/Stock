@@ -1,18 +1,20 @@
 from tensorflow.keras.layers import LSTM
 
-test_money = 10000
-test_var = "close"
 reports_directory = "../reports"
-error_file = "../error_file.txt"
 config_directory = "../config"
 stock_decisions_directory = reports_directory + "/decisions"
 graph_directory = "../plots"
 model_saveload_directory = "../models"
-random_seed = 314
-trades_dir = "../trades"
 tuning_directory = "../tuning_info"
-back_test_days = 100
 data_directory = "../data"
+excel_directory = "../excel"
+error_file = "../error_file.txt"
+
+test_var = "close"
+test_money = 10000
+money_per_stock = 100
+random_seed = 314
+back_test_days = 100
 save_logs = False
 to_plot = True
 
@@ -53,9 +55,6 @@ defaults = {
     "BATCH_SIZE": 128,
     "EPOCHS": 2000,
     "PATIENCE": 400,
-    "SAVELOAD":False,
+    "SAVELOAD": False,
 }
-
-
-
 

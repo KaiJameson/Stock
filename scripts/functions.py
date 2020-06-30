@@ -1,5 +1,5 @@
-import os
 from environment import *
+import os
 import sys
 
 
@@ -12,25 +12,29 @@ def check_directories():
         os.mkdir(stock_decisions_directory)
     if not os.path.isdir(graph_directory):
         os.mkdir(graph_directory)
+    if not os.path.isdir(model_saveload_directory):
+        os.mkdir(model_saveload_directory)
     if not os.path.isdir(tuning_directory):
         os.mkdir(tuning_directory)
     if not os.path.isdir(data_directory):
         os.mkdir(data_directory)
+    if not os.path.isdir(excel_directory):
+        os.mkdir(excel_directory)
 
-def deleteFiles(dirObject , dirPath):
+def deleteFiles(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
         name = os.fsdecode(dirObject.name)
-        newDir = dirPath+"/"+name
+        newDir = dirPath + "/" + name
         moreFiles = os.scandir(newDir)
         for f in moreFiles:
             if f.is_dir(follow_symlinks=False):
                 deleteFiles(f, newDir)
-                os.rmdir(newDir+"/"+os.fsdecode(f.name))
+                os.rmdir(newDir + "/" + os.fsdecode(f.name))
             else:
-                os.remove(newDir+"/"+os.fsdecode(f.name))
+                os.remove(newDir + "/" + os.fsdecode(f.name))
         os.rmdir(newDir)
     else:
-        os.remove(dirPath+"/"+os.fsdecode(dirObject.name))
+        os.remove(dirPath + "/" + os.fsdecode(dirObject.name))
 
 
 def delete_files_in_folder(directory):
@@ -40,12 +44,7 @@ def delete_files_in_folder(directory):
             deleteFiles(f, directory)
     except:
         f = open(error_file, "a")
-        f.write("problem with deleting files in folder: " + directory + "\n")
+        f.write("Problem with deleting files in folder: " + directory + "\n")
         f.write(sys.exc_info()[1] + "\n")
         f.close()
-
-
-
-
-
 

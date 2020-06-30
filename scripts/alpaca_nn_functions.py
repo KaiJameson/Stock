@@ -1,3 +1,5 @@
+from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
+import alpaca_trade_api as tradeapi
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
@@ -8,11 +10,8 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-import alpaca_trade_api as tradeapi
-from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot
-from environment import test_money as money
-from time_functions import get_time_string, get_end_date, get_trade_day_back
+from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot, test_money, excel_directory, money_per_stock
+from time_functions import get_time_string, get_end_date, get_trade_day_back, get_date_string
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,7 +23,8 @@ import math
 import talib as ta
 
 
-def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS):
+def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, valid_mae, 
+train_mae, N_STEPS):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -46,16 +46,18 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
 
     curr_price = real_y_values[-1]
 
-    spencer_money = money * (curr_price/real_y_values[0])
+    spencer_money = test_money * (curr_price/real_y_values[0])
     f = open(report_dir, "a")
-    f.write("~~~~~~~" + ticker + "~~~~~~~" "\n")
-    f.write("Spencer wanteds to have: $" + str(round(spencer_money, 2)) + "\n")
-    money_made = decide_trades(money, real_y_values, predicted_y_values)
+    f.write("~~~~~~~" + ticker + "~~~~~~~\n")
+    f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
+    money_made = model_money(test_money, real_y_values, predicted_y_values)
     f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
-    per_mon = perfect_money(money, real_y_values)
+    per_mon = perfect_money(test_money, real_y_values)
     f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
     f.write("The test var was " + test_var + "\n")
-    f.write("The mean absolute error is: " + str(round(mae, 4)) + "\n")
+    f.write("The test mean absolute error is: " + str(round(test_mae, 4)) + "\n")
+    f.write("The validation mean absolute error is: " + str(round(valid_mae, 4)) + "\n")
+    f.write("The training absolute error is: " + str(round(train_mae, 4)) + "\n")
     f.write("Total time to run was: " + str(round(total_minutes, 2)) + " minutes.\n")
     f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
     f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
@@ -69,13 +71,42 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
         f.write("I would sell this stock.\n")
     
     f.write("The average away from the real is: " + str(percent_from_real(y_real, y_pred)) + "%\n")
-    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
-    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + "%\n")
     f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + "%\n")
+    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + "%\n")
+    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
     f.close()
+
+    excel_output(curr_price, future_price)
 
     return percent
 
+def make_excel_file():
+    date_string = get_date_string()
+
+    freal = open(excel_directory + "/" + date_string + "real" + ".txt", "r")
+    real_vals = freal.read()
+    freal.close()
+
+    fpred = open(excel_directory + "/" + date_string + "predict" + ".txt", "r")
+    pred_vals = fpred.read()
+    fpred.close()
+
+    f = open(excel_directory + "/" + date_string + ".txt", "a+")
+    
+    f.write(str(real_vals) + "\n")
+    f.write(str(pred_vals))
+
+    f.close()
+    
+def excel_output(real_price, predicted_price):
+    date_string = get_date_string()
+    f = open(excel_directory + "/" + date_string + "real" + ".txt", "a")
+    f.write(str(round(real_price, 2)) + "\t")
+    f.close()
+
+    f = open(excel_directory + "/" + date_string + "predict" + ".txt", "a")
+    f.write(str(round(predicted_price, 2)) + "\t")
+    f.close()
 
 def percent_from_real(y_real, y_predict):
     the_diffs = []
@@ -122,12 +153,76 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     
     # df["rolling_avg"] = roll
     
-    upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
-    df["upper_band"] = upperband
-    df["lower_band"] = lowerband
+    # upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
+    # df["upper_band"] = upperband
+    # df["lower_band"] = lowerband
+
+    # on_bal_vol = ta.OBV(df.close, df.volume)
+    # df["OBV"] = on_bal_vol
+
+    # relative_Strength = ta.RSI(df.close)
+    # df["RSI"] = relative_Strength
+
+    # lin = ta.LINEARREG(df.close, timeperiod=14)
+    # df["LIN_REGRESS"] = lin
+
+    # beta = ta.BETA(df.high, df.low, timeperiod=5)
+    # df["BETA"] = beta
+
+    # corr = ta.CORREL(df.high, df.low, timeperiod=30)
+    # df["CORRELATION"] = corr
+
+    # flow = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
+    # df["MFI"] = flow
+
+    # will = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
+    # df["WILL"] = will
+
+    # stddev = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
+    # df["STDDEV"] = stddev
+
+    # minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
+    # df["min"] = minimum
+    # df["max"] = maximum
+
+    # time_series = ta.TSF(df.close, timeperiod=14)
+    # df["time_series_forecast"] = time_series
+
+    # channel = ta.CCI(df.high, df.low, df.close, timeperiod=14)
+    # df["commodity_channel_index"] = channel
+
+    # true = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+    # df["average_true_range"] = true
+
+    # average_dir = ta.ADX(df.high, df.low, df.close, timeperiod=14)
+    # df["average_directional_movement_index"] = average_dir
+
+    # parbol_SAR = ta.SAR(df.high, df.low, .02, .018)
+    # df["SAR"] = parbol_SAR
+
+    # macd, macdsignal, macdhist = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
+    # df["MACD"], df["MACD_signal"], df["MACD_hist"] = macd, macdsignal, macdhist
+
+    # rate = ta.ROC(df.close, timeperiod=10)
+    # df["ROC"] = rate 
+
+    # hilbert_trans = ta.HT_TRENDMODE(df.close)
+    # df["hilbert_trans"] = hilbert_trans
+
+    # mom = ta.MOM(df.close, timeperiod=10)
+    # df["momentum"] = mom
+
+    # price_os = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
+    # df["absolute_price_oscillator"] = price_os
+
+    # true_range = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+    # df["average_true_range"] = true_range
+
+    # kama = ta.KAMA(df.close, timeperiod=30)
+    # df["KAMA"] = kama
+
     print(df)
     return df
-
 
 def get_values(items):
     data = {}
@@ -160,9 +255,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# , "rolling_avg"
+# , "rolling_avg""SAR" "KAMA"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "upper_band", "lower_band"],
+feature_columns=["open", "low", "high", "close", "mid", "volume"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -241,7 +336,6 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "upper_band", 
     # return the result
     return result, train, valid, test
 
-
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
                 loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
     model = Sequential()
@@ -269,7 +363,6 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
     model.add(Dense(1, activation="linear"))
     model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
     return model
-
 
 def predict(model, data, n_steps, classification=False):
     # retrieve the last sequence from data
@@ -309,7 +402,7 @@ def decide_trades(symbol, owned, accuracy, percent):
             print("\nSELLING:", sell)
             print("\n\n")
     except KeyError:
-        if accuracy >= .65:
+        if accuracy >= .6:
             if percent > 1:
                 barset = api.get_barset(symbol, "day", limit=1)
                 current_price = 0
@@ -319,7 +412,7 @@ def decide_trades(symbol, owned, accuracy, percent):
                 if current_price == 0:
                     print("\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n")
                 else:
-                    buy_qty = 200 // current_price
+                    buy_qty = money_per_stock // current_price
                     buy = api.submit_order(
                         symbol=symbol,
                         qty=buy_qty,
@@ -355,11 +448,33 @@ def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     plt.savefig(plot_name)
     plt.close()
     
+def get_all_accuracies(model, data, lookup_step):
+    y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
+    train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
+    y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+    valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
+    y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+    test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
+
+    return train_acc, valid_acc, test_acc 
 
 def get_accuracy(y_real, y_pred, lookup_step):
     y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_pred[lookup_step:]))
     y_real = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_real[lookup_step:]))
     return accuracy_score(y_real, y_pred)
+
+def get_all_maes(model, test_tensorslice, valid_tensorslice, train_tensorslice, data):
+    train_mae = get_mae(model, train_tensorslice, data)
+    valid_mae = get_mae(model, valid_tensorslice, data)
+    test_mae =  get_mae(model, test_tensorslice, data)
+
+    return test_mae, valid_mae, train_mae
+
+def get_mae(model, tensorslice, data):
+    mse, mae = model.evaluate(tensorslice, verbose=0)
+    mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
+
+    return mae
 
 def return_real_predict(model, X_data, y_data, column_scaler):
     y_pred = model.predict(X_data)
@@ -368,7 +483,7 @@ def return_real_predict(model, X_data, y_data, column_scaler):
     return y_real, y_pred
 
 
-def decide_trades(money, data1, data2):
+def model_money(money, data1, data2):
     stocks_owned = 0
     for i in range(0 , len(data1) - 1):
         now_price = data1[i]
@@ -408,6 +523,6 @@ if __name__ == "__main__":
     predict =([ 110, 100, 110, 100, 110, 100])
    
     money = 100
-    print(str(decide_trades(money, real_price, predict)))
+    print(str(model_money(money, real_price, predict)))
     print(str(perfect_money(money, real_price)))
 

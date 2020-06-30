@@ -13,7 +13,8 @@ import pandas as pd
 ticker = exhaustive_symbols
 
 check_directories()
-EPOCHS = 20
+
+EPOCHS = 2000
 UNITS = [128, 256, 448]
 N_STEPS = [150, 200, 250, 300, 350, 400, 450, 500]
 DROPOUT = [.35, .4, .45]
@@ -51,7 +52,9 @@ def get_info():
             total test accuracy
             total validation accuracy
             total train accuracy
-            total mae
+            total test mae
+            total validation mae
+            total train mae
             """
             f = open(file_name, "r")
             info = []
@@ -74,7 +77,7 @@ def get_info():
             best_drop = DROPOUT[0]
             info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
             info[4] = 0
-            info = info + [0, 0, 0, 0]
+            info = info + [0, 0, 0, 0, 0, 0]
             print("NEW INFO:", info)
             return info
     else:
@@ -83,7 +86,8 @@ def get_info():
             os.remove(file_name)
         return ""
 
-def write_info(info, total_time=0, test_acc=0, valid_acc=0, train_acc=0, total_mae=0):
+def write_info(info, total_time=0, test_acc=0, valid_acc=0, train_acc=0, test_mae=0,
+valid_mae=0, train_mae=0):
     """
     best mae
     best n step
@@ -97,7 +101,9 @@ def write_info(info, total_time=0, test_acc=0, valid_acc=0, train_acc=0, total_m
     total test accuracy
     total validation accuracy
     total train accuracy
-    total mae
+    total test mae
+    total validation mae
+    total train mae
     """
     if info[5] == N_STEPS[-1] and info[6] == UNITS[-1] and info[7] == DROPOUT[-1]:
         config_file = config_directory + "/" + ticker + ".csv"
@@ -113,7 +119,9 @@ def write_info(info, total_time=0, test_acc=0, valid_acc=0, train_acc=0, total_m
         f.write("The average test accuracy was: " + str(round((info[9] / iteration_num) * 100, 2)) + "%\n")
         f.write("The average validation accuracy was: " + str(round((info[10] / iteration_num) * 100, 2)) + "%\n")
         f.write("The average train accuracy was: " + str(round((info[11] / iteration_num) * 100, 2)) + "%\n")
-        f.write("The average mae was: " + str(round(info[12] / iteration_num, 4)) + "\n")
+        f.write("The average test mae was: " + str(round(info[12] / iteration_num, 4)) + "\n")
+        f.write("The average validation mae was: " + str(round(info[13] / iteration_num, 4)) + "\n")
+        f.write("The average train mae was: " + str(round(info[14] / iteration_num, 4)) + "\n")
         f.close()
 
         f = open(f_name, "w")
@@ -130,7 +138,9 @@ def write_info(info, total_time=0, test_acc=0, valid_acc=0, train_acc=0, total_m
         info[9] += test_acc
         info[10] += valid_acc
         info[11] += train_acc
-        info[12] += total_mae
+        info[12] += test_mae
+        info[13] += valid_mae
+        info[14] += train_mae
         print("WRITING TO FILE NAME WITH INFO:", info)
         for num in info:
             if isinstance(num, float):
@@ -214,7 +224,7 @@ while not done:
         step = N_STEPS[step_index]
         info[5] = step
 
-        test_acc, valid_acc, train_acc, mae = tuning_neural_net(
+        test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = tuning_neural_net(
             ticker, 
             end_date=info[8], 
             N_STEPS=step, 
@@ -227,14 +237,14 @@ while not done:
         total_time = end_time - start_time
         m = total_time / 60
 
-        if mae < info[0]:
+        if test_mae < info[0]:
             #mae, step, unit, drop
-            info[0] = mae
+            info[0] = test_mae
             info[1] = step
             info[2] = unit
             info[3] = drop
         elif info[0] == 0:
-            info[0] = mae
+            info[0] = test_mae
             info[1] = step
             info[2] = unit
             info[3] = drop
@@ -249,9 +259,12 @@ while not done:
         f.write("The test accuracy for this this run was: " + str(round(test_acc * 100, 2)) + "%\n")
         f.write("The validation accuracy for this this run was: " + str(round(valid_acc * 100, 2)) + "%\n")
         f.write("The train accuracy for this this run was: " + str(round(train_acc * 100, 2)) + "%\n")
-        f.write("The mean absolute error for this run was: " + str(round(mae, 4)) + "\n")
+        f.write("The test mean absolute error for this run was: " + str(round(test_mae, 4)) + "\n")
+        f.write("The validation mean absolute error for this run was: " + str(round(valid_mae, 4)) + "\n")
+        f.write("The train mean absolute error for this run was: " + str(round(train_mae, 4)) + "\n")
         f.close()
-        write_info(info, total_time=total_time, test_acc=test_acc, valid_acc=valid_acc, train_acc=train_acc, total_mae=mae)
+        write_info(info, total_time=total_time, test_acc=test_acc, valid_acc=valid_acc, train_acc=train_acc, 
+        test_mae=test_mae, valid_mae=valid_mae, train_mae=train_mae)
     except KeyboardInterrupt:
         print("I acknowledge that you want this to stop.")
         print("Thy will be done.")

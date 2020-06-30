@@ -8,7 +8,7 @@ from time_functions import get_time_string
 from environment import (test_var, reports_directory, model_saveload_directory, random_seed, error_file, back_test_days, 
 save_logs)
 from alpaca_nn_functions import (load_data, create_model, predict, accuracy_score, plot_graph, 
-get_accuracy, nn_report, return_real_predict)
+get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
 from functions import delete_files_in_folder
 from time_functions import get_time_string
 from datetime import datetime
@@ -40,7 +40,7 @@ def decision_neural_net(
 #description of these parameters located inside environment.py
 
     start_time = time.time()
-    data, model, test_acc, valid_acc, train_acc, mae = make_neural_net(
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = make_neural_net(
         ticker, N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
         BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
@@ -50,7 +50,8 @@ def decision_neural_net(
 
     end_time = time.time()
     total_time = end_time - start_time
-    percent = nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS)
+    percent = nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, 
+    valid_mae, train_mae, N_STEPS)
 
     return percent, test_acc
 
@@ -72,7 +73,7 @@ def tuning_neural_net(ticker, end_date,
     SAVELOAD=defaults["SAVELOAD"]):
 #description of these parameters located inside environment.py
     
-    data, model, test_acc, valid_acc, train_acc, mae = make_neural_net(
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
@@ -81,9 +82,9 @@ def tuning_neural_net(ticker, end_date,
         SAVELOAD=SAVELOAD
     )
     
-    return test_acc, valid_acc, train_acc, mae
+    return test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae
 
-def saveload_neural_net(ticker, end_date, 
+def saveload_neural_net(ticker, end_date=None, 
     N_STEPS=defaults["N_STEPS"], 
     LOOKUP_STEP=defaults["LOOKUP_STEP"], 
     TEST_SIZE=defaults["TEST_SIZE"], 
@@ -99,7 +100,7 @@ def saveload_neural_net(ticker, end_date,
     PATIENCE=defaults["PATIENCE"],
     SAVELOAD=defaults["SAVELOAD"]):
 
-    data, model, test_acc, valid_acc, train_acc, mae = make_neural_net(
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
@@ -182,7 +183,7 @@ def make_neural_net(ticker, end_date=None,
     
     #before testing, no shuffle
     if SAVELOAD:
-        test_acc, valid_acc, train_acc, mae = 0    
+        test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
         data, train, valid, test = load_data(
             ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
@@ -193,17 +194,14 @@ def make_neural_net(ticker, end_date=None,
         model_path = os.path.join("results", model_name + ".h5")
         model.load_weights(model_path)
 
-        mse, mae = model.evaluate(test, verbose=0)
-        mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
+        # mse, mae = model.evaluate(test, verbose=0)
+        # mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
         
+        test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
+
         delete_files_in_folder(results_folder)
         os.rmdir(results_folder)
         
-        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
-        train_acc = get_accuracy(y_train_real, y_train_pred, LOOKUP_STEP)
-        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
-        valid_acc = get_accuracy(y_valid_real, y_valid_pred, LOOKUP_STEP)
-        y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
-        test_acc = get_accuracy(y_test_real, y_test_pred, LOOKUP_STEP)
+        train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
 
-    return data, model, test_acc, valid_acc, train_acc, mae
+    return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae

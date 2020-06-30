@@ -1,8 +1,11 @@
 from alpaca_neural_net import saveload_neural_net
 from symbols import load_save_symbols
+from functions import check_directories
+from environment import model_saveload_directory, error_file, config_directory
+import traceback
 import os
 import sys
-from environment import model_saveload_directory, error_file, config_directory
+import time
 
 check_directories()
 
@@ -19,11 +22,11 @@ def save_models(symbols):
                 saveload_neural_net(symbol, UNITS=int(values["UNITS"]), DROPOUT=float(values["DROPOUT"]),
                 N_STEPS=int(values["N_STEPS"]), EPOCHS=int(values["EPOCHS"]), SAVELOAD=True)
             else:
-                saveload_neural_net(symbol, SAVELOAD=True)
+                saveload_neural_net(symbol, UNITS=448, EPOCHS=4000, PATIENCE=800, SAVELOAD=True)
 
         except KeyboardInterrupt:
-            print("I acknowledge that you want this to stop")
-            print("Thy will be done")
+            print("I acknowledge that you want this to stop.")
+            print("Thy will be done.")
             sys.exit(-1)
         except:
             f = open(error_file, "a")
@@ -34,6 +37,8 @@ def save_models(symbols):
             f.close()
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
         
+s = time.time()
 save_models(load_save_symbols)
-
+end = (time.time() - s) / 60
+print("This took " + str(end) + "minutes to complete.")
 

@@ -44,6 +44,22 @@ def get_time_string():
     s = f"{year}-{month}-{day}-{hour}-{minute}"
     return s
 
+def get_date_string():
+    operating_sys = platform.system()
+    on_linux = operating_sys == 'LINUX'
+    now = time.time()
+    n = datetime.datetime.fromtimestamp(now)
+    if on_linux:
+        td = datetime.timedelta(hours=4)
+        n -= td
+    year = n.year
+    month = n.month
+    day = n.day
+    hour = n.hour
+    minute = n.minute
+    s = f"{year}-{month}-{day}"
+    return s
+
 def get_end_date():
     tz = 'US/EASTERN'
     now = time.time()
@@ -67,3 +83,4 @@ def get_trade_day_back(last_day, days_back):
     time_int = time.mktime(trade_day.date.timetuple())
     trade_date = pd.Timestamp(time_int, unit='s', tz=tz).isoformat()
     return trade_date
+    

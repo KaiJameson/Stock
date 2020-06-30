@@ -7,6 +7,10 @@ results/
 plots/
 information/
 old/
+excel/
+models/
+reports/
+tuning_info/
 error_file.txt
 scripts/testing.py
 scripts/symbols.py
