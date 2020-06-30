@@ -23,7 +23,8 @@ import math
 import talib as ta
 
 
-def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS):
+def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, valid_mae, 
+train_mae, N_STEPS):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -54,7 +55,9 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, m
     per_mon = perfect_money(test_money, real_y_values)
     f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
     f.write("The test var was " + test_var + "\n")
-    f.write("The mean absolute error is: " + str(round(mae, 4)) + "\n")
+    f.write("The test mean absolute error is: " + str(round(test_mae, 4)) + "\n")
+    f.write("The validation mean absolute error is: " + str(round(valid_mae, 4)) + "\n")
+    f.write("The training absolute error is: " + str(round(train_mae, 4)) + "\n")
     f.write("Total time to run was: " + str(round(total_minutes, 2)) + " minutes.\n")
     f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
     f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
@@ -157,8 +160,6 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # on_bal_vol = ta.OBV(df.close, df.volume)
     # df["OBV"] = on_bal_vol
 
-    # print(df.high)
-    # print(df.low)
 
     # parbol_SAR = ta.SAR(df.high, df.low, .02, .018)
     # df["SAR"] = parbol_SAR
@@ -169,8 +170,20 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # rate = ta.ROC(df.close, timeperiod=10)
     # df["ROC"] = rate 
 
-    hilbert_trans = ta.HT_TRENDMODE(df.close)
-    df["hilbert_trans"] = hilbert_trans
+    # hilbert_trans = ta.HT_TRENDMODE(df.close)
+    # df["hilbert_trans"] = hilbert_trans
+
+    # mom = ta.MOM(df.close, timeperiod=10)
+    # df["momentum"] = mom
+
+    # price_os = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
+    # df["absolute_price_oscillator"] = price_os
+
+    # true_range = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+    # df["average_true_range"] = true_range
+
+    # kama = ta.KAMA(df.close, timeperiod=30)
+    # df["KAMA"] = kama
 
     print(df)
     return df
@@ -206,9 +219,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# , "rolling_avg""SAR"
+# , "rolling_avg""SAR" "KAMA"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "hilbert_trans"],
+feature_columns=["open", "low", "high", "close", "mid", "volume"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -353,7 +366,7 @@ def decide_trades(symbol, owned, accuracy, percent):
             print("\nSELLING:", sell)
             print("\n\n")
     except KeyError:
-        if accuracy >= .65:
+        if accuracy >= .6:
             if percent > 1:
                 barset = api.get_barset(symbol, "day", limit=1)
                 current_price = 0
@@ -413,6 +426,19 @@ def get_accuracy(y_real, y_pred, lookup_step):
     y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_pred[lookup_step:]))
     y_real = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_real[lookup_step:]))
     return accuracy_score(y_real, y_pred)
+
+def get_all_maes(model, test_tensorslice, valid_tensorslice, train_tensorslice, data):
+    train_mae = get_mae(model, train_tensorslice, data)
+    valid_mae = get_mae(model, valid_tensorslice, data)
+    test_mae =  get_mae(model, test_tensorslice, data)
+
+    return test_mae, valid_mae, train_mae
+
+def get_mae(model, tensorslice, data):
+    mse, mae = model.evaluate(tensorslice, verbose=0)
+    mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
+
+    return mae
 
 def return_real_predict(model, X_data, y_data, column_scaler):
     y_pred = model.predict(X_data)
