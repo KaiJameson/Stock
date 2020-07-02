@@ -251,7 +251,7 @@ while not done:
 
         
         f = open(tuning_status_file, "a")
-        f.write("Finished another run.\n")
+        f.write("\n" + "Finished another run.\n")
         f.write("This run took " + str(m) + " minutes to run.\n")
         f.close()
         print_params(tuning_status_file, step, unit, drop, EPOCHS, indent="\t", punct=": ")
