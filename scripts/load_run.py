@@ -1,4 +1,4 @@
-from alpaca_nn_functions import load_data, predict, getOwnedStocks, decide_trades, return_real_predict, get_all_accuracies, nn_report, make_excel_file
+from alpaca_nn_functions import load_data, predict, getOwnedStocks, decide_trades, return_real_predict, get_all_accuracies, nn_report, make_excel_file, get_all_maes
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
 from functions import check_directories
@@ -35,12 +35,10 @@ def load_trade(symbols):
             
             train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
             
-            mse, mae = model.evaluate(test, verbose=0)
-            mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
+            test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
 
             total_time = time.time() - start_time
-            percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, mae, N_STEPS)
-
+            percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, N_STEPS)
 
             
 

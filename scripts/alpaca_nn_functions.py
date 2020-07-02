@@ -76,12 +76,16 @@ train_mae, N_STEPS):
     f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
     f.close()
 
-    excel_output(curr_price, future_price)
+    excel_output(ticker, curr_price, future_price)
 
     return percent
 
 def make_excel_file():
     date_string = get_date_string()
+
+    fsym =  open(excel_directory + "/" + date_string + "symbol" + ".txt", "r")
+    sym_vals = fsym.read()
+    fsym.close()
 
     freal = open(excel_directory + "/" + date_string + "real" + ".txt", "r")
     real_vals = freal.read()
@@ -93,13 +97,19 @@ def make_excel_file():
 
     f = open(excel_directory + "/" + date_string + ".txt", "a+")
     
+    f.write(sym_vals + "\n")
     f.write(str(real_vals) + "\n")
     f.write(str(pred_vals))
 
     f.close()
     
-def excel_output(real_price, predicted_price):
+def excel_output(symbol, real_price, predicted_price):
     date_string = get_date_string()
+
+    f = open(excel_directory + "/" + date_string + "symbol" + ".txt", "a")
+    f.write(symbol + ":" + "\t")
+    f.close()
+
     f = open(excel_directory + "/" + date_string + "real" + ".txt", "a")
     f.write(str(round(real_price, 2)) + "\t")
     f.close()
@@ -144,7 +154,6 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
             items = barset.items() 
             df = get_values(items)
     
-    
     if limit > 1000:
         frames = [other_df, df]
         df = pd.concat(frames) 
@@ -163,8 +172,8 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # relative_Strength = ta.RSI(df.close)
     # df["RSI"] = relative_Strength
 
-    # lin = ta.LINEARREG(df.close, timeperiod=14)
-    # df["LIN_REGRESS"] = lin
+    # lin_regress = ta.LINEARREG(df.close, timeperiod=14)
+    # df["linear_regression"] = lin_regress
 
     # beta = ta.BETA(df.high, df.low, timeperiod=5)
     # df["BETA"] = beta
@@ -172,8 +181,8 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # corr = ta.CORREL(df.high, df.low, timeperiod=30)
     # df["CORRELATION"] = corr
 
-    # flow = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
-    # df["MFI"] = flow
+    # money_flow = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
+    # df["money_flow_index"] = money_flow
 
     # will = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
     # df["WILL"] = will
@@ -221,6 +230,12 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # kama = ta.KAMA(df.close, timeperiod=30)
     # df["KAMA"] = kama
 
+    # typ_price = ta.TYPPRICE(df.high, df.low, df.close)
+    # df["typical_price"] = typ_price
+
+    # ult_os = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
+    # df["ultimate_oscillator"] = ult_os
+
     print(df)
     return df
 
@@ -255,9 +270,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# , "rolling_avg""SAR" "KAMA"
+# , "rolling_avg""SAR" "KAMA" ,"money_flow_index"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume"],
+feature_columns=["open", "low", "high", "close", "mid", "volume" ],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -402,7 +417,7 @@ def decide_trades(symbol, owned, accuracy, percent):
             print("\nSELLING:", sell)
             print("\n\n")
     except KeyError:
-        if accuracy >= .6:
+        if accuracy >= .55:
             if percent > 1:
                 barset = api.get_barset(symbol, "day", limit=1)
                 current_price = 0
