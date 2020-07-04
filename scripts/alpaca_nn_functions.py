@@ -362,7 +362,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["upside/downside_gap_three_methods"]= CDLXSIDEGAP3METHODS(df.open, df.high, df.low, df.close)
 
     pd.set_option("display.max_rows", None, "display.max_columns", None)
-    print(df)
+    print(df.head(100))
     return df
 
 def get_values(items):

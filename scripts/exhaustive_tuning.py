@@ -65,7 +65,7 @@ def get_info():
                     info.append(int(line.strip("i").strip()))
                 else:
                     info.append(line.strip())
-            if len(info) != 13:
+            if len(info) != 15:
                 #TODO: RAISE ERROR
                 print("YOU NEED TO RAISE AN ERROR HERE")
             print("INFO:", info)
