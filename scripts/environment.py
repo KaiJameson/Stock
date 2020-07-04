@@ -16,7 +16,7 @@ money_per_stock = 100
 random_seed = 314
 back_test_days = 100
 save_logs = False
-to_plot = True
+to_plot = False
 
 """
 # N_STEPS = Window size or the sequence length.
