@@ -12,6 +12,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot, test_money, excel_directory, money_per_stock
 from time_functions import get_time_string, get_end_date, get_trade_day_back, get_date_string
+from functions import deleteFiles
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -76,12 +77,16 @@ train_mae, N_STEPS):
     f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
     f.close()
 
-    excel_output(curr_price, future_price)
+    excel_output(ticker, curr_price, future_price)
 
     return percent
 
 def make_excel_file():
     date_string = get_date_string()
+
+    fsym = open(excel_directory + "/" + date_string + "symbol" + ".txt", "r")
+    sym_vals = fsym.read()
+    fsym.close()
 
     freal = open(excel_directory + "/" + date_string + "real" + ".txt", "r")
     real_vals = freal.read()
@@ -93,13 +98,22 @@ def make_excel_file():
 
     f = open(excel_directory + "/" + date_string + ".txt", "a+")
     
+    f.write(sym_vals + "\n")
     f.write(str(real_vals) + "\n")
     f.write(str(pred_vals))
-
     f.close()
+
+    os.remove(excel_directory + "/" + date_string + "symbol" + ".txt")
+    os.remove(excel_directory + "/" + date_string + "real" + ".txt")
+    os.remove(excel_directory + "/" + date_string + "predict" + ".txt")
     
-def excel_output(real_price, predicted_price):
+def excel_output(symbol, real_price, predicted_price):
     date_string = get_date_string()
+
+    f = open(excel_directory + "/" + date_string + "symbol" + ".txt", "a")
+    f.write(symbol + ":" + "\t")
+    f.close()
+
     f = open(excel_directory + "/" + date_string + "real" + ".txt", "a")
     f.write(str(round(real_price, 2)) + "\t")
     f.close()
@@ -144,84 +158,211 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
             items = barset.items() 
             df = get_values(items)
     
-    
     if limit > 1000:
         frames = [other_df, df]
         df = pd.concat(frames) 
 
-    # roll = df.close.rolling(window=10).mean()
-    
-    # df["rolling_avg"] = roll
+    # df["simple_rolling_avg"] = df.close.rolling(window=10).mean()
     
     # upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
     # df["upper_band"] = upperband
     # df["lower_band"] = lowerband
 
-    # on_bal_vol = ta.OBV(df.close, df.volume)
-    # df["OBV"] = on_bal_vol
+    # df["OBV"] = ta.OBV(df.close, df.volume)
 
-    # relative_Strength = ta.RSI(df.close)
-    # df["RSI"] = relative_Strength
+    # df["relative_strength_index"] = ta.RSI(df.close)
 
-    # lin = ta.LINEARREG(df.close, timeperiod=14)
-    # df["LIN_REGRESS"] = lin
+    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
 
-    # beta = ta.BETA(df.high, df.low, timeperiod=5)
-    # df["BETA"] = beta
+    # df["linear_regression_angle"] = ta.LINEARRG_ANGLE(df.close, timeperiod=14)
 
-    # corr = ta.CORREL(df.high, df.low, timeperiod=30)
-    # df["CORRELATION"] = corr
+    # df["linear_regression_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    # flow = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
-    # df["MFI"] = flow
+    # df["linear_regression_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
-    # will = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
-    # df["WILL"] = will
+    # df["BETA"] = ta.BETA(df.high, df.low, timeperiod=5)
 
-    # stddev = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
-    # df["STDDEV"] = stddev
+    # df["CORRELATION"] = ta.CORREL(df.high, df.low, timeperiod=30)
+
+    # df["money_flow_index"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
+
+    # df["williams_r"] = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
+
+    # df["standard_deviation"] = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
 
     # minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
-    # df["min"] = minimum
-    # df["max"] = maximum
+    # df["minimum"] = minimum
+    # df["maximum"] = maximum
+ 
+    # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
-    # time_series = ta.TSF(df.close, timeperiod=14)
-    # df["time_series_forecast"] = time_series
+    # df["commodity_channel_index"] = ta.CCI(df.high, df.low, df.close, timeperiod=14)
 
-    # channel = ta.CCI(df.high, df.low, df.close, timeperiod=14)
-    # df["commodity_channel_index"] = channel
+    # df["average_true_range"] = ta.ATR(df.high, df.low, df.close, timeperiod=14)
 
-    # true = ta.ATR(df.high, df.low, df.close, timeperiod=14)
-    # df["average_true_range"] = true
+    # df["average_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
 
-    # average_dir = ta.ADX(df.high, df.low, df.close, timeperiod=14)
-    # df["average_directional_movement_index"] = average_dir
+    # df["parabolic_SAR"] = ta.SAR(df.high, df.low)
 
-    # parbol_SAR = ta.SAR(df.high, df.low, .02, .018)
-    # df["SAR"] = parbol_SAR
+    # df["parabolic_SAR_extended"] = ta.SAREXT(df.high, df.low, startvalue=0, offsetonreverse=0, accelerationinitlong=0, 
+    # accelerationlong=0, accelerationmaxlong=0, accelerationinitshort=0, accelerationshort=0, accelerationmaxshort=0)
 
-    # macd, macdsignal, macdhist = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
-    # df["MACD"], df["MACD_signal"], df["MACD_hist"] = macd, macdsignal, macdhist
+    # df["MACD"], df["MACD_signal"], df["MACD_hist"] = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
 
-    # rate = ta.ROC(df.close, timeperiod=10)
-    # df["ROC"] = rate 
+    # df["rate_of_change"] = ta.ROC(df.close, timeperiod=10)
 
-    # hilbert_trans = ta.HT_TRENDMODE(df.close)
-    # df["hilbert_trans"] = hilbert_trans
+    # df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
 
-    # mom = ta.MOM(df.close, timeperiod=10)
-    # df["momentum"] = mom
+    # df["ht_dcphase"] = ta.HT_DCPHASE(df.close)
 
-    # price_os = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
-    # df["absolute_price_oscillator"] = price_os
+    # df["ht_inphase"], df["quadrature"] = ta.HT_PHASOR(df.close)
 
-    # true_range = ta.ATR(df.high, df.low, df.close, timeperiod=14)
-    # df["average_true_range"] = true_range
+    # df["ht_sine"], df["ht_leadsine"] = ta.HT_SINE(df.close)
 
-    # kama = ta.KAMA(df.close, timeperiod=30)
-    # df["KAMA"] = kama
+    # df["ht_trendline"] = ta.HT_TRENDLINE(df.close)
 
-    print(df)
+    # df["momentum"] = ta.MOM(df.close, timeperiod=10)
+
+    # df["absolute_price_oscillator"] = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
+
+    # df["average_true_range"] = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+
+    # df["KAMA"] = ta.KAMA(df.close, timeperiod=30)
+
+    # df["typical_price"] = ta.TYPPRICE(df.high, df.low, df.close)
+
+    # df["ultimate_oscillator"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
+
+    # df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
+
+    # df["chaikin_oscillator"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
+
+    # df["normalized_average_true_range"] = ta.NATR(df.high, df.low, df.close, timeperiod=14)
+
+    # df["median_price"] = ta.MEDPRICE(df.high, df.low)
+
+    # df["variance"] = ta.VAR(df.close, timeperiod=5, nbdev=1)
+
+    # df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
+
+    # df["aroon_oscillator"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
+
+    # df["balance_of_power"] = ta.BOP(df.open, df.high, df.low, df.close)
+
+    # df["chande_momentum_oscillator"] = ta.CMO(df.close, timeperiod=14)
+
+    # df["control_MACD"], df["control_MACD_signal"], df["control_MACD_hist"] = ta.MACEXT(df.close, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
+
+    # df["fixed_MACD"], df["fixed_MACD_signal"], df["fixed_MACD_hist"] = ta.MACEXT(df.close, signalperiod=9)
+
+    # df["minus_directional_indicator"] = ta.MINUS_DI(df.high, df.low, df.close, timeperiod=14)
+
+    # df["minus_directional_movement"] = ta.MINUS_DM(df.high, df.low, timeperiod=14)
+
+    # df["plus_directional_indicator"] = ta.PLUS_DI(df.high, df.low, df.close, timeperiod=14)
+
+    # df["plus_directional_movement"] = ta.PLUS_DM(df.high, df.low, timeperiod=14)
+
+    # df["percentage_price_oscillator"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
+
+    # df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, fastk_period=5, fastd_period=3, fastd_matype=0)
+
+    # df["stochastic_relative_strength_k"] = df["stochastic_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+
+    # df["TRIX"] = ta.TRIX(df.close, timeperiod=30)
+
+    # df["weighted_moving_average"] = ta.WMA(df.close, timeperiod=30)
+
+    # TODO figure out what periods to use here
+    # df["moving_average_with_variable_period"] = ta.MAVP(df.close, periods, minperiod=2, maxperiod=30, matype=0)
+
+    # Group 1
+    # df["two_crows"] = ta.CDL2CROWS(df.open, df.high, df.low, df.close)
+    # df["three_black_crows"] = ta.CDL3BLACKCROWS(df.open, df.high, df.low, df.close)
+    # df["three_inside_updown"] = ta.CDL3INSIDE(df.open, df.high, df.low, df.close)
+    # df["three_line_strike"] = ta.CDL3LINESTRIKE(df.open, df.high, df.low, df.close)
+    # df["three_outside_updown"] = ta.CDL3OUTSIDE(df.open, df.high, df.low, df.close)
+
+    # Group 2
+    # df["three_stars_in_the_south"] = ta.CDL3STARSINSOUTH(df.open, df.high, df.low, df.close)
+    # df["three_advancing_white_soldiers"] = ta.CDL3WHITESOLDIERS(df.open, df.high, df.low, df.close)
+    # df["abandoned_baby"] = ta.CDLABANDONEDBABY(df.open, df.high, df.low, df.close)
+    # df["advance_block"] = ta.CDLADVANCEBLOCK(df.open, df.high, df.low, df.close)
+    # df["belt_hold"] = ta.CDLBELTHOLD(df.open, df.high, df.low, df.close)
+
+    # Group 3
+    # df["breakaway"] = ta.CDLBREAKAWAY(df.open, df.high, df.low, df.close)
+    # df["closing_marubozu"] = ta.CDLCLOSINGMARUBOZU(df.open, df.high, df.low, df.close)
+    # df["concealing_baby_swallow"] = ta.CDLCONCEALBABYSWALL(df.open, df.high, df.low, df.close)
+    # df["counterattack"] = ta.CDLCOUNTERATTACK(df.open, df.high, df.low, df.close)
+    # df["dark_cloud_cover"] = ta.CDLDARKCLOUDCOVER(df.open, df.high, df.low, df.close)
+
+    # Group 4
+    # df["doji"] = ta.CDLDOJI(df.open, df.high, df.low, df.close)
+    # df["doji_star"] = ta.CDLDOJISTAR(df.open, df.high, df.low, df.close)
+    # df["dragonfly_doji"] = ta.CDLDRAGONFLYDOJI(df.open, df.high, df.low, df.close)
+    # df["engulfing_pattern"] = ta.CDLENGULFING(df.open, df.high, df.low, df.close)
+    # df["evening_doji_star"] = ta.CDLEVENINGDOJISTAR(df.open, df.high, df.low, df.close)
+
+    # Group 5
+    # df["evening_star"] = ta.CDLEVENINGSTAR(df.open, df.high, df.low, df.close)
+    # df["updown_gap_sidebyside_white_lines"] = ta.CDLGAPSIDESIDEWHITE(df.open, df.high, df.low, df.close)
+    # df["gravestone_doji"] = ta.CDLGRAVESTONEDOJI(df.open, df.high, df.low, df.close)
+    # df["hammer"] = ta.CDLHAMMER(df.open, df.high, df.low, df.close)
+    # df["hanging_man"] = ta.CDLHANGINGMAN(df.open, df.high, df.low, df.close)
+
+    # Group 6
+    # df["harami_pattern"] = ta.CDLHARAMI(df.open, df.high, df.low, df.close)
+    # df["harami_cross_pattern"] = ta.CDLHARAMICROSS(df.open, df.high, df.low, df.close)
+    # df["high_wave_candle"] = ta.CDLHIGHWAVE(df.open, df.high, df.low, df.close)
+    # df["hikkake_pattern"]= ta.CDLHIKKAKE(df.open, df.high, df.low, df.close)
+    # df["modified_hikkake_pattern"]= ta.CDLHIKKAKEMOD(df.open, df.high, df.low, df.close)
+
+    # Group 7
+    # df["homing_pigeon"] = ta.CDLHOMINGPIGEON(df.open, df.high, df.low, df.close)
+    # df["identical_three_crows"] = ta.CDLIDENTICAL3CROWS(df.open, df.high, df.low, df.close)
+    # df["in_neck_pattern"] = ta.CDLINNECK(df.open, df.high, df.low, df.close)
+    # df["inverted_hammer"] = ta.CDLINVERTEDHAMMER(df.open, df.high, df.low, df.close)
+    # df["kicking"] = ta.CDLKICKING(df.open, df.high, df.low, df.close)
+
+    # Group 8
+    # df["kicking_bull/bear_determined_by_longer_marubozu"] = ta.CDLKICKINGBYLENGTH(df.open, df.high, df.low, df.close)
+    # df["ladder_bottom"] = ta.CDLLADDERBOTTOM(df.open, df.high, df.low, df.close)
+    # df["long_legged_doji"] = ta.CDLLONGLEGGEDDOJI(df.open, df.high, df.low, df.close)
+    # df["long_line_candle"] = ta.CDLLONGLINE(df.open, df.high, df.low, df.close)
+    # df["marubozu"] = ta.CDLMARUBOZU(df.open, df.high, df.low, df.close)
+
+    # Group 9
+    # df["matching_low"] = ta.CDLMATCHINGLOW(df.open, df.high, df.low, df.close)
+    # df["mat_hold"] = ta.CDLMATHOLD(df.open, df.high, df.low, df.close)
+    # df["morning_doji_star"] = ta.CDLMORNINGDOJISTAR(df.open, df.high, df.low, df.close)
+    # df["morning_star"] = ta.CDLMORNINGSTAR(df.open, df.high, df.low, df.close)
+    # df["on_neck_pattern"] = ta.CDLONNECK(df.open, df.high, df.low, df.close)
+
+    # Group 10
+    # df["piercing_pattern"] = ta.CDLPIERCING(df.open, df.high, df.low, df.close)
+    # df["rickshaw_man"] = ta.CDLRICKSHAWMAN(df.open, df.high, df.low, df.close)
+    # df["rising_falling_three_methods"] = ta.CDLRISEFALL3METHODS(df.open, df.high, df.low, df.close)
+    # df["separating_lines"] = ta.CDLSEPARATINGLINES(df.open, df.high, df.low, df.close)
+    # df["shooting_star"] = ta.CDLSHOOTINGSTAR(df.open, df.high, df.low, df.close)
+
+    # Group 11
+    # df["short_line_candle"] = ta.CDLSHORTLINE(df.open, df.high, df.low, df.close)
+    # df["spinning_top"] = ta.CDLSPINNINGTOP(df.open, df.high, df.low, df.close)
+    # df["stalled_pattern"] = ta.CDLSTALLEDPATTERN(df.open, df.high, df.low, df.close)
+    # df["stick_sandwich"] = ta.CDLSTICKSANDWICH(df.open, df.high, df.low, df.close)
+    # df["takuri"] = ta.CDLTAKURI(df.open, df.high, df.low, df.close)
+
+    # Group 12
+    # df["tasuki_gap"] = CDLTASUKIGAP(df.open, df.high, df.low, df.close)  
+    # df["thrusting_pattern"] = CDLTHRUSTING(df.open, df.high, df.low, df.close)
+    # df["tristar_pattern"] = CDLTRISTAR(df.open, df.high, df.low, df.close)
+    # df["unique_3_river"] = CDLUNIQUE3RIVER(df.open, df.high, df.low, df.close)
+    # df["upside_gap_two_crows"] = CDLUPSIDEGAP2CROWS(df.open, df.high, df.low, df.close)
+    # df["upside/downside_gap_three_methods"]= CDLXSIDEGAP3METHODS(df.open, df.high, df.low, df.close)
+
+    pd.set_option("display.max_rows", None, "display.max_columns", None)
+    print(df.head(100))
     return df
 
 def get_values(items):
@@ -255,7 +396,7 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# , "rolling_avg""SAR" "KAMA"
+# , "rolling_avg""SAR" "KAMA" "williams_r" 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
 feature_columns=["open", "low", "high", "close", "mid", "volume"],
                 batch_size=64, end_date=None):
@@ -402,7 +543,7 @@ def decide_trades(symbol, owned, accuracy, percent):
             print("\nSELLING:", sell)
             print("\n\n")
     except KeyError:
-        if accuracy >= .6:
+        if accuracy >= .55:
             if percent > 1:
                 barset = api.get_barset(symbol, "day", limit=1)
                 current_price = 0

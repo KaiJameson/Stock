@@ -22,7 +22,7 @@ def save_models(symbols):
                 saveload_neural_net(symbol, UNITS=int(values["UNITS"]), DROPOUT=float(values["DROPOUT"]),
                 N_STEPS=int(values["N_STEPS"]), EPOCHS=int(values["EPOCHS"]), SAVELOAD=True)
             else:
-                saveload_neural_net(symbol, UNITS=448, EPOCHS=4000, PATIENCE=800, SAVELOAD=True)
+                saveload_neural_net(symbol, UNITS=256, EPOCHS=3000, PATIENCE=400, SAVELOAD=True)
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")
@@ -40,5 +40,5 @@ def save_models(symbols):
 s = time.time()
 save_models(load_save_symbols)
 end = (time.time() - s) / 60
-print("This took " + str(end) + "minutes to complete.")
+print("This took " + str(round(end , 2)) + " minutes to complete.")
 

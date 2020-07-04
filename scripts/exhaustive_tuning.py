@@ -55,6 +55,7 @@ def get_info():
             total test mae
             total validation mae
             total train mae
+            total epochs used
             """
             f = open(file_name, "r")
             info = []
@@ -65,7 +66,7 @@ def get_info():
                     info.append(int(line.strip("i").strip()))
                 else:
                     info.append(line.strip())
-            if len(info) != 13:
+            if len(info) != 16:
                 #TODO: RAISE ERROR
                 print("YOU NEED TO RAISE AN ERROR HERE")
             print("INFO:", info)
@@ -77,7 +78,7 @@ def get_info():
             best_drop = DROPOUT[0]
             info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
             info[4] = 0
-            info = info + [0, 0, 0, 0, 0, 0]
+            info = info + [0, 0, 0, 0, 0, 0, 0]
             print("NEW INFO:", info)
             return info
     else:
@@ -87,7 +88,7 @@ def get_info():
         return ""
 
 def write_info(info, total_time=0, test_acc=0, valid_acc=0, train_acc=0, test_mae=0,
-valid_mae=0, train_mae=0):
+valid_mae=0, train_mae=0, total_epochs=0):
     """
     best mae
     best n step
@@ -104,6 +105,7 @@ valid_mae=0, train_mae=0):
     total test mae
     total validation mae
     total train mae
+    total epochs used
     """
     if info[5] == N_STEPS[-1] and info[6] == UNITS[-1] and info[7] == DROPOUT[-1]:
         config_file = config_directory + "/" + ticker + ".csv"
@@ -122,6 +124,7 @@ valid_mae=0, train_mae=0):
         f.write("The average test mae was: " + str(round(info[12] / iteration_num, 4)) + "\n")
         f.write("The average validation mae was: " + str(round(info[13] / iteration_num, 4)) + "\n")
         f.write("The average train mae was: " + str(round(info[14] / iteration_num, 4)) + "\n")
+        f.write("The average amount of epochs used was: " + str(round(info[15] / iteration_num, 4)) + "\n")
         f.close()
 
         f = open(f_name, "w")
@@ -141,6 +144,7 @@ valid_mae=0, train_mae=0):
         info[12] += test_mae
         info[13] += valid_mae
         info[14] += train_mae
+        info[15] += total_epochs
         print("WRITING TO FILE NAME WITH INFO:", info)
         for num in info:
             if isinstance(num, float):
@@ -224,7 +228,7 @@ while not done:
         step = N_STEPS[step_index]
         info[5] = step
 
-        test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = tuning_neural_net(
+        test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, total_epochs = tuning_neural_net(
             ticker, 
             end_date=info[8], 
             N_STEPS=step, 
@@ -251,7 +255,7 @@ while not done:
 
         
         f = open(tuning_status_file, "a")
-        f.write("Finished another run.\n")
+        f.write("\n" + "Finished another run.\n")
         f.write("This run took " + str(m) + " minutes to run.\n")
         f.close()
         print_params(tuning_status_file, step, unit, drop, EPOCHS, indent="\t", punct=": ")
@@ -264,7 +268,7 @@ while not done:
         f.write("The train mean absolute error for this run was: " + str(round(train_mae, 4)) + "\n")
         f.close()
         write_info(info, total_time=total_time, test_acc=test_acc, valid_acc=valid_acc, train_acc=train_acc, 
-        test_mae=test_mae, valid_mae=valid_mae, train_mae=train_mae)
+        test_mae=test_mae, valid_mae=valid_mae, train_mae=train_mae, total_epochs=total_epochs)
     except KeyboardInterrupt:
         print("I acknowledge that you want this to stop.")
         print("Thy will be done.")
