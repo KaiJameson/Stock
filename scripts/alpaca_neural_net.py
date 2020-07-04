@@ -40,7 +40,7 @@ def decision_neural_net(
 #description of these parameters located inside environment.py
 
     start_time = time.time()
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = make_neural_net(
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
         ticker, N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
         BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
@@ -73,7 +73,7 @@ def tuning_neural_net(ticker, end_date,
     SAVELOAD=defaults["SAVELOAD"]):
 #description of these parameters located inside environment.py
     
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = make_neural_net(
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
@@ -82,7 +82,7 @@ def tuning_neural_net(ticker, end_date,
         SAVELOAD=SAVELOAD
     )
     
-    return test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae
+    return test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
 
 def saveload_neural_net(ticker, end_date=None, 
     N_STEPS=defaults["N_STEPS"], 
@@ -100,7 +100,7 @@ def saveload_neural_net(ticker, end_date=None,
     PATIENCE=defaults["PATIENCE"],
     SAVELOAD=defaults["SAVELOAD"]):
 
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae = make_neural_net(
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
         ticker, end_date=end_date, 
         N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
         N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
@@ -180,7 +180,8 @@ def make_neural_net(ticker, end_date=None,
                         callbacks = [tboard_callback, checkpointer, early_stop]   
                         )
 
-    
+    epochs_used = len(history.history["loss"])
+
     #before testing, no shuffle
     if SAVELOAD:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
@@ -204,4 +205,4 @@ def make_neural_net(ticker, end_date=None,
         
         train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
 
-    return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae
+    return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
