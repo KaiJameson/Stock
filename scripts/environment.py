@@ -54,7 +54,7 @@ defaults = {
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 128,
     "EPOCHS": 2000,
-    "PATIENCE": 400,
+    "PATIENCE": 300,
     "SAVELOAD": False,
 }
 
