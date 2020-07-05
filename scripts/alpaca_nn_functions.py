@@ -172,7 +172,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["relative_strength_index"] = ta.RSI(df.close)
 
-    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
+    df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
 
     # df["linear_regression_angle"] = ta.LINEARRG_ANGLE(df.close, timeperiod=14)
 
@@ -362,7 +362,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["upside/downside_gap_three_methods"]= CDLXSIDEGAP3METHODS(df.open, df.high, df.low, df.close)
 
     pd.set_option("display.max_rows", None, "display.max_columns", None)
-    print(df.head(100))
+    print(df.head(40))
     return df
 
 def get_values(items):
@@ -398,7 +398,7 @@ def get_values(items):
 
 # , "rolling_avg""SAR" "KAMA" "williams_r" 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "linear_regression"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca

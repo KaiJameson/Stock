@@ -14,7 +14,7 @@ ticker = exhaustive_symbols
 
 check_directories()
 
-EPOCHS = 2000
+EPOCHS = 3000
 UNITS = [128, 256, 448]
 N_STEPS = [150, 200, 250, 300, 350, 400, 450, 500]
 DROPOUT = [.35, .4, .45]
@@ -266,6 +266,7 @@ while not done:
         f.write("The test mean absolute error for this run was: " + str(round(test_mae, 4)) + "\n")
         f.write("The validation mean absolute error for this run was: " + str(round(valid_mae, 4)) + "\n")
         f.write("The train mean absolute error for this run was: " + str(round(train_mae, 4)) + "\n")
+        f.write("The amount of epochs used for this run was: " + str(round(total_epochs, 4)) + "\n")
         f.close()
         write_info(info, total_time=total_time, test_acc=test_acc, valid_acc=valid_acc, train_acc=train_acc, 
         test_mae=test_mae, valid_mae=valid_mae, train_mae=train_mae, total_epochs=total_epochs)
