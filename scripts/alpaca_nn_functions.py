@@ -172,17 +172,17 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["relative_strength_index"] = ta.RSI(df.close)
 
-    df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
+    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
 
-    # df["linear_regression_angle"] = ta.LINEARRG_ANGLE(df.close, timeperiod=14)
+    # df["linear_regression_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
     # df["linear_regression_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    # df["linear_regression_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
+    df["linear_regression_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
     # df["BETA"] = ta.BETA(df.high, df.low, timeperiod=5)
 
-    # df["CORRELATION"] = ta.CORREL(df.high, df.low, timeperiod=30)
+    # df["pearson's_correlation"] = ta.CORREL(df.high, df.low, timeperiod=30)
 
     # df["money_flow_index"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
 
@@ -210,6 +210,8 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["MACD"], df["MACD_signal"], df["MACD_hist"] = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
 
     # df["rate_of_change"] = ta.ROC(df.close, timeperiod=10)
+
+    # df["ht_dcperiod"] = ta.HT_DCPERIOD(df.close)
 
     # df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
 
@@ -265,7 +267,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["percentage_price_oscillator"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    # df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, fastk_period=5, fastd_period=3, fastd_matype=0)
+    # df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
     # df["stochastic_relative_strength_k"] = df["stochastic_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
@@ -354,13 +356,54 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["takuri"] = ta.CDLTAKURI(df.open, df.high, df.low, df.close)
 
     # Group 12
-    # df["tasuki_gap"] = CDLTASUKIGAP(df.open, df.high, df.low, df.close)  
-    # df["thrusting_pattern"] = CDLTHRUSTING(df.open, df.high, df.low, df.close)
-    # df["tristar_pattern"] = CDLTRISTAR(df.open, df.high, df.low, df.close)
-    # df["unique_3_river"] = CDLUNIQUE3RIVER(df.open, df.high, df.low, df.close)
-    # df["upside_gap_two_crows"] = CDLUPSIDEGAP2CROWS(df.open, df.high, df.low, df.close)
-    # df["upside/downside_gap_three_methods"]= CDLXSIDEGAP3METHODS(df.open, df.high, df.low, df.close)
+    # df["tasuki_gap"] = ta.CDLTASUKIGAP(df.open, df.high, df.low, df.close)  
+    # df["thrusting_pattern"] = ta.CDLTHRUSTING(df.open, df.high, df.low, df.close)
+    # df["tristar_pattern"] = ta.CDLTRISTAR(df.open, df.high, df.low, df.close)
+    # df["unique_3_river"] = ta.CDLUNIQUE3RIVER(df.open, df.high, df.low, df.close)
+    # df["upside_gap_two_crows"] = ta.CDLUPSIDEGAP2CROWS(df.open, df.high, df.low, df.close)
+    # df["upside/downside_gap_three_methods"] = ta.CDLXSIDEGAP3METHODS(df.open, df.high, df.low, df.close)
 
+    # df["upperband"], df["middleband"], df["lowerband"] = ta.BBANDS(df.close, timeperiod=5, nbdevup=2, nbdevdn=2, matype=0)
+
+    # df["double_exponetial_moving_average"] = ta.DEMA(df.close, timeperiod=30)
+
+    # df["exponential_moving_average"] = ta.EMA(df.close, timeperiod=30)
+
+    # df["moving_average"] = ta.MA(df.close, timeperiod=30, matype=0)
+
+    # df["MESA_mama"], df["MESA_fama"] = ta.MAMA(df.close)
+
+    # df["midpoint"] = ta.MIDPOINT(df.close, timeperiod=14)
+
+    # df["midprice"] = ta.MIDPRICE(df.high, df.low, timeperiod=14)
+
+    # df["parabolic_SAR"] = ta.SAR(df.high, df.low)
+
+    # df["simple_moving_average"] = ta.SMA(df.close, timeperiod=30)
+
+    # df["triple_exponential_moving_average"] = ta.TEMA(df.close, timeperiod=30)
+
+    # df["triangular_moving_average"] = ta.TRIMA(df.close, timeperiod=30)
+
+    # df["average_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
+
+    # df["average_directional_movement_index_rating"] = ta.ADXR(df.high, df.low, df.close, timeperiod=14)
+
+    # df["stochastic_slowk"], df["stochastic_slowd"] = ta.STOCH(df.high, df.low, df.close, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
+
+    # df["average_true_range"] = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+
+    # df["true_range"] = ta.TRANGE(df.high, df.low, df.close)
+
+    # df["average_price"] = ta.AVGPRICE(df.open, df.high, df.low, df.close)
+
+    # df["weighted_close_price"] = ta.WCLPRICE(df.high, df.low, df.close)
+
+    # df["beta"] = ta.BETA(df.high, df.low, timeperiod=5)
+
+    # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
+
+    # print(df)
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     print(df.head(40))
     return df
@@ -396,9 +439,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# , "rolling_avg""SAR" "KAMA" "williams_r" 
+#  "linear_regression", "ht_trendmode"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "linear_regression"],
+feature_columns=["open", "low", "high", "close", "mid", "volume",  "linear_regression_slope"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -543,7 +586,7 @@ def decide_trades(symbol, owned, accuracy, percent):
             print("\nSELLING:", sell)
             print("\n\n")
     except KeyError:
-        if accuracy >= .55:
+        if accuracy >= .5:
             if percent > 1:
                 barset = api.get_barset(symbol, "day", limit=1)
                 current_price = 0
@@ -660,10 +703,9 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
     
-    real_price = ([ 110, 100, 110, 100, 110, 100,])
-    predict =([ 110, 100, 110, 100, 110, 100])
-   
-    money = 100
-    print(str(model_money(money, real_price, predict)))
-    print(str(perfect_money(money, real_price)))
+    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    account = api.get_account()
+    print(float(account.equity))
+
+
 

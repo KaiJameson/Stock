@@ -1,7 +1,7 @@
 from alpaca_neural_net import saveload_neural_net
 from symbols import load_save_symbols
 from functions import check_directories
-from environment import model_saveload_directory, error_file, config_directory
+from environment import model_saveload_directory, error_file, config_directory, defaults
 import traceback
 import os
 import sys
@@ -22,7 +22,8 @@ def save_models(symbols):
                 saveload_neural_net(symbol, UNITS=int(values["UNITS"]), DROPOUT=float(values["DROPOUT"]),
                 N_STEPS=int(values["N_STEPS"]), EPOCHS=int(values["EPOCHS"]), SAVELOAD=True)
             else:
-                saveload_neural_net(symbol, UNITS=256, EPOCHS=3000, PATIENCE=400, SAVELOAD=True)
+                saveload_neural_net(symbol, UNITS=defaults["UNITS"], EPOCHS=defaults["EPOCHS"], PATIENCE=defaults["PATIENCE"], 
+                SAVELOAD=True)
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")

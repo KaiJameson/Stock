@@ -42,7 +42,7 @@ to_plot = False
 """
 
 defaults = {
-    "N_STEPS": 300,
+    "N_STEPS": 500,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 3,
@@ -54,7 +54,7 @@ defaults = {
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 128,
     "EPOCHS": 2000,
-    "PATIENCE": 300,
+    "PATIENCE": 200,
     "SAVELOAD": False,
 }
 

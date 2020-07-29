@@ -16,7 +16,7 @@ check_directories()
 
 EPOCHS = 3000
 UNITS = [128, 256, 448]
-N_STEPS = [150, 200, 250, 300, 350, 400, 450, 500]
+N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.35, .4, .45]
 
 iteration_num = len(UNITS) * len(N_STEPS) * len(DROPOUT)
@@ -118,6 +118,7 @@ valid_mae=0, train_mae=0, total_epochs=0):
         time_message = "It took " + str(total_minutes) + " minutes to complete.\n"
         f.write(time_message)
         f.write("The average time was: " + str(round(total_minutes / iteration_num, 2)) + " minutes.\n")
+        f.write("The average accuracy was: " + str(round(((info[9] + info[10] + info[11]) / iteration_num) * 100, 2) + "%\n"))
         f.write("The average test accuracy was: " + str(round((info[9] / iteration_num) * 100, 2)) + "%\n")
         f.write("The average validation accuracy was: " + str(round((info[10] / iteration_num) * 100, 2)) + "%\n")
         f.write("The average train accuracy was: " + str(round((info[11] / iteration_num) * 100, 2)) + "%\n")
