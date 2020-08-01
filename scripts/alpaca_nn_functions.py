@@ -571,60 +571,63 @@ def getOwnedStocks():
 def decide_trades(symbol, owned, accuracy, percent):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
     clock = api.get_clock()
-    # if clock.is_open:
-    try:
-        qty = owned[symbol]
-        if percent < 1:
-            sell = api.submit_order(
-                symbol=symbol,
-                qty=qty,
-                side="sell",
-                type="market",
-                time_in_force="day"
-            )
+    if clock.is_open:
+        try:
+            qty = owned[symbol]
+            if percent < 1:
+                sell = api.submit_order(
+                    symbol=symbol,
+                    qty=qty,
+                    side="sell",
+                    type="market",
+                    time_in_force="day"
+                )
 
-            print("\n~~~SELLING " + sell.symbol + "~~~")
-            print("Quantity: " + sell.qty)
-            print("Filled at " + sell.filled_at + " with an average fill of " + sell.filled_avg_price + ".")
-            print("Status: " + sell.status)
-            print("Type: " + sell.type)
-            print("Time in force: "  + sell.time_in_force + "\n\n")
+                print("\n~~~SELLING " + sell.symbol + "~~~")
+                print("Quantity: " + sell.qty)
+                print("Filled at " + sell.filled_at + " with an average fill of " + sell.filled_avg_price + ".")
+                print("Status: " + sell.status)
+                print("Type: " + sell.type)
+                print("Time in force: "  + sell.time_in_force + "\n\n")
 
-    except KeyError:
-        if accuracy >= .5:
-            if percent > 1:
-                account_equity = api.get_account().equity
-                print((account_equity))
-                barset = api.get_barset(symbol, "day", limit=1)
-                current_price = 0
-                for symbol, bars in barset.items():
-                    for bar in bars:
-                        current_price = bar.c
-                if current_price == 0:
-                    print("\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n")
-                else:
-                    buy_qty = (float(account_equity) / stocks_traded) // current_price
-                    buy = api.submit_order(
-                        symbol=symbol,
-                        qty=buy_qty,
-                        side="buy",
-                        type="market",
-                        time_in_force="day"
-                    )
-                print("\n~~~Buying " + buy.symbol + "~~~")
-                print("Quantity: " + buy.qty)
-                print("Filled at " + buy.filled_at + " with an average fill of " + buy.filled_avg_price + ".")
-                print("Status: " + buy.status)
-                print("Type: " + buy.type)
-                print("Time in force: "  + buy.time_in_force + "\n\n")
-    except:
-        f = open(error_file, "a")
-        f.write("Problem with configged stock: " + symbol + "\n")
-        exit_info = sys.exc_info()
-        f.write(str(exit_info[1]) + "\n")
-        traceback.print_tb(tb=exit_info[2], file=f)
-        f.close()
-        print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except KeyError:
+            if accuracy >= .5:
+                if percent > 1:
+                    account_equity = api.get_account().equity
+                    barset = api.get_barset(symbol, "day", limit=1)
+                    current_price = 0
+                    for symbol, bars in barset.items():
+                        for bar in bars:
+                            current_price = bar.c
+                    if current_price == 0:
+                        print("\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n")
+                    else:
+                        buy_qty = (float(account_equity) / stocks_traded) // current_price
+                        buy = api.submit_order(
+                            symbol=symbol,
+                            qty=buy_qty,
+                            side="buy",
+                            type="market",
+                            time_in_force="day"
+                        )
+                    print("\n~~~Buying " + buy.symbol + "~~~")
+                    print("Quantity: " + buy.qty)
+                    print("Filled at " + buy.filled_at + " with an average fill of " + buy.filled_avg_price + ".")
+                    print("Status: " + buy.status)
+                    print("Type: " + buy.type)
+                    print("Time in force: "  + buy.time_in_force + "\n\n")
+
+        except:
+            f = open(error_file, "a")
+            f.write("Problem with configged stock: " + symbol + "\n")
+            exit_info = sys.exc_info()
+            f.write(str(exit_info[1]) + "\n")
+            traceback.print_tb(tb=exit_info[2], file=f)
+            f.close()
+            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+    else:
+        print("You tried to trade while the market was closed! You're either ")
+        print("testing or stupid. Good thing I'm here!")
 
 def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
