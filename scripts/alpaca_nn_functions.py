@@ -10,7 +10,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot, test_money, excel_directory, money_per_stock
+from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot, test_money, excel_directory, money_per_stock, stocks_traded
 from time_functions import get_time_string, get_end_date, get_trade_day_back, get_date_string
 from functions import deleteFiles
 import numpy as np
@@ -24,8 +24,7 @@ import math
 import talib as ta
 
 
-def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, valid_mae, 
-train_mae, N_STEPS):
+def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -56,10 +55,7 @@ train_mae, N_STEPS):
     per_mon = perfect_money(test_money, real_y_values)
     f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
     f.write("The test var was " + test_var + "\n")
-    f.write("The test mean absolute error is: " + str(round(test_mae, 4)) + "\n")
-    f.write("The validation mean absolute error is: " + str(round(valid_mae, 4)) + "\n")
-    f.write("The training absolute error is: " + str(round(train_mae, 4)) + "\n")
-    f.write("Total time to run was: " + str(round(total_minutes, 2)) + " minutes.\n")
+    f.write("Total run time was: " + str(round(total_minutes, 2)) + " minutes.\n")
     f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
     f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
     
@@ -133,34 +129,35 @@ def percent_from_real(y_real, y_predict):
 
 def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
-    if end_date is not None:
-        if limit > 1000:
-            barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
-            items = barset.items() 
-            df = get_values(items)
-            new_end_date = get_trade_day_back(end_date, limit-1000)
-            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit-1000, end=new_end_date)
-            other_df = get_values(other_barset.items()) 
+
+    frames = []
+    while limit > 1000:
+        if end_date is not None:
+            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+            new_df = get_values(other_barset.items())  
+            limit -= 1000
+            end_date = get_trade_day_back(end_date, 1000)
         else:
+            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+            new_df = get_values(other_barset.items()) 
+            limit -= 1000
+            end_date = get_trade_day_back(get_end_date(), 1000)
+            
+        frames.insert(0, new_df)
+        
+    if limit > 0:
+        if end_date is not None:
             barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
             items = barset.items() 
-            df = get_values(items)
-    else:
-        if limit > 1000:
-            barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000)
-            items = barset.items() 
-            df = get_values(items)
-            new_end_date = get_trade_day_back(get_end_date(), limit-1000)
-            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit-1000, end=new_end_date)
-            other_df = get_values(other_barset.items()) 
+            new_df = get_values(items)
         else:
             barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
             items = barset.items() 
-            df = get_values(items)
-    
-    if limit > 1000:
-        frames = [other_df, df]
-        df = pd.concat(frames) 
+            new_df = get_values(items)
+        
+        frames.insert(0, new_df)
+
+    df = pd.concat(frames) 
 
     # df["simple_rolling_avg"] = df.close.rolling(window=10).mean()
     
@@ -178,7 +175,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["linear_regression_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    df["linear_regression_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
+    # df["linear_regression_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
     # df["BETA"] = ta.BETA(df.high, df.low, timeperiod=5)
 
@@ -403,9 +400,9 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
-    # print(df)
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     print(df.head(40))
+    # print(df)
     return df
 
 def get_values(items):
@@ -439,9 +436,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-#  "linear_regression", "ht_trendmode"
+# "stochastic_fast_k"], df["stochastic_fast_d"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume",  "linear_regression_slope"],
+feature_columns=["open", "low", "high", "close", "mid", "volume"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -573,6 +570,8 @@ def getOwnedStocks():
 
 def decide_trades(symbol, owned, accuracy, percent):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    clock = api.get_clock()
+    # if clock.is_open:
     try:
         qty = owned[symbol]
         if percent < 1:
@@ -583,11 +582,19 @@ def decide_trades(symbol, owned, accuracy, percent):
                 type="market",
                 time_in_force="day"
             )
-            print("\nSELLING:", sell)
-            print("\n\n")
+
+            print("\n~~~SELLING " + sell.symbol + "~~~")
+            print("Quantity: " + sell.qty)
+            print("Filled at " + sell.filled_at + " with an average fill of " + sell.filled_avg_price + ".")
+            print("Status: " + sell.status)
+            print("Type: " + sell.type)
+            print("Time in force: "  + sell.time_in_force + "\n\n")
+
     except KeyError:
         if accuracy >= .5:
             if percent > 1:
+                account_equity = api.get_account().equity
+                print((account_equity))
                 barset = api.get_barset(symbol, "day", limit=1)
                 current_price = 0
                 for symbol, bars in barset.items():
@@ -596,7 +603,7 @@ def decide_trades(symbol, owned, accuracy, percent):
                 if current_price == 0:
                     print("\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n")
                 else:
-                    buy_qty = money_per_stock // current_price
+                    buy_qty = (float(account_equity) / stocks_traded) // current_price
                     buy = api.submit_order(
                         symbol=symbol,
                         qty=buy_qty,
@@ -604,11 +611,15 @@ def decide_trades(symbol, owned, accuracy, percent):
                         type="market",
                         time_in_force="day"
                     )
-                    print("\nBUYING:", buy)
-                    print("\n\n")
+                print("\n~~~Buying " + buy.symbol + "~~~")
+                print("Quantity: " + buy.qty)
+                print("Filled at " + buy.filled_at + " with an average fill of " + buy.filled_avg_price + ".")
+                print("Status: " + buy.status)
+                print("Type: " + buy.type)
+                print("Time in force: "  + buy.time_in_force + "\n\n")
     except:
         f = open(error_file, "a")
-        f.write("problem with configged stock: " + symbol + "\n")
+        f.write("Problem with configged stock: " + symbol + "\n")
         exit_info = sys.exc_info()
         f.write(str(exit_info[1]) + "\n")
         traceback.print_tb(tb=exit_info[2], file=f)

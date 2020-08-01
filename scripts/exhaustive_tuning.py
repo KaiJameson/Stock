@@ -5,7 +5,7 @@ import sys
 import subprocess
 import time
 from functions import check_directories
-from environment import config_directory, tuning_directory, error_file
+from environment import config_directory, tuning_directory, error_file, make_config
 import traceback
 import datetime
 import pandas as pd
@@ -108,8 +108,9 @@ valid_mae=0, train_mae=0, total_epochs=0):
     total epochs used
     """
     if info[5] == N_STEPS[-1] and info[6] == UNITS[-1] and info[7] == DROPOUT[-1]:
-        config_file = config_directory + "/" + ticker + ".csv"
-        print_params(config_file, info[1], info[2], info[3], EPOCHS, punct=",")
+        if make_config:
+            config_file = config_directory + "/" + ticker + ".csv"
+            print_params(config_file, info[1], info[2], info[3], EPOCHS, punct=",")
         if os.path.isfile(file_name):
             os.remove(file_name)
         f = open(tuning_status_file, "a")
@@ -118,7 +119,7 @@ valid_mae=0, train_mae=0, total_epochs=0):
         time_message = "It took " + str(total_minutes) + " minutes to complete.\n"
         f.write(time_message)
         f.write("The average time was: " + str(round(total_minutes / iteration_num, 2)) + " minutes.\n")
-        f.write("The average accuracy was: " + str(round(((info[9] + info[10] + info[11]) / iteration_num) * 100, 2) + "%\n"))
+        f.write("The average accuracy was: " + str(round(((info[9] + info[10] + info[11]) / (iteration_num * 3)) * 100, 2)) + "%\n")
         f.write("The average test accuracy was: " + str(round((info[9] / iteration_num) * 100, 2)) + "%\n")
         f.write("The average validation accuracy was: " + str(round((info[10] / iteration_num) * 100, 2)) + "%\n")
         f.write("The average train accuracy was: " + str(round((info[11] / iteration_num) * 100, 2)) + "%\n")

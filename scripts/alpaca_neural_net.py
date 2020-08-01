@@ -50,8 +50,7 @@ def decision_neural_net(
 
     end_time = time.time()
     total_time = end_time - start_time
-    percent = nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, 
-    valid_mae, train_mae, N_STEPS)
+    percent = nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
 
     return percent, test_acc
 
