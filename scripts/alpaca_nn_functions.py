@@ -25,6 +25,7 @@ import talib as ta
 
 
 def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
+    print("do we make it here")
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -130,34 +131,47 @@ def percent_from_real(y_real, y_predict):
 def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
 
-    frames = []
-    while limit > 1000:
-        if end_date is not None:
-            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
-            new_df = get_values(other_barset.items())  
-            limit -= 1000
-            end_date = get_trade_day_back(end_date, 1000)
-        else:
-            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
-            new_df = get_values(other_barset.items()) 
-            limit -= 1000
-            end_date = get_trade_day_back(get_end_date(), 1000)
+    # frames = []
+    # while limit > 1000:
+    #     if end_date is not None:
+    #         other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+    #         new_df = get_values(other_barset.items())  
+    #         limit -= 1000
+    #         end_date = get_trade_day_back(end_date, 1000)
+    #     else:
+    #         other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+    #         new_df = get_values(other_barset.items()) 
+    #         limit -= 1000
+    #         end_date = get_trade_day_back(get_end_date(), 1000)
             
-        frames.insert(0, new_df)
+    #     frames.insert(0, new_df)
         
-    if limit > 0:
-        if end_date is not None:
-            barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
-            items = barset.items() 
-            new_df = get_values(items)
-        else:
-            barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
-            items = barset.items() 
-            new_df = get_values(items)
+    # if limit > 0:
+    #     if end_date is not None:
+    #         barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
+    #         items = barset.items() 
+    #         new_df = get_values(items)
+    #     else:
+    #         barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
+    #         items = barset.items() 
+    #         new_df = get_values(items)
         
-        frames.insert(0, new_df)
+    #     frames.insert(0, new_df)
 
-    df = pd.concat(frames) 
+    # df = pd.concat(frames) 
+
+    # df = api.alpha_vantage.historic_quotes(symbol, adjusted=False, cadence="daily", output_format='pandas')
+    # df.rename(columns={"1. open":"open", "2. high":"high", "3. low":"low", "4. close":"close", "5. volume":"volume"}, inplace=True)
+    # df["mid"] = (df.low + df.high) / 2
+    # df.iloc[::-1]
+
+    if end_date is not None:
+        df = api.polygon.historic_agg_v2(symbol, 1, 'day', _from='2000-01-01', to=end_date).df
+    else:
+        df = api.polygon.historic_agg_v2(symbol, 1, 'day', _from='2000-01-01', to='2020-08-03').df
+    
+    df["mid"] = (df.low + df.high) / 2
+    df = df.tail(limit)
 
     # df["simple_rolling_avg"] = df.close.rolling(window=10).mean()
     
@@ -400,9 +414,10 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
-    pd.set_option("display.max_rows", None, "display.max_columns", None)
-    print(df.head(40))
-    # print(df)
+    # pd.set_option("display.max_rows", None, "display.max_columns", None)
+    # print(df.head(10))
+    # print(df.tail(10))
+    print(df)
     return df
 
 def get_values(items):
@@ -438,14 +453,14 @@ def get_values(items):
 
 # "stochastic_fast_k"], df["stochastic_fast_d"
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_sine", "ht_leadsine", "average_directional_movement_index"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, limit=2000, end_date=end_date)
+            df = make_dataframe(ticker, limit=4000, end_date=end_date)
         else:
-            df = make_dataframe(ticker, limit=2000)
+            df = make_dataframe(ticker, limit=4000)
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
@@ -716,10 +731,15 @@ def perfect_money(money, data):
     return money
 
 if __name__ == "__main__":
-    
+
+    symbol = "MSFT"
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
-    account = api.get_account()
-    print(float(account.equity))
+    # print("\n\n COMPANY: " + str(api.polygon.company(symbol))  + "\n\n")
+    # print("\n\n DIVIDENDS: " + str(api.polygon.dividends(symbol)) + "\n\n")
+    # print("\n\n SPLITS: " + str(api.polygon.splits(symbol)) + "\n\n")
+    # print("\n\n EARNINGS: " + str(api.polygon.earnings(symbol)) + "\n\n")
+    # print("\n\n FINANCIALS: " + str(api.polygon.financials(symbol)) + "\n\n")
+    # print("\n\n NEWS: " + str(api.polygon.news(symbol)) + "\n\n")
 
 
 
