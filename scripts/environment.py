@@ -10,9 +10,11 @@ data_directory = "../data"
 excel_directory = "../excel"
 error_file = "../error_file.txt"
 
+make_config = False
 test_var = "close"
 test_money = 10000
 money_per_stock = 100
+stocks_traded = 20
 random_seed = 314
 back_test_days = 100
 save_logs = False
@@ -42,7 +44,7 @@ to_plot = False
 """
 
 defaults = {
-    "N_STEPS": 500,
+    "N_STEPS": 300,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 3,
@@ -53,7 +55,7 @@ defaults = {
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 128,
-    "EPOCHS": 2000,
+    "EPOCHS": 1500,
     "PATIENCE": 200,
     "SAVELOAD": False,
 }

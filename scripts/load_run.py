@@ -27,26 +27,32 @@ def load_trade(symbols):
                 data, train, valid, test = load_data(symbol, int(values["N_STEPS"]), shuffle=False)
             else:
                 N_STEPS = int(defaults["N_STEPS"])
+                time_s = time.time()
                 data, train, valid, test = load_data(symbol, int(defaults["N_STEPS"]), shuffle=False)
+                print("\n\n Loading the data took " + str(time.time() - time_s) + " seconds\n\n")    
 
             LOOKUP_STEP = defaults["LOOKUP_STEP"]
 
+            time_s = time.time()
             model = load_model(model_saveload_directory + "/" + symbol + ".h5")
-            
+            print("\n\n Loading the model took " + str(time.time() - time_s) + " seconds\n\n")    
+
+            time_s = time.time()
             train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
-            
-            test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
+            print("\n\n Getting the accuracies took " + str(time.time() - time_s) + " seconds\n\n")   
 
             total_time = time.time() - start_time
-            percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, N_STEPS)
-
+            time_s = time.time()
+            percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
+            print("\n\n NN report took " + str(time.time() - time_s) + " seconds\n\n")
             
-
+            time_s = time.time()
             if do_the_trades:
                 decide_trades(symbol, owned, test_acc, percent)
             else:
                 print("Why are you running this if you don't want to do the trades?")
-
+            print("\n\n Performing the trade took " + str(time.time() - time_s) + " seconds\n\n")
+            
             print("Finished running: " + symbol)
 
         except KeyboardInterrupt:
@@ -64,6 +70,8 @@ def load_trade(symbols):
 
 s = time.time()
 load_trade(load_save_symbols)
+time_s = time.time()
 make_excel_file()
+print("\n\n Making the excel file took " + str(time.time() - time_s) + " seconds\n\n")
 tt = (time.time() - s) / 60
 print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
