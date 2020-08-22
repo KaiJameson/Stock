@@ -60,6 +60,18 @@ def get_date_string():
     s = f"{year}-{month}-{day}"
     return s
 
+def zero_pad_date_string():
+    operating_sys = platform.system()
+    on_linux = operating_sys == 'LINUX'
+    now = time.time()
+    now = datetime.datetime.fromtimestamp(now)
+    if on_linux:
+        td = datetime.timedelta(hours=4)
+        now -= td
+
+    padded = datetime.date(now.year, now.month, now.day) + datetime.timedelta(1)
+    return str(padded)
+
 def get_end_date():
     tz = 'US/EASTERN'
     now = time.time()
