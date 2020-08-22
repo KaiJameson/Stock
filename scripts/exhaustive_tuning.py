@@ -14,7 +14,7 @@ ticker = exhaustive_symbols
 
 check_directories()
 
-EPOCHS = 3000
+EPOCHS = 1000
 UNITS = [128, 256, 448]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.35, .4, .45]

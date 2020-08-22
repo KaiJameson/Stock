@@ -10,14 +10,17 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-from environment import test_var, reports_directory, graph_directory, back_test_days, to_plot, test_money, excel_directory, money_per_stock, stocks_traded
-from time_functions import get_time_string, get_end_date, get_trade_day_back, get_date_string
+from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
+test_money, excel_directory, money_per_stock, stocks_traded, error_file, load_run_excel)
+from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
 import os
+import sys
+import traceback
 import random
 import datetime
 import math 
@@ -25,7 +28,6 @@ import talib as ta
 
 
 def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
-    print("do we make it here")
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -119,6 +121,14 @@ def excel_output(symbol, real_price, predicted_price):
     f.write(str(round(predicted_price, 2)) + "\t")
     f.close()
 
+def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, percent_away):
+    date_string = get_date_string()
+    f = open(load_run_excel + "/" + date_string + ".txt", "a")
+    f.write(symbol + "\t" + str(round(train_acc * 100, 2)) + "\t" + str(round(valid_acc * 100, 2)) + "\t" 
+    + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 
+    + "\n")
+    f.close()
+
 def percent_from_real(y_real, y_predict):
     the_diffs = []
     for i in range(len(y_real) - 1):
@@ -131,44 +141,11 @@ def percent_from_real(y_real, y_predict):
 def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
     api = tradeapi.REST(real_api_key_id, real_api_secret_key)
 
-    # frames = []
-    # while limit > 1000:
-    #     if end_date is not None:
-    #         other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
-    #         new_df = get_values(other_barset.items())  
-    #         limit -= 1000
-    #         end_date = get_trade_day_back(end_date, 1000)
-    #     else:
-    #         other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
-    #         new_df = get_values(other_barset.items()) 
-    #         limit -= 1000
-    #         end_date = get_trade_day_back(get_end_date(), 1000)
-            
-    #     frames.insert(0, new_df)
-        
-    # if limit > 0:
-    #     if end_date is not None:
-    #         barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
-    #         items = barset.items() 
-    #         new_df = get_values(items)
-    #     else:
-    #         barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
-    #         items = barset.items() 
-    #         new_df = get_values(items)
-        
-    #     frames.insert(0, new_df)
-
-    # df = pd.concat(frames) 
-
-    # df = api.alpha_vantage.historic_quotes(symbol, adjusted=False, cadence="daily", output_format='pandas')
-    # df.rename(columns={"1. open":"open", "2. high":"high", "3. low":"low", "4. close":"close", "5. volume":"volume"}, inplace=True)
-    # df["mid"] = (df.low + df.high) / 2
-    # df.iloc[::-1]
-
     if end_date is not None:
-        df = api.polygon.historic_agg_v2(symbol, 1, 'day', _from='2000-01-01', to=end_date).df
+        df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=end_date).df
     else:
-        df = api.polygon.historic_agg_v2(symbol, 1, 'day', _from='2000-01-01', to='2020-08-03').df
+        time_now = zero_pad_date_string()
+        df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=time_now).df
     
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
@@ -416,7 +393,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # pd.set_option("display.max_rows", None, "display.max_columns", None)
     # print(df.head(10))
-    # print(df.tail(10))
+    # print(df.tail(5))
     print(df)
     return df
 
@@ -451,9 +428,9 @@ def get_values(items):
     df = pd.DataFrame(data=data)
     return df
 
-# "stochastic_fast_k"], df["stochastic_fast_d"
+# 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_sine", "ht_leadsine", "average_directional_movement_index"],
+feature_columns=["open", "low", "high", "close", "mid", "volume"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -600,10 +577,12 @@ def decide_trades(symbol, owned, accuracy, percent):
 
                 print("\n~~~SELLING " + sell.symbol + "~~~")
                 print("Quantity: " + sell.qty)
-                print("Filled at " + sell.filled_at + " with an average fill of " + sell.filled_avg_price + ".")
+                # print("Filled at " + str(sell.filled_at) + " with an average fill of " + sell.filled_avg_price + ".")
                 print("Status: " + sell.status)
                 print("Type: " + sell.type)
                 print("Time in force: "  + sell.time_in_force + "\n\n")
+            else:
+                print("\n~~~Holding " + symbol + "~~~")
 
         except KeyError:
             if accuracy >= .5:
@@ -627,7 +606,7 @@ def decide_trades(symbol, owned, accuracy, percent):
                         )
                     print("\n~~~Buying " + buy.symbol + "~~~")
                     print("Quantity: " + buy.qty)
-                    print("Filled at " + buy.filled_at + " with an average fill of " + buy.filled_avg_price + ".")
+                    # print("Filled at " + str(buy.filled_at) + " with an average fill of " + buy.filled_avg_price + ".")
                     print("Status: " + buy.status)
                     print("Type: " + buy.type)
                     print("Time in force: "  + buy.time_in_force + "\n\n")
@@ -732,8 +711,8 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    symbol = "MSFT"
-    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    # symbol = "MSFT"
+    # api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
     # print("\n\n COMPANY: " + str(api.polygon.company(symbol))  + "\n\n")
     # print("\n\n DIVIDENDS: " + str(api.polygon.dividends(symbol)) + "\n\n")
     # print("\n\n SPLITS: " + str(api.polygon.splits(symbol)) + "\n\n")
@@ -741,5 +720,9 @@ if __name__ == "__main__":
     # print("\n\n FINANCIALS: " + str(api.polygon.financials(symbol)) + "\n\n")
     # print("\n\n NEWS: " + str(api.polygon.news(symbol)) + "\n\n")
 
+    
+    now = time.time()
+    now = datetime.datetime.fromtimestamp(now)
 
-
+    padded = datetime.date(2020, 12, 31) + datetime.timedelta(1)
+    print(padded)
