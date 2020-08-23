@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
-test_money, excel_directory, money_per_stock, stocks_traded, error_file, load_run_excel)
+test_money, excel_directory, stocks_traded, error_file, load_run_excel)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
 import numpy as np
