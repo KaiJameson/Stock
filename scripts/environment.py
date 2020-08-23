@@ -9,6 +9,7 @@ tuning_directory = "../tuning_info"
 data_directory = "../data"
 excel_directory = "../excel"
 error_file = "../error_file.txt"
+load_run_excel = "../load_run_test"
 
 make_config = False
 test_var = "close"

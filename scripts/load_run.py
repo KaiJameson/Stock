@@ -1,4 +1,5 @@
-from alpaca_nn_functions import load_data, predict, getOwnedStocks, decide_trades, return_real_predict, get_all_accuracies, nn_report, make_excel_file, get_all_maes
+from alpaca_nn_functions import (load_data, predict, getOwnedStocks, decide_trades, return_real_predict, 
+get_all_accuracies, nn_report, make_excel_file, make_load_run_excel, percent_from_real)
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
 from functions import check_directories
@@ -29,31 +30,39 @@ def load_trade(symbols):
                 N_STEPS = int(defaults["N_STEPS"])
                 time_s = time.time()
                 data, train, valid, test = load_data(symbol, int(defaults["N_STEPS"]), shuffle=False)
-                print("\n\n Loading the data took " + str(time.time() - time_s) + " seconds\n\n")    
+                print("Loading the data took " + str(time.time() - time_s) + " seconds")    
 
             LOOKUP_STEP = defaults["LOOKUP_STEP"]
 
             time_s = time.time()
             model = load_model(model_saveload_directory + "/" + symbol + ".h5")
-            print("\n\n Loading the model took " + str(time.time() - time_s) + " seconds\n\n")    
+            print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
             train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
-            print("\n\n Getting the accuracies took " + str(time.time() - time_s) + " seconds\n\n")   
+            print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
 
             total_time = time.time() - start_time
             time_s = time.time()
             percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
-            print("\n\n NN report took " + str(time.time() - time_s) + " seconds\n\n")
-            
+            print("NN report took " + str(time.time() - time_s) + " seconds")
+
+            time_s = time.time()
+            y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+            make_load_run_excel(symbol, train_acc, valid_acc, test_acc, percent_from_real(y_real, y_pred), abs((percent - 1) * 100))
+            print("Load run excel took " + str(time.time() - time_s) + " seconds")
+
+
             time_s = time.time()
             if do_the_trades:
                 decide_trades(symbol, owned, test_acc, percent)
             else:
                 print("Why are you running this if you don't want to do the trades?")
-            print("\n\n Performing the trade took " + str(time.time() - time_s) + " seconds\n\n")
+            print("Performing the trade took " + str(time.time() - time_s) + " seconds")
             
             print("Finished running: " + symbol)
+
+            sys.stdout.flush()
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop")
@@ -72,6 +81,6 @@ s = time.time()
 load_trade(load_save_symbols)
 time_s = time.time()
 make_excel_file()
-print("\n\n Making the excel file took " + str(time.time() - time_s) + " seconds\n\n")
+print("\nMaking the excel file took " + str(time.time() - time_s) + " seconds\n")
 tt = (time.time() - s) / 60
 print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
