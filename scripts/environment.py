@@ -56,7 +56,7 @@ defaults = {
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 128,
-    "EPOCHS": 1500,
+    "EPOCHS": 1000,
     "PATIENCE": 200,
     "SAVELOAD": False,
 }

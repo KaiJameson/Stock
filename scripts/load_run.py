@@ -55,7 +55,7 @@ def load_trade(symbols):
 
             time_s = time.time()
             if do_the_trades:
-                decide_trades(symbol, owned, test_acc, percent)
+                decide_trades(symbol, owned, valid_acc, percent)
             else:
                 print("Why are you running this if you don't want to do the trades?")
             print("Performing the trade took " + str(time.time() - time_s) + " seconds")

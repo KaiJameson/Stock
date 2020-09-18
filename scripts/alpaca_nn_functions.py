@@ -493,8 +493,11 @@ feature_columns=["open", "low", "high", "close", "mid", "volume"],
     
     # split the dataset
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
-    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.5, shuffle=shuffle)   
-    
+    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
+
+    print("validation" + str(len(result["X_valid"])))
+    print("test" + str(len(result["X_test"])))
+
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
