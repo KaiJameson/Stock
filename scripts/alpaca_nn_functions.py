@@ -160,7 +160,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["relative_strength_index"] = ta.RSI(df.close)
 
-    df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
+    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
 
     # df["linear_regression_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
@@ -201,7 +201,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["ht_dcperiod"] = ta.HT_DCPERIOD(df.close)
 
-    df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
+    # df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
 
     # df["ht_dcphase"] = ta.HT_DCPHASE(df.close)
 
@@ -430,7 +430,7 @@ def get_values(items):
 
 # 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "linear_regression", "ht_trendmode"],
+feature_columns=["open", "low", "high", "close", "mid", "volume"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -493,8 +493,11 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "linear_regres
     
     # split the dataset
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
-    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.5, shuffle=shuffle)   
-    
+    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
+
+    print("validation" + str(len(result["X_valid"])))
+    print("test" + str(len(result["X_test"])))
+
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
