@@ -1,3 +1,4 @@
+from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_nn_functions import (load_data, predict, getOwnedStocks, decide_trades, return_real_predict, 
 get_all_accuracies, nn_report, make_excel_file, make_load_run_excel, percent_from_real)
 from symbols import load_save_symbols, do_the_trades
@@ -48,14 +49,12 @@ def load_trade(symbols):
             print("NN report took " + str(time.time() - time_s) + " seconds")
 
             time_s = time.time()
-            y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+            y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
             make_load_run_excel(symbol, train_acc, valid_acc, test_acc, percent_from_real(y_real, y_pred), abs((percent - 1) * 100))
-            print("Load run excel took " + str(time.time() - time_s) + " seconds")
-
 
             time_s = time.time()
             if do_the_trades:
-                decide_trades(symbol, owned, valid_acc, percent)
+                decide_trades(symbol, owned, valid_acc, percent, paper_api_key_id, paper_api_secret_key)
             else:
                 print("Why are you running this if you don't want to do the trades?")
             print("Performing the trade took " + str(time.time() - time_s) + " seconds")
