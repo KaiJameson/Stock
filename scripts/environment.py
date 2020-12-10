@@ -11,7 +11,7 @@ excel_directory = "../excel"
 error_file = "../error_file.txt"
 load_run_excel = "../load_run_test"
 
-make_config = False
+
 test_var = "close"
 test_money = 10000
 money_per_stock = 100
@@ -20,6 +20,9 @@ random_seed = 314
 back_test_days = 100
 save_logs = False
 to_plot = False
+make_config = False
+trading_real_money = True
+using_all_accuracies = False
 
 """
 # N_STEPS = Window size or the sequence length.
@@ -56,7 +59,7 @@ defaults = {
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 128,
-    "EPOCHS": 1000,
+    "EPOCHS": 800,
     "PATIENCE": 200,
     "SAVELOAD": False,
 }

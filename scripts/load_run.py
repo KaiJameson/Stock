@@ -15,6 +15,8 @@ check_directories()
 def load_trade(symbols):
     
     owned = getOwnedStocks()
+
+    price_prediction_list = {}
     for symbol in symbols:
         try:
             start_time = time.time()
@@ -45,7 +47,8 @@ def load_trade(symbols):
 
             total_time = time.time() - start_time
             time_s = time.time()
-            percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
+            percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
+            price_prediction_list[symbol] = future_price
             print("NN report took " + str(time.time() - time_s) + " seconds")
 
             time_s = time.time()
@@ -54,7 +57,7 @@ def load_trade(symbols):
 
             time_s = time.time()
             if do_the_trades:
-                decide_trades(symbol, owned, valid_acc, percent, paper_api_key_id, paper_api_secret_key)
+                decide_trades(symbol, owned, valid_acc, percent, real_api_key_id, real_api_secret_key)
             else:
                 print("Why are you running this if you don't want to do the trades?")
             print("Performing the trade took " + str(time.time() - time_s) + " seconds")
@@ -75,6 +78,13 @@ def load_trade(symbols):
             traceback.print_tb(tb=exit_info[2], file=f)
             f.close()
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+
+    # if do_the_trades:
+    #     time_s = time.time()
+    #     buy_all_at_once(symbols, owned, price_prediction_list)
+    #     print("Performing all the trades took " + str(time.time() - time_s) + " seconds")
+    # else:
+    #     print("Why are you running this if you don't want to do the trades?")
 
 s = time.time()
 load_trade(load_save_symbols)

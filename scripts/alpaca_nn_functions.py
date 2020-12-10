@@ -11,7 +11,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
-test_money, excel_directory, stocks_traded, error_file, load_run_excel)
+test_money, excel_directory, stocks_traded, error_file, load_run_excel, trading_real_money,
+using_all_accuracies)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
 import numpy as np
@@ -78,7 +79,7 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N
 
     excel_output(ticker, curr_price, future_price)
 
-    return percent
+    return percent, future_price
 
 def make_excel_file():
     date_string = get_date_string()
@@ -139,7 +140,7 @@ def percent_from_real(y_real, y_predict):
     return round(pddf.mean(), 2)
 
 def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
-    api = tradeapi.REST(real_api_key_id, real_api_secret_key)
+    api = get_api()
 
     if end_date is not None:
         df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=end_date).df
@@ -550,7 +551,7 @@ def predict(model, data, n_steps, classification=False):
     return predicted_val
 
 def getOwnedStocks():
-    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    api = get_api()
     positions = api.list_positions()
     owned = {}
     for position in positions:
@@ -558,7 +559,7 @@ def getOwnedStocks():
     return owned
 
 def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
-    api = tradeapi.REST(api_id, api_key, base_url="https://paper-api.alpaca.markets")
+    api = get_api()
     clock = api.get_clock()
     if clock.is_open:
         try:
@@ -620,6 +621,139 @@ def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
         print("You tried to trade while the market was closed! You're either ")
         print("testing or stupid. Good thing I'm here!")
 
+def buy_all_at_once(symbols, owned, price_list):
+    api = get_api()
+    clock = api.get_clock()
+    if not clock.is_open:
+        print("The market is closed right now, go home. You're drunk.")
+        return
+
+
+    buy_list = []
+    for symbol in symbols:
+        try:
+            barset = api.get_barset(symbol, "day", limit=1)
+            current_price = 0
+            for symbol, bars in barset.items():
+                for bar in bars:
+                    current_price = bar.c
+            if current_price < price_list[symbol]:
+                if symbol not in owned:
+                    buy_list.append(symbol)
+                else:
+                    print("\n~~~Holding " + symbol + "~~~")
+            else:
+                if symbol in owned:
+                    qty = owned[symbol]
+
+                    sell = api.submit_order(
+                        symbol=symbol,
+                        qty=qty,
+                        side="sell",
+                        type="market",
+                        time_in_force="day"
+                    )
+
+                    print("\n~~~SELLING " + sell.symbol + "~~~")
+                    print("Quantity: " + sell.qty)
+                    print("Status: " + sell.status)
+                    print("Type: " + sell.type)
+                    print("Time in force: "  + sell.time_in_force + "\n\n")
+
+            print("The current price for " + symbol + " is " + str(current_price) + "\n")
+
+        except:
+            f = open(error_file, "a")
+            f.write("Problem with configged stock: " + symbol + "\n")
+            exit_info = sys.exc_info()
+            f.write(str(exit_info[1]) + "\n")
+            traceback.print_tb(tb=exit_info[2], file=f)
+            f.close()
+            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+
+            
+    print(owned)
+    print(buy_list)
+
+    account_equity = api.get_account().equity
+    buy_power = api.get_account().buying_power
+
+    value_in_stocks = 1 - (buying_power/account_equity)
+
+    stock_portion_adjuster = 0
+
+    if value_in_stocks > .6:
+        stock_portion_adjuster = buy_list.length()
+    elif value_in_stocks > .3:
+        if (buy_list.length / stocks_traded) > .8:
+            stock_portion_adjuster = buy_list.length()
+        elif (buy_list.length / stocks_traded) > .6:
+            stock_portion_adjuster = buy_list.length() * .95
+        elif (buy_list.length / stocks_traded) > .4:
+            stock_portion_adjuster = buy_list.length() * .90
+        else:
+            stock_portion_adjuster = buy_list.length() * .80
+    else:
+        if (buy_list.length / stocks_traded) > .8:
+            stock_portion_adjuster = buy_list.length()
+        elif (buy_list.length / stocks_traded) > .6:
+            stock_portion_adjuster = buy_list.length() * .90
+        elif (buy_list.length / stocks_traded) > .4:
+            stock_portion_adjuster = buy_list.length() * .75
+        else:
+            stock_portion_adjuster = buy_list.length() * .65
+
+    print("\nThe value in stocks is " + str(value_in_stocks))
+    print("\nThe Stock portion adjuster is " + str(stock_portion_adjuster))
+
+    for symbol in symbols:
+        try:
+            if symbol not in owned and symbol not in buy_list:
+                print("~~~Not buying " + symbol + "~~~")
+                continue
+
+            else:
+                current_price = 0
+                for symbol, bars in barset.items():
+                    for bar in bars:
+                        current_price = bar.c
+                buy_qty = (float(buying_power) / stock_portion_adjuster) // current_price
+
+                if buy_qty == 0:
+                    print("Not enough money to purchase stock " + symbol + ".")
+                    continue
+
+                buy = api.submit_order(
+                    symbol=symbol,
+                    qty=buy_qty,
+                    side="buy",
+                    type="market",
+                    time_in_force="day"
+                )
+                
+                print("\n~~~Buying " + buy.symbol + "~~~")
+                print("Quantity: " + buy.qty)
+                print("Status: " + buy.status)
+                print("Type: " + buy.type)
+                print("Time in force: "  + buy.time_in_force + "\n\n")
+                
+        except:
+            f = open(error_file, "a")
+            f.write("Problem with configged stock: " + symbol + "\n")
+            exit_info = sys.exc_info()
+            f.write(str(exit_info[1]) + "\n")
+            traceback.print_tb(tb=exit_info[2], file=f)
+            f.close()
+            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+
+def get_api():
+    if trading_real_money:
+        api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
+    else:
+        api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+
+    return api
+
 def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
@@ -638,12 +772,17 @@ def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     plt.close()
     
 def get_all_accuracies(model, data, lookup_step):
-    y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
-    train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
-    y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
-    valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
-    y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
-    test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
+    if using_all_accuracies:
+        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
+        train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
+        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+        valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
+        y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+        test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
+    else:
+        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+        valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
+        train_acc = test_acc = 0
 
     return train_acc, valid_acc, test_acc 
 
@@ -708,16 +847,7 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    # symbol = "MSFT"
-    # api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
-    # print("\n\n COMPANY: " + str(api.polygon.company(symbol))  + "\n\n")
-    # print("\n\n DIVIDENDS: " + str(api.polygon.dividends(symbol)) + "\n\n")
-    # print("\n\n SPLITS: " + str(api.polygon.splits(symbol)) + "\n\n")
-    # print("\n\n EARNINGS: " + str(api.polygon.earnings(symbol)) + "\n\n")
-    # print("\n\n FINANCIALS: " + str(api.polygon.financials(symbol)) + "\n\n")
-    # print("\n\n NEWS: " + str(api.polygon.news(symbol)) + "\n\n")
 
-    
     now = time.time()
     now = datetime.datetime.fromtimestamp(now)
 
