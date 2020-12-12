@@ -11,13 +11,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
-test_money, excel_directory, stocks_traded, error_file, load_run_excel)
+test_money, excel_directory, stocks_traded, error_file, load_run_excel, trading_real_money,
+using_all_accuracies)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
+from symbols import trading_real_money
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
+import time as timey
 import os
 import sys
 import traceback
@@ -78,7 +81,7 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N
 
     excel_output(ticker, curr_price, future_price)
 
-    return percent
+    return percent, future_price
 
 def make_excel_file():
     date_string = get_date_string()
@@ -139,14 +142,14 @@ def percent_from_real(y_real, y_predict):
     return round(pddf.mean(), 2)
 
 def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
-    api = tradeapi.REST(real_api_key_id, real_api_secret_key)
+    api = get_api()
 
     if end_date is not None:
         df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=end_date).df
     else:
         time_now = zero_pad_date_string()
         df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=time_now).df
-    
+  
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
 
@@ -159,8 +162,8 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["OBV"] = ta.OBV(df.close, df.volume)
 
     # df["relative_strength_index"] = ta.RSI(df.close)
-
-    df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
+    
+    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
 
     # df["linear_regression_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
@@ -197,7 +200,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["ht_dcperiod"] = ta.HT_DCPERIOD(df.close)
 
-    df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
+    # df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
 
     # df["ht_dcphase"] = ta.HT_DCPHASE(df.close)
 
@@ -249,7 +252,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["percentage_price_oscillator"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    # df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
     # df["stochastic_relative_strength_k"] = df["stochastic_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
@@ -386,7 +389,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
     # pd.set_option("display.max_rows", None, "display.max_columns", None)
-    # print(df.head(10))
+    # print(df.head(1))
     # print(df.tail(5))
     print(df)
     return df
@@ -424,7 +427,7 @@ def get_values(items):
 
 # 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode", "linear_regression"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "stochastic_fast_k", "stochastic_fast_d"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -432,6 +435,7 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode"
             df = make_dataframe(ticker, limit=4000, end_date=end_date)
         else:
             df = make_dataframe(ticker, limit=4000)
+
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
@@ -489,9 +493,6 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode"
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
 
-    # print("validation" + str(len(result["X_valid"])))
-    # print("test" + str(len(result["X_test"])))
-
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
@@ -499,7 +500,6 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode"
     train = train.batch(batch_size)
     valid = valid.batch(batch_size)
     test = test.batch(batch_size)
-
     # train = train.prefetch(buffer_size=AUTOTUNE)
     # test = test.prefetch(buffer_size=AUTOTUNE)
 
@@ -550,7 +550,7 @@ def predict(model, data, n_steps, classification=False):
     return predicted_val
 
 def getOwnedStocks():
-    api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+    api = get_api()
     positions = api.list_positions()
     owned = {}
     for position in positions:
@@ -558,7 +558,7 @@ def getOwnedStocks():
     return owned
 
 def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
-    api = tradeapi.REST(api_id, api_key, base_url="https://paper-api.alpaca.markets")
+    api = get_api()
     clock = api.get_clock()
     if clock.is_open:
         try:
@@ -574,7 +574,6 @@ def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
 
                 print("\n~~~SELLING " + sell.symbol + "~~~")
                 print("Quantity: " + sell.qty)
-                # print("Filled at " + str(sell.filled_at) + " with an average fill of " + sell.filled_avg_price + ".")
                 print("Status: " + sell.status)
                 print("Type: " + sell.type)
                 print("Time in force: "  + sell.time_in_force + "\n\n")
@@ -603,7 +602,6 @@ def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
                         )
                     print("\n~~~Buying " + buy.symbol + "~~~")
                     print("Quantity: " + buy.qty)
-                    # print("Filled at " + str(buy.filled_at) + " with an average fill of " + buy.filled_avg_price + ".")
                     print("Status: " + buy.status)
                     print("Type: " + buy.type)
                     print("Time in force: "  + buy.time_in_force + "\n\n")
@@ -619,6 +617,146 @@ def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
     else:
         print("You tried to trade while the market was closed! You're either ")
         print("testing or stupid. Good thing I'm here!")
+
+def buy_all_at_once(symbols, owned, price_list):
+    api = get_api()
+    clock = api.get_clock()
+    if not clock.is_open:
+        print("The market is closed right now, go home. You're drunk.")
+        return
+
+
+    buy_list = []
+    for symbol in symbols:
+        try:
+            barset = api.get_barset(symbol, "day", limit=1)
+            current_price = 0
+            for symbol, bars in barset.items():
+                for bar in bars:
+                    current_price = bar.c
+            if current_price < price_list[symbol]:
+                if symbol not in owned:
+                    buy_list.append(symbol)
+                
+            else:
+                if symbol in owned:
+                    qty = owned[symbol]
+
+                    sell = api.submit_order(
+                        symbol=symbol,
+                        qty=qty,
+                        side="sell",
+                        type="market",
+                        time_in_force="day"
+                    )
+
+                    print("\n~~~SELLING " + sell.symbol + "~~~")
+                    print("Quantity: " + sell.qty)
+                    print("Status: " + sell.status)
+                    print("Type: " + sell.type)
+                    print("Time in force: "  + sell.time_in_force + "\n\n")
+
+            print("The current price for " + symbol + " is " + str(current_price) + "\n")
+
+        except:
+            f = open(error_file, "a")
+            f.write("Problem with configged stock: " + symbol + "\n")
+            exit_info = sys.exc_info()
+            f.write(str(exit_info[1]) + "\n")
+            traceback.print_tb(tb=exit_info[2], file=f)
+            f.close()
+            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+
+            
+    print("The Owned list" + str(owned))
+    print("The buy list " + str(buy_list))
+
+    account_equity = float(api.get_account().equity)
+    buy_power = float(api.get_account().cash)
+
+    value_in_stocks = 1 - (buy_power / account_equity)
+
+    print("account equity " + str(account_equity))
+
+    stock_portion_adjuster = 0
+
+    if value_in_stocks > .6:
+        stock_portion_adjuster = len(buy_list)
+    elif value_in_stocks > .3:
+        if (len(buy_list) / stocks_traded) > .8:
+            stock_portion_adjuster = len(buy_list)
+        elif (len(buy_list) / stocks_traded) > .6:
+            stock_portion_adjuster = len(buy_list) / .95  # want 95%
+        elif (len(buy_list) / stocks_traded) > .4:
+            stock_portion_adjuster = len(buy_list) / .90 # want 90%
+        else:
+            stock_portion_adjuster = len(buy_list) / .80 # want 80%
+    else:
+        if (len(buy_list) / stocks_traded) > .8:
+            stock_portion_adjuster = len(buy_list)
+        elif (len(buy_list) / stocks_traded) > .6:
+            stock_portion_adjuster = len(buy_list) / .90 # want 90%
+        elif (len(buy_list) / stocks_traded) > .4:
+            stock_portion_adjuster = len(buy_list) / .75 # want 75%
+        else:
+            stock_portion_adjuster = len(buy_list) / .65 # want 65%
+            
+
+    print("\nThe value in stocks is " + str(value_in_stocks))
+    print("\nThe Stock portion adjuster is " + str(stock_portion_adjuster))
+
+    for symbol in symbols:
+        try:
+            if symbol not in owned and symbol not in buy_list:
+                print("~~~Not buying " + symbol + "~~~")
+                continue
+
+            elif symbol in owned and symbol not in buy_list:
+                print("~~~Holding " + symbol + "~~~")
+                continue
+            
+            else:
+                current_price = 0
+                barset = api.get_barset(symbol, "day", limit=1)
+                for symbol, bars in barset.items():
+                    for bar in bars:
+                        current_price = bar.c
+                buy_qty = (buy_power / stock_portion_adjuster) // current_price
+
+                if buy_qty == 0:
+                    print("Not enough money to purchase stock " + symbol + ".")
+                    continue
+
+                buy = api.submit_order(
+                    symbol=symbol,
+                    qty=buy_qty,
+                    side="buy",
+                    type="market",
+                    time_in_force="day"
+                )
+                
+                print("\n~~~Buying " + buy.symbol + "~~~")
+                print("Quantity: " + buy.qty)
+                print("Status: " + buy.status)
+                print("Type: " + buy.type)
+                print("Time in force: "  + buy.time_in_force + "\n\n")
+                
+        except:
+            f = open(error_file, "a")
+            f.write("Problem with configged stock: " + symbol + "\n")
+            exit_info = sys.exc_info()
+            f.write(str(exit_info[1]) + "\n")
+            traceback.print_tb(tb=exit_info[2], file=f)
+            f.close()
+            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+
+def get_api():
+    if trading_real_money:
+        api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
+    else:
+        api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+
+    return api
 
 def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
@@ -638,18 +776,24 @@ def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     plt.close()
     
 def get_all_accuracies(model, data, lookup_step):
-    y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
-    train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
-    y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
-    valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
-    y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
-    test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
+    if using_all_accuracies:
+        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
+        train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
+        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+        valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
+        y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+        test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
+    else:
+        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+        valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
+        train_acc = test_acc = 0
 
     return train_acc, valid_acc, test_acc 
 
 def get_accuracy(y_real, y_pred, lookup_step):
     y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_pred[lookup_step:]))
     y_real = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_real[lookup_step:]))
+
     return accuracy_score(y_real, y_pred)
 
 def get_all_maes(model, test_tensorslice, valid_tensorslice, train_tensorslice, data):
@@ -669,6 +813,7 @@ def return_real_predict(model, X_data, y_data, column_scaler):
     y_pred = model.predict(X_data)
     y_real = np.squeeze(column_scaler.inverse_transform(np.expand_dims(y_data, axis=0)))
     y_pred = np.squeeze(column_scaler.inverse_transform(y_pred))
+
     return y_real, y_pred
 
 
@@ -708,18 +853,18 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    # symbol = "MSFT"
-    # api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
-    # print("\n\n COMPANY: " + str(api.polygon.company(symbol))  + "\n\n")
-    # print("\n\n DIVIDENDS: " + str(api.polygon.dividends(symbol)) + "\n\n")
-    # print("\n\n SPLITS: " + str(api.polygon.splits(symbol)) + "\n\n")
-    # print("\n\n EARNINGS: " + str(api.polygon.earnings(symbol)) + "\n\n")
-    # print("\n\n FINANCIALS: " + str(api.polygon.financials(symbol)) + "\n\n")
-    # print("\n\n NEWS: " + str(api.polygon.news(symbol)) + "\n\n")
+    symbol = ticker = "AGYS"
 
-    
-    now = time.time()
-    now = datetime.datetime.fromtimestamp(now)
+    # time_s = time.time()
+    # data, train, valid, test = load_data(ticker, 300, True, True, 1, .2, ["open", "low", "high", "close", "mid", "volume", "ht_trendmode", "linear_regression"], 128, end_date=None)
+    # print("load data took " + str(time.time() - time_s))
 
-    padded = datetime.date(2020, 12, 31) + datetime.timedelta(1)
-    print(padded)
+    # time_s = time.time()
+    # df = make_dataframe(ticker, limit=600, end_date=None)
+    # print("make data took " + str(time.time() - time_s))
+
+    # time_s = time.time()
+    # api = get_api()
+    # current_price = 0
+    # barset = api.get_barset(symbol, "day", limit=1)
+    # print("getting one day took " + str(time.time() - time_s))
