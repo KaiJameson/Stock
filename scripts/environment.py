@@ -21,7 +21,6 @@ back_test_days = 100
 save_logs = False
 to_plot = False
 make_config = False
-trading_real_money = True
 using_all_accuracies = False
 
 """

@@ -15,10 +15,12 @@ test_money, excel_directory, stocks_traded, error_file, load_run_excel, trading_
 using_all_accuracies)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
+from symbols import trading_real_money
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
+import time as timey
 import os
 import sys
 import traceback
@@ -147,7 +149,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     else:
         time_now = zero_pad_date_string()
         df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=time_now).df
-    
+  
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
 
@@ -160,8 +162,8 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["OBV"] = ta.OBV(df.close, df.volume)
 
     # df["relative_strength_index"] = ta.RSI(df.close)
-
-    df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
+    
+    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
 
     # df["linear_regression_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
@@ -198,7 +200,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["ht_dcperiod"] = ta.HT_DCPERIOD(df.close)
 
-    df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
+    # df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
 
     # df["ht_dcphase"] = ta.HT_DCPHASE(df.close)
 
@@ -250,7 +252,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["percentage_price_oscillator"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    # df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
     # df["stochastic_relative_strength_k"] = df["stochastic_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
@@ -387,7 +389,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
     # pd.set_option("display.max_rows", None, "display.max_columns", None)
-    # print(df.head(10))
+    # print(df.head(1))
     # print(df.tail(5))
     print(df)
     return df
@@ -425,7 +427,7 @@ def get_values(items):
 
 # 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode", "linear_regression"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "stochastic_fast_k", "stochastic_fast_d"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -433,6 +435,7 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode"
             df = make_dataframe(ticker, limit=4000, end_date=end_date)
         else:
             df = make_dataframe(ticker, limit=4000)
+
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
         df = ticker
@@ -490,9 +493,6 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode"
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
 
-    # print("validation" + str(len(result["X_valid"])))
-    # print("test" + str(len(result["X_test"])))
-
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
@@ -500,7 +500,6 @@ feature_columns=["open", "low", "high", "close", "mid", "volume", "ht_trendmode"
     train = train.batch(batch_size)
     valid = valid.batch(batch_size)
     test = test.batch(batch_size)
-
     # train = train.prefetch(buffer_size=AUTOTUNE)
     # test = test.prefetch(buffer_size=AUTOTUNE)
 
@@ -575,7 +574,6 @@ def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
 
                 print("\n~~~SELLING " + sell.symbol + "~~~")
                 print("Quantity: " + sell.qty)
-                # print("Filled at " + str(sell.filled_at) + " with an average fill of " + sell.filled_avg_price + ".")
                 print("Status: " + sell.status)
                 print("Type: " + sell.type)
                 print("Time in force: "  + sell.time_in_force + "\n\n")
@@ -604,7 +602,6 @@ def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
                         )
                     print("\n~~~Buying " + buy.symbol + "~~~")
                     print("Quantity: " + buy.qty)
-                    # print("Filled at " + str(buy.filled_at) + " with an average fill of " + buy.filled_avg_price + ".")
                     print("Status: " + buy.status)
                     print("Type: " + buy.type)
                     print("Time in force: "  + buy.time_in_force + "\n\n")
@@ -640,8 +637,7 @@ def buy_all_at_once(symbols, owned, price_list):
             if current_price < price_list[symbol]:
                 if symbol not in owned:
                     buy_list.append(symbol)
-                else:
-                    print("\n~~~Holding " + symbol + "~~~")
+                
             else:
                 if symbol in owned:
                     qty = owned[symbol]
@@ -672,36 +668,39 @@ def buy_all_at_once(symbols, owned, price_list):
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
             
-    print(owned)
-    print(buy_list)
+    print("The Owned list" + str(owned))
+    print("The buy list " + str(buy_list))
 
-    account_equity = api.get_account().equity
-    buy_power = api.get_account().buying_power
+    account_equity = float(api.get_account().equity)
+    buy_power = float(api.get_account().cash)
 
-    value_in_stocks = 1 - (buying_power/account_equity)
+    value_in_stocks = 1 - (buy_power / account_equity)
+
+    print("account equity " + str(account_equity))
 
     stock_portion_adjuster = 0
 
     if value_in_stocks > .6:
-        stock_portion_adjuster = buy_list.length()
+        stock_portion_adjuster = len(buy_list)
     elif value_in_stocks > .3:
-        if (buy_list.length / stocks_traded) > .8:
-            stock_portion_adjuster = buy_list.length()
-        elif (buy_list.length / stocks_traded) > .6:
-            stock_portion_adjuster = buy_list.length() * .95
-        elif (buy_list.length / stocks_traded) > .4:
-            stock_portion_adjuster = buy_list.length() * .90
+        if (len(buy_list) / stocks_traded) > .8:
+            stock_portion_adjuster = len(buy_list)
+        elif (len(buy_list) / stocks_traded) > .6:
+            stock_portion_adjuster = len(buy_list) / .95  # want 95%
+        elif (len(buy_list) / stocks_traded) > .4:
+            stock_portion_adjuster = len(buy_list) / .90 # want 90%
         else:
-            stock_portion_adjuster = buy_list.length() * .80
+            stock_portion_adjuster = len(buy_list) / .80 # want 80%
     else:
-        if (buy_list.length / stocks_traded) > .8:
-            stock_portion_adjuster = buy_list.length()
-        elif (buy_list.length / stocks_traded) > .6:
-            stock_portion_adjuster = buy_list.length() * .90
-        elif (buy_list.length / stocks_traded) > .4:
-            stock_portion_adjuster = buy_list.length() * .75
+        if (len(buy_list) / stocks_traded) > .8:
+            stock_portion_adjuster = len(buy_list)
+        elif (len(buy_list) / stocks_traded) > .6:
+            stock_portion_adjuster = len(buy_list) / .90 # want 90%
+        elif (len(buy_list) / stocks_traded) > .4:
+            stock_portion_adjuster = len(buy_list) / .75 # want 75%
         else:
-            stock_portion_adjuster = buy_list.length() * .65
+            stock_portion_adjuster = len(buy_list) / .65 # want 65%
+            
 
     print("\nThe value in stocks is " + str(value_in_stocks))
     print("\nThe Stock portion adjuster is " + str(stock_portion_adjuster))
@@ -712,12 +711,17 @@ def buy_all_at_once(symbols, owned, price_list):
                 print("~~~Not buying " + symbol + "~~~")
                 continue
 
+            elif symbol in owned and symbol not in buy_list:
+                print("~~~Holding " + symbol + "~~~")
+                continue
+            
             else:
                 current_price = 0
+                barset = api.get_barset(symbol, "day", limit=1)
                 for symbol, bars in barset.items():
                     for bar in bars:
                         current_price = bar.c
-                buy_qty = (float(buying_power) / stock_portion_adjuster) // current_price
+                buy_qty = (buy_power / stock_portion_adjuster) // current_price
 
                 if buy_qty == 0:
                     print("Not enough money to purchase stock " + symbol + ".")
@@ -789,6 +793,7 @@ def get_all_accuracies(model, data, lookup_step):
 def get_accuracy(y_real, y_pred, lookup_step):
     y_pred = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_pred[lookup_step:]))
     y_real = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_real[lookup_step:]))
+
     return accuracy_score(y_real, y_pred)
 
 def get_all_maes(model, test_tensorslice, valid_tensorslice, train_tensorslice, data):
@@ -808,6 +813,7 @@ def return_real_predict(model, X_data, y_data, column_scaler):
     y_pred = model.predict(X_data)
     y_real = np.squeeze(column_scaler.inverse_transform(np.expand_dims(y_data, axis=0)))
     y_pred = np.squeeze(column_scaler.inverse_transform(y_pred))
+
     return y_real, y_pred
 
 
@@ -847,9 +853,18 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
+    symbol = ticker = "AGYS"
 
-    now = time.time()
-    now = datetime.datetime.fromtimestamp(now)
+    # time_s = time.time()
+    # data, train, valid, test = load_data(ticker, 300, True, True, 1, .2, ["open", "low", "high", "close", "mid", "volume", "ht_trendmode", "linear_regression"], 128, end_date=None)
+    # print("load data took " + str(time.time() - time_s))
 
-    padded = datetime.date(2020, 12, 31) + datetime.timedelta(1)
-    print(padded)
+    # time_s = time.time()
+    # df = make_dataframe(ticker, limit=600, end_date=None)
+    # print("make data took " + str(time.time() - time_s))
+
+    # time_s = time.time()
+    # api = get_api()
+    # current_price = 0
+    # barset = api.get_barset(symbol, "day", limit=1)
+    # print("getting one day took " + str(time.time() - time_s))

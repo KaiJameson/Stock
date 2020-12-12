@@ -1,6 +1,7 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_nn_functions import (load_data, predict, getOwnedStocks, decide_trades, return_real_predict, 
-get_all_accuracies, nn_report, make_excel_file, make_load_run_excel, percent_from_real)
+get_all_accuracies, nn_report, make_excel_file, make_load_run_excel, percent_from_real,
+buy_all_at_once)
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
 from functions import check_directories
@@ -20,6 +21,8 @@ def load_trade(symbols):
     for symbol in symbols:
         try:
             start_time = time.time()
+            print("\n~~~Now Starting " + symbol + "~~~")
+
             config_name = config_directory + "/" + symbol + ".csv"
             if os.path.isfile(config_name):
                 f = open(config_name, "r")
@@ -55,12 +58,12 @@ def load_trade(symbols):
             y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
             make_load_run_excel(symbol, train_acc, valid_acc, test_acc, percent_from_real(y_real, y_pred), abs((percent - 1) * 100))
 
-            time_s = time.time()
-            if do_the_trades:
-                decide_trades(symbol, owned, valid_acc, percent, real_api_key_id, real_api_secret_key)
-            else:
-                print("Why are you running this if you don't want to do the trades?")
-            print("Performing the trade took " + str(time.time() - time_s) + " seconds")
+            # time_s = time.time()
+            # if do_the_trades:
+            #     decide_trades(symbol, owned, valid_acc, percent, real_api_key_id, real_api_secret_key)
+            # else:
+            #     print("Why are you running this if you don't want to do the trades?")
+            # print("Performing the trade took " + str(time.time() - time_s) + " seconds")
             
             print("Finished running: " + symbol)
 
@@ -79,12 +82,12 @@ def load_trade(symbols):
             f.close()
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
-    # if do_the_trades:
-    #     time_s = time.time()
-    #     buy_all_at_once(symbols, owned, price_prediction_list)
-    #     print("Performing all the trades took " + str(time.time() - time_s) + " seconds")
-    # else:
-    #     print("Why are you running this if you don't want to do the trades?")
+    if do_the_trades:
+        time_s = time.time()
+        buy_all_at_once(symbols, owned, price_prediction_list)
+        print("Performing all the trades took " + str(time.time() - time_s) + " seconds")
+    else:
+        print("Why are you running this if you don't want to do the trades?")
 
 s = time.time()
 load_trade(load_save_symbols)
