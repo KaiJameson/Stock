@@ -11,8 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
-test_money, excel_directory, stocks_traded, error_file, load_run_excel, trading_real_money,
-using_all_accuracies)
+test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
 from symbols import trading_real_money
@@ -391,41 +390,17 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # pd.set_option("display.max_rows", None, "display.max_columns", None)
     # print(df.head(1))
     # print(df.tail(5))
+    df = convert_date_values(df)
+
     print(df)
     return df
 
-def get_values(items):
-    data = {}
-    for symbol, bar in items:
-        open_values = []
-        close_values = []
-        low_values = []
-        high_values = []
-        mid_values = []
-        volume = []
-        for day in bar:
-            open_price = day.o
-            close_price = day.c
-            low_price = day.l
-            high_price = day.h
-            mid_price = (low_price + high_price) / 2
-            vol = day.v
-            open_values.append(open_price)
-            close_values.append(close_price)
-            low_values.append(low_price)
-            high_values.append(high_price)
-            mid_values.append(mid_price)
-            volume.append(vol)
-        data["open"] = open_values
-        data["low"] = low_values
-        data["high"] = high_values
-        data["close"] = close_values
-        data["mid"] = mid_values
-        data["volume"] = volume
-    df = pd.DataFrame(data=data)
+def convert_date_values(df):
+    df["day_of_week"] = df.index
+    df["day_of_week"] = df["day_of_week"].dt.dayofweek
+
     return df
 
-# 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
 feature_columns=["open", "low", "high", "close", "mid", "volume", "stochastic_fast_k", "stochastic_fast_d"],
                 batch_size=64, end_date=None):
