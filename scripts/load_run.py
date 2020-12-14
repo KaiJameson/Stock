@@ -93,6 +93,6 @@ s = time.time()
 load_trade(load_save_symbols)
 time_s = time.time()
 make_excel_file()
-print("\nMaking the excel file took " + str(time.time() - time_s) + " seconds\n")
+print("Making the excel file took " + str(time.time() - time_s) + " seconds\n")
 tt = (time.time() - s) / 60
 print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")

@@ -21,7 +21,7 @@ back_test_days = 100
 save_logs = False
 to_plot = False
 make_config = False
-using_all_accuracies = False
+using_all_accuracies = True
 
 """
 # N_STEPS = Window size or the sequence length.
@@ -57,7 +57,7 @@ defaults = {
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
-    "BATCH_SIZE": 128,
+    "BATCH_SIZE": 64,
     "EPOCHS": 800,
     "PATIENCE": 200,
     "SAVELOAD": False,
