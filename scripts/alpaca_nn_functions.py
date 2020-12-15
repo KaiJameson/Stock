@@ -10,7 +10,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
+from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
@@ -109,6 +109,13 @@ def make_excel_file():
     os.remove(excel_directory + "/" + date_string + "real" + ".txt")
     os.remove(excel_directory + "/" + date_string + "predict" + ".txt")
     
+def make_current_price(curr_price):
+    date_string = get_date_string()
+
+    f = open(current_price_directory + "/" + date_string + ".txt", "a")
+    f.write(str(round(curr_price, 2)) + "\t")
+    f.close()
+
 def excel_output(symbol, real_price, predicted_price):
     date_string = get_date_string()
 
@@ -152,8 +159,6 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
   
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
-
-    df = get_ARIMA(df)
 
     # df["7_moving_avg"] = df.close.rolling(window=7).mean()
     
@@ -526,9 +531,10 @@ def buy_all_at_once(symbols, owned, price_list):
                     print("Quantity: " + sell.qty)
                     print("Status: " + sell.status)
                     print("Type: " + sell.type)
-                    print("Time in force: "  + sell.time_in_force + "\n\n")
+                    print("Time in force: "  + sell.time_in_force + "\n")
 
-            print("The current price for " + symbol + " is " + str(current_price) + "\n")
+            print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
+            make_current_price(current_price)
 
         except:
             f = open(error_file, "a")
@@ -540,15 +546,16 @@ def buy_all_at_once(symbols, owned, price_list):
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
             
-    print("The Owned list" + str(owned))
-    print("The buy list " + str(buy_list))
+    print("The Owned list: " + str(owned))
+    print("The buy list: " + str(buy_list))
 
     account_equity = float(api.get_account().equity)
     buy_power = float(api.get_account().cash)
 
     value_in_stocks = 1 - (buy_power / account_equity)
 
-    print("account equity " + str(account_equity))
+    print("Value in stocks: " + str(value_in_stocks))
+    print("Account equity: " + str(account_equity))
 
     stock_portion_adjuster = 0
 
@@ -575,7 +582,7 @@ def buy_all_at_once(symbols, owned, price_list):
             
 
     print("\nThe value in stocks is " + str(value_in_stocks))
-    print("\nThe Stock portion adjuster is " + str(stock_portion_adjuster))
+    print("The Stock portion adjuster is " + str(stock_portion_adjuster))
 
     for symbol in symbols:
         try:
@@ -611,7 +618,7 @@ def buy_all_at_once(symbols, owned, price_list):
                 print("Quantity: " + buy.qty)
                 print("Status: " + buy.status)
                 print("Type: " + buy.type)
-                print("Time in force: "  + buy.time_in_force + "\n\n")
+                print("Time in force: "  + buy.time_in_force + "\n")
                 
         except:
             f = open(error_file, "a")

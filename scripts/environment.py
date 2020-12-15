@@ -10,6 +10,7 @@ data_directory = "../data"
 excel_directory = "../excel"
 error_file = "../error_file.txt"
 load_run_excel = "../load_run_test"
+current_price_directory = "../curr_price"
 
 
 test_var = "close"
