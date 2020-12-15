@@ -10,9 +10,8 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-from environment import (test_var, reports_directory, graph_directory, back_test_days, to_plot, 
-test_money, excel_directory, stocks_traded, error_file, load_run_excel, trading_real_money,
-using_all_accuracies)
+from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
+test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
 from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
 from functions import deleteFiles
 from symbols import trading_real_money
@@ -28,6 +27,7 @@ import random
 import datetime
 import math 
 import talib as ta
+import xgboost as xgb
 
 
 def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
@@ -109,6 +109,13 @@ def make_excel_file():
     os.remove(excel_directory + "/" + date_string + "real" + ".txt")
     os.remove(excel_directory + "/" + date_string + "predict" + ".txt")
     
+def make_current_price(curr_price):
+    date_string = get_date_string()
+
+    f = open(current_price_directory + "/" + date_string + ".txt", "a")
+    f.write(str(round(curr_price, 2)) + "\t")
+    f.close()
+
 def excel_output(symbol, real_price, predicted_price):
     date_string = get_date_string()
 
@@ -153,7 +160,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
 
-    # df["simple_rolling_avg"] = df.close.rolling(window=10).mean()
+    # df["7_moving_avg"] = df.close.rolling(window=7).mean()
     
     # upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
     # df["upper_band"] = upperband
@@ -182,19 +189,13 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
     # df["minimum"] = minimum
     # df["maximum"] = maximum
- 
-    # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
     # df["commodity_channel_index"] = ta.CCI(df.high, df.low, df.close, timeperiod=14)
-
-    # df["average_true_range"] = ta.ATR(df.high, df.low, df.close, timeperiod=14)
 
     # df["parabolic_SAR"] = ta.SAR(df.high, df.low)
 
     # df["parabolic_SAR_extended"] = ta.SAREXT(df.high, df.low, startvalue=0, offsetonreverse=0, accelerationinitlong=0, 
     # accelerationlong=0, accelerationmaxlong=0, accelerationinitshort=0, accelerationshort=0, accelerationmaxshort=0)
-
-    # df["MACD"], df["MACD_signal"], df["MACD_hist"] = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
 
     # df["rate_of_change"] = ta.ROC(df.close, timeperiod=10)
 
@@ -212,19 +213,19 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["momentum"] = ta.MOM(df.close, timeperiod=10)
 
-    # df["absolute_price_oscillator"] = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
+    # df["abs_price_osc"] = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
     # df["KAMA"] = ta.KAMA(df.close, timeperiod=30)
 
     # df["typical_price"] = ta.TYPPRICE(df.high, df.low, df.close)
 
-    # df["ultimate_oscillator"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
+    # df["ultimate_osc"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
 
     # df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
 
-    # df["chaikin_oscillator"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
+    # df["chaikin_osc"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
 
-    # df["normalized_average_true_range"] = ta.NATR(df.high, df.low, df.close, timeperiod=14)
+    # df["norm_average_true_range"] = ta.NATR(df.high, df.low, df.close, timeperiod=14)
 
     # df["median_price"] = ta.MEDPRICE(df.high, df.low)
 
@@ -232,129 +233,43 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
 
-    # df["aroon_oscillator"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
+    # df["aroon_osc"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
 
     # df["balance_of_power"] = ta.BOP(df.open, df.high, df.low, df.close)
 
-    # df["chande_momentum_oscillator"] = ta.CMO(df.close, timeperiod=14)
+    # df["chande_momen_osc"] = ta.CMO(df.close, timeperiod=14)
 
-    # df["control_MACD"], df["control_MACD_signal"], df["control_MACD_hist"] = ta.MACEXT(df.close, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
+    # df["macd"], df["macdsignal"], df["macdhist"] = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
 
-    # df["fixed_MACD"], df["fixed_MACD_signal"], df["fixed_MACD_hist"] = ta.MACEXT(df.close, signalperiod=9)
+    # df["control_MACD"], df["control_MACD_signal"], df["control_MACD_hist"] = ta.MACDEXT(df.close, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
 
-    # df["minus_directional_indicator"] = ta.MINUS_DI(df.high, df.low, df.close, timeperiod=14)
+    # df["fix_MACD"], df["fix_MACD_signal"], df["fix_MACD_hist"] = ta.MACDFIX(df.close, signalperiod=9)
 
-    # df["minus_directional_movement"] = ta.MINUS_DM(df.high, df.low, timeperiod=14)
+    # df["minus_directional_ind"] = ta.MINUS_DI(df.high, df.low, df.close, timeperiod=14)
 
-    # df["plus_directional_indicator"] = ta.PLUS_DI(df.high, df.low, df.close, timeperiod=14)
+    # df["minus_directional_move"] = ta.MINUS_DM(df.high, df.low, timeperiod=14)
 
-    # df["plus_directional_movement"] = ta.PLUS_DM(df.high, df.low, timeperiod=14)
+    # df["plus_directional_ind"] = ta.PLUS_DI(df.high, df.low, df.close, timeperiod=14)
 
-    # df["percentage_price_oscillator"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
+    # df["plus_directional_move"] = ta.PLUS_DM(df.high, df.low, timeperiod=14)
 
-    df["stochastic_fast_k"], df["stochastic_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    # df["percentage_price_osc"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    # df["stochastic_relative_strength_k"] = df["stochastic_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+
+    # df["stochas_relative_strength_k"], df["stochas_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+
+    # df["stochas_slowk"], df["stochas_slowd"] = ta.STOCH(df.high, df.low, df.close, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
 
     # df["TRIX"] = ta.TRIX(df.close, timeperiod=30)
 
-    # df["weighted_moving_average"] = ta.WMA(df.close, timeperiod=30)
+    # df["weighted_moving_avg"] = ta.WMA(df.close, timeperiod=30)
 
-    # TODO figure out what periods to use here
-    # df["moving_average_with_variable_period"] = ta.MAVP(df.close, periods, minperiod=2, maxperiod=30, matype=0)
+    # df["upband"], df["midband"], df["lowband"] = ta.BBANDS(df.close, timeperiod=5, nbdevup=2, nbdevdn=2, matype=0)
 
-    # Group 1
-    # df["two_crows"] = ta.CDL2CROWS(df.open, df.high, df.low, df.close)
-    # df["three_black_crows"] = ta.CDL3BLACKCROWS(df.open, df.high, df.low, df.close)
-    # df["three_inside_updown"] = ta.CDL3INSIDE(df.open, df.high, df.low, df.close)
-    # df["three_line_strike"] = ta.CDL3LINESTRIKE(df.open, df.high, df.low, df.close)
-    # df["three_outside_updown"] = ta.CDL3OUTSIDE(df.open, df.high, df.low, df.close)
+    # df["double_exponetial_moving_avg"] = ta.DEMA(df.close, timeperiod=30)
 
-    # Group 2
-    # df["three_stars_in_the_south"] = ta.CDL3STARSINSOUTH(df.open, df.high, df.low, df.close)
-    # df["three_advancing_white_soldiers"] = ta.CDL3WHITESOLDIERS(df.open, df.high, df.low, df.close)
-    # df["abandoned_baby"] = ta.CDLABANDONEDBABY(df.open, df.high, df.low, df.close)
-    # df["advance_block"] = ta.CDLADVANCEBLOCK(df.open, df.high, df.low, df.close)
-    # df["belt_hold"] = ta.CDLBELTHOLD(df.open, df.high, df.low, df.close)
-
-    # Group 3
-    # df["breakaway"] = ta.CDLBREAKAWAY(df.open, df.high, df.low, df.close)
-    # df["closing_marubozu"] = ta.CDLCLOSINGMARUBOZU(df.open, df.high, df.low, df.close)
-    # df["concealing_baby_swallow"] = ta.CDLCONCEALBABYSWALL(df.open, df.high, df.low, df.close)
-    # df["counterattack"] = ta.CDLCOUNTERATTACK(df.open, df.high, df.low, df.close)
-    # df["dark_cloud_cover"] = ta.CDLDARKCLOUDCOVER(df.open, df.high, df.low, df.close)
-
-    # Group 4
-    # df["doji"] = ta.CDLDOJI(df.open, df.high, df.low, df.close)
-    # df["doji_star"] = ta.CDLDOJISTAR(df.open, df.high, df.low, df.close)
-    # df["dragonfly_doji"] = ta.CDLDRAGONFLYDOJI(df.open, df.high, df.low, df.close)
-    # df["engulfing_pattern"] = ta.CDLENGULFING(df.open, df.high, df.low, df.close)
-    # df["evening_doji_star"] = ta.CDLEVENINGDOJISTAR(df.open, df.high, df.low, df.close)
-
-    # Group 5
-    # df["evening_star"] = ta.CDLEVENINGSTAR(df.open, df.high, df.low, df.close)
-    # df["updown_gap_sidebyside_white_lines"] = ta.CDLGAPSIDESIDEWHITE(df.open, df.high, df.low, df.close)
-    # df["gravestone_doji"] = ta.CDLGRAVESTONEDOJI(df.open, df.high, df.low, df.close)
-    # df["hammer"] = ta.CDLHAMMER(df.open, df.high, df.low, df.close)
-    # df["hanging_man"] = ta.CDLHANGINGMAN(df.open, df.high, df.low, df.close)
-
-    # Group 6
-    # df["harami_pattern"] = ta.CDLHARAMI(df.open, df.high, df.low, df.close)
-    # df["harami_cross_pattern"] = ta.CDLHARAMICROSS(df.open, df.high, df.low, df.close)
-    # df["high_wave_candle"] = ta.CDLHIGHWAVE(df.open, df.high, df.low, df.close)
-    # df["hikkake_pattern"]= ta.CDLHIKKAKE(df.open, df.high, df.low, df.close)
-    # df["modified_hikkake_pattern"]= ta.CDLHIKKAKEMOD(df.open, df.high, df.low, df.close)
-
-    # Group 7
-    # df["homing_pigeon"] = ta.CDLHOMINGPIGEON(df.open, df.high, df.low, df.close)
-    # df["identical_three_crows"] = ta.CDLIDENTICAL3CROWS(df.open, df.high, df.low, df.close)
-    # df["in_neck_pattern"] = ta.CDLINNECK(df.open, df.high, df.low, df.close)
-    # df["inverted_hammer"] = ta.CDLINVERTEDHAMMER(df.open, df.high, df.low, df.close)
-    # df["kicking"] = ta.CDLKICKING(df.open, df.high, df.low, df.close)
-
-    # Group 8
-    # df["kicking_bull/bear_determined_by_longer_marubozu"] = ta.CDLKICKINGBYLENGTH(df.open, df.high, df.low, df.close)
-    # df["ladder_bottom"] = ta.CDLLADDERBOTTOM(df.open, df.high, df.low, df.close)
-    # df["long_legged_doji"] = ta.CDLLONGLEGGEDDOJI(df.open, df.high, df.low, df.close)
-    # df["long_line_candle"] = ta.CDLLONGLINE(df.open, df.high, df.low, df.close)
-    # df["marubozu"] = ta.CDLMARUBOZU(df.open, df.high, df.low, df.close)
-
-    # Group 9
-    # df["matching_low"] = ta.CDLMATCHINGLOW(df.open, df.high, df.low, df.close)
-    # df["mat_hold"] = ta.CDLMATHOLD(df.open, df.high, df.low, df.close)
-    # df["morning_doji_star"] = ta.CDLMORNINGDOJISTAR(df.open, df.high, df.low, df.close)
-    # df["morning_star"] = ta.CDLMORNINGSTAR(df.open, df.high, df.low, df.close)
-    # df["on_neck_pattern"] = ta.CDLONNECK(df.open, df.high, df.low, df.close)
-
-    # Group 10
-    # df["piercing_pattern"] = ta.CDLPIERCING(df.open, df.high, df.low, df.close)
-    # df["rickshaw_man"] = ta.CDLRICKSHAWMAN(df.open, df.high, df.low, df.close)
-    # df["rising_falling_three_methods"] = ta.CDLRISEFALL3METHODS(df.open, df.high, df.low, df.close)
-    # df["separating_lines"] = ta.CDLSEPARATINGLINES(df.open, df.high, df.low, df.close)
-    # df["shooting_star"] = ta.CDLSHOOTINGSTAR(df.open, df.high, df.low, df.close)
-
-    # Group 11
-    # df["short_line_candle"] = ta.CDLSHORTLINE(df.open, df.high, df.low, df.close)
-    # df["spinning_top"] = ta.CDLSPINNINGTOP(df.open, df.high, df.low, df.close)
-    # df["stalled_pattern"] = ta.CDLSTALLEDPATTERN(df.open, df.high, df.low, df.close)
-    # df["stick_sandwich"] = ta.CDLSTICKSANDWICH(df.open, df.high, df.low, df.close)
-    # df["takuri"] = ta.CDLTAKURI(df.open, df.high, df.low, df.close)
-
-    # Group 12
-    # df["tasuki_gap"] = ta.CDLTASUKIGAP(df.open, df.high, df.low, df.close)  
-    # df["thrusting_pattern"] = ta.CDLTHRUSTING(df.open, df.high, df.low, df.close)
-    # df["tristar_pattern"] = ta.CDLTRISTAR(df.open, df.high, df.low, df.close)
-    # df["unique_3_river"] = ta.CDLUNIQUE3RIVER(df.open, df.high, df.low, df.close)
-    # df["upside_gap_two_crows"] = ta.CDLUPSIDEGAP2CROWS(df.open, df.high, df.low, df.close)
-    # df["upside/downside_gap_three_methods"] = ta.CDLXSIDEGAP3METHODS(df.open, df.high, df.low, df.close)
-
-    # df["upperband"], df["middleband"], df["lowerband"] = ta.BBANDS(df.close, timeperiod=5, nbdevup=2, nbdevdn=2, matype=0)
-
-    # df["double_exponetial_moving_average"] = ta.DEMA(df.close, timeperiod=30)
-
-    # df["exponential_moving_average"] = ta.EMA(df.close, timeperiod=30)
-
-    # df["moving_average"] = ta.MA(df.close, timeperiod=30, matype=0)
+    # df["exponential_moving_avg"] = ta.EMA(df.close, timeperiod=30)
 
     # df["MESA_mama"], df["MESA_fama"] = ta.MAMA(df.close)
 
@@ -362,21 +277,11 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["midprice"] = ta.MIDPRICE(df.high, df.low, timeperiod=14)
 
-    # df["parabolic_SAR"] = ta.SAR(df.high, df.low)
-
-    # df["simple_moving_average"] = ta.SMA(df.close, timeperiod=30)
-
-    # df["triple_exponential_moving_average"] = ta.TEMA(df.close, timeperiod=30)
+    # df["triple_exponential_moving_avg"] = ta.TEMA(df.close, timeperiod=30)
 
     # df["triangular_moving_average"] = ta.TRIMA(df.close, timeperiod=30)
 
-    # df["average_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
-
-    # df["average_directional_movement_index_rating"] = ta.ADXR(df.high, df.low, df.close, timeperiod=14)
-
-    # df["stochastic_slowk"], df["stochastic_slowd"] = ta.STOCH(df.high, df.low, df.close, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
-
-    # df["average_true_range"] = ta.ATR(df.high, df.low, df.close, timeperiod=14)
+    # df["avg_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
 
     # df["true_range"] = ta.TRANGE(df.high, df.low, df.close)
 
@@ -391,43 +296,15 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # pd.set_option("display.max_rows", None, "display.max_columns", None)
     # print(df.head(1))
     # print(df.tail(5))
+
+    # df = convert_date_values(df)
+
+    # get_feature_importance(df)
     print(df)
     return df
 
-def get_values(items):
-    data = {}
-    for symbol, bar in items:
-        open_values = []
-        close_values = []
-        low_values = []
-        high_values = []
-        mid_values = []
-        volume = []
-        for day in bar:
-            open_price = day.o
-            close_price = day.c
-            low_price = day.l
-            high_price = day.h
-            mid_price = (low_price + high_price) / 2
-            vol = day.v
-            open_values.append(open_price)
-            close_values.append(close_price)
-            low_values.append(low_price)
-            high_values.append(high_price)
-            mid_values.append(mid_price)
-            volume.append(vol)
-        data["open"] = open_values
-        data["low"] = low_values
-        data["high"] = high_values
-        data["close"] = close_values
-        data["mid"] = mid_values
-        data["volume"] = volume
-    df = pd.DataFrame(data=data)
-    return df
-
-# 
 def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "stochastic_fast_k", "stochastic_fast_d"],
+feature_columns=["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"],
                 batch_size=64, end_date=None):
     if isinstance(ticker, str):
         # load data from alpaca
@@ -622,7 +499,7 @@ def buy_all_at_once(symbols, owned, price_list):
     api = get_api()
     clock = api.get_clock()
     if not clock.is_open:
-        print("The market is closed right now, go home. You're drunk.")
+        print("\nThe market is closed right now, go home. You're drunk.")
         return
 
 
@@ -654,9 +531,10 @@ def buy_all_at_once(symbols, owned, price_list):
                     print("Quantity: " + sell.qty)
                     print("Status: " + sell.status)
                     print("Type: " + sell.type)
-                    print("Time in force: "  + sell.time_in_force + "\n\n")
+                    print("Time in force: "  + sell.time_in_force + "\n")
 
-            print("The current price for " + symbol + " is " + str(current_price) + "\n")
+            print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
+            make_current_price(current_price)
 
         except:
             f = open(error_file, "a")
@@ -668,15 +546,16 @@ def buy_all_at_once(symbols, owned, price_list):
             print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
             
-    print("The Owned list" + str(owned))
-    print("The buy list " + str(buy_list))
+    print("The Owned list: " + str(owned))
+    print("The buy list: " + str(buy_list))
 
     account_equity = float(api.get_account().equity)
     buy_power = float(api.get_account().cash)
 
     value_in_stocks = 1 - (buy_power / account_equity)
 
-    print("account equity " + str(account_equity))
+    print("Value in stocks: " + str(value_in_stocks))
+    print("Account equity: " + str(account_equity))
 
     stock_portion_adjuster = 0
 
@@ -703,7 +582,7 @@ def buy_all_at_once(symbols, owned, price_list):
             
 
     print("\nThe value in stocks is " + str(value_in_stocks))
-    print("\nThe Stock portion adjuster is " + str(stock_portion_adjuster))
+    print("The Stock portion adjuster is " + str(stock_portion_adjuster))
 
     for symbol in symbols:
         try:
@@ -739,7 +618,7 @@ def buy_all_at_once(symbols, owned, price_list):
                 print("Quantity: " + buy.qty)
                 print("Status: " + buy.status)
                 print("Type: " + buy.type)
-                print("Time in force: "  + buy.time_in_force + "\n\n")
+                print("Time in force: "  + buy.time_in_force + "\n")
                 
         except:
             f = open(error_file, "a")
@@ -757,6 +636,39 @@ def get_api():
         api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
 
     return api
+
+def get_feature_importance(df):
+    data = df.copy()
+    y = data["close"]
+    X = data
+   
+    train_samples = int(X.shape[0] * 0.8)
+ 
+    X_train_FI = X.iloc[:train_samples]
+    X_test_FI = X.iloc[train_samples:]
+
+    y_train_FI = y.iloc[:train_samples]
+    y_test_FI = y.iloc[train_samples:]
+
+    regressor = xgb.XGBRegressor(gamma=0.0, n_estimators=150, base_score=0.7, colsample_bytree=1, learning_rate=0.05)
+    
+    xgbModel = regressor.fit(X_train_FI, y_train_FI, eval_set = [(X_train_FI, y_train_FI), 
+    (X_test_FI, y_test_FI)], verbose=False)
+    
+    fig = plt.figure(figsize=(8,8))
+    plt.xticks(rotation='vertical')
+    plt.bar([i for i in range(len(xgbModel.feature_importances_))], xgbModel.feature_importances_.tolist(), 
+    tick_label=X_test_FI.columns)
+    plt.title('Figure 6: Feature importance of the technical indicators.')
+    plt.show()
+
+    feature_names = list(X.columns)
+    i = 0
+    for feature in xgbModel.feature_importances_.tolist():
+        print(feature_names[i], end="")
+        print(": "+ str(feature))
+        i += 1
+
 
 def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
@@ -855,9 +767,9 @@ if __name__ == "__main__":
 
     symbol = ticker = "AGYS"
 
-    # time_s = time.time()
-    # data, train, valid, test = load_data(ticker, 300, True, True, 1, .2, ["open", "low", "high", "close", "mid", "volume", "ht_trendmode", "linear_regression"], 128, end_date=None)
-    # print("load data took " + str(time.time() - time_s))
+    time_s = time.time()
+    data, train, valid, test = load_data(ticker, 300, True, True, 1, .2, ["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"], 64, end_date=None)
+    print("load data took " + str(time.time() - time_s))
 
     # time_s = time.time()
     # df = make_dataframe(ticker, limit=600, end_date=None)

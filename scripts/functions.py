@@ -22,6 +22,8 @@ def check_directories():
         os.mkdir(excel_directory)
     if not os.path.isdir(load_run_excel):
         os.mkdir(load_run_excel)
+    if not os.path.isdir(current_price_directory):
+        os.mkdir(current_price_directory)
 
 def deleteFiles(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):

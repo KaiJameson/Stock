@@ -10,6 +10,7 @@ data_directory = "../data"
 excel_directory = "../excel"
 error_file = "../error_file.txt"
 load_run_excel = "../load_run_test"
+current_price_directory = "../curr_price"
 
 
 test_var = "close"
@@ -21,7 +22,7 @@ back_test_days = 100
 save_logs = False
 to_plot = False
 make_config = False
-using_all_accuracies = False
+using_all_accuracies = True
 
 """
 # N_STEPS = Window size or the sequence length.
@@ -57,7 +58,7 @@ defaults = {
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
-    "BATCH_SIZE": 128,
+    "BATCH_SIZE": 64,
     "EPOCHS": 800,
     "PATIENCE": 200,
     "SAVELOAD": False,
