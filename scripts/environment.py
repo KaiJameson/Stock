@@ -22,7 +22,7 @@ back_test_days = 100
 save_logs = False
 to_plot = False
 make_config = False
-using_all_accuracies = True
+using_all_accuracies = False
 
 """
 # N_STEPS = Window size or the sequence length.

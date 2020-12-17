@@ -170,27 +170,27 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["relative_strength_index"] = ta.RSI(df.close)
     
-    # df["linear_regression"] = ta.LINEARREG(df.close, timeperiod=14)
+    # df["linear_regres"] = ta.LINEARREG(df.close, timeperiod=14)
 
-    # df["linear_regression_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
+    # df["linear_regres_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
-    # df["linear_regression_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
+    # df["linear_regres_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    # df["linear_regression_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
+    # df["linear_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
-    # df["pearson's_correlation"] = ta.CORREL(df.high, df.low, timeperiod=30)
+    # df["pearson's_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
 
-    # df["money_flow_index"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
+    # df["money_flow_ind"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
 
     # df["williams_r"] = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
 
-    # df["standard_deviation"] = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
+    # df["std_dev"] = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
 
     # minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
-    # df["minimum"] = minimum
-    # df["maximum"] = maximum
+    # df["min"] = minimum
+    # df["max"] = maximum
 
-    # df["commodity_channel_index"] = ta.CCI(df.high, df.low, df.close, timeperiod=14)
+    # df["commodity_channel_ind"] = ta.CCI(df.high, df.low, df.close, timeperiod=14)
 
     # df["parabolic_SAR"] = ta.SAR(df.high, df.low)
 
@@ -235,7 +235,7 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["aroon_osc"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
 
-    # df["balance_of_power"] = ta.BOP(df.open, df.high, df.low, df.close)
+    # df["balance_of_pow"] = ta.BOP(df.open, df.high, df.low, df.close)
 
     # df["chande_momen_osc"] = ta.CMO(df.close, timeperiod=14)
 
@@ -279,13 +279,13 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
 
     # df["triple_exponential_moving_avg"] = ta.TEMA(df.close, timeperiod=30)
 
-    # df["triangular_moving_average"] = ta.TRIMA(df.close, timeperiod=30)
+    # df["triangular_moving_avg"] = ta.TRIMA(df.close, timeperiod=30)
 
     # df["avg_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
 
     # df["true_range"] = ta.TRANGE(df.high, df.low, df.close)
 
-    # df["average_price"] = ta.AVGPRICE(df.open, df.high, df.low, df.close)
+    # df["avg_price"] = ta.AVGPRICE(df.open, df.high, df.low, df.close)
 
     # df["weighted_close_price"] = ta.WCLPRICE(df.high, df.low, df.close)
 
@@ -501,7 +501,6 @@ def buy_all_at_once(symbols, owned, price_list):
     if not clock.is_open:
         print("\nThe market is closed right now, go home. You're drunk.")
         return
-
 
     buy_list = []
     for symbol in symbols:

@@ -158,7 +158,7 @@ def make_neural_net(ticker, end_date=None,
     logs = "logs/" + get_time_string()
 
     if SAVELOAD:
-        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + ticker + ".h5", save_weights_only=False, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + ticker + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
@@ -194,9 +194,6 @@ def make_neural_net(ticker, end_date=None,
         model_path = os.path.join("results", model_name + ".h5")
         model.load_weights(model_path)
 
-        # mse, mae = model.evaluate(test, verbose=0)
-        # mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
-        
         test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
 
         delete_files_in_folder(results_folder)

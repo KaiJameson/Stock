@@ -1,7 +1,7 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from alpaca_nn_functions import (load_data, predict, getOwnedStocks, decide_trades, return_real_predict, 
 get_all_accuracies, nn_report, make_excel_file, make_load_run_excel, percent_from_real,
-buy_all_at_once)
+buy_all_at_once, create_model)
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
 from functions import check_directories
@@ -41,7 +41,12 @@ def load_trade(symbols):
             LOOKUP_STEP = defaults["LOOKUP_STEP"]
 
             time_s = time.time()
-            model = load_model(model_saveload_directory + "/" + symbol + ".h5")
+            # model = load_model(model_saveload_directory + "/" + symbol + ".h5")
+            model = create_model(N_STEPS, loss=defaults["LOSS"], units=defaults["UNITS"], 
+            cell=defaults["CELL"], n_layers=defaults["N_LAYERS"], dropout=defaults["DROPOUT"], 
+            optimizer=defaults["OPTIMIZER"], bidirectional=defaults["BIDIRECTIONAL"])
+            model.load_weights(model_saveload_directory + "/" + symbol + ".h5")
+                        
             print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
