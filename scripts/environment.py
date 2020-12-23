@@ -11,6 +11,7 @@ excel_directory = "../excel"
 error_file = "../error_file.txt"
 load_run_excel = "../load_run_test"
 current_price_directory = "../curr_price"
+real_test_directory = "../real_test"
 
 
 test_var = "close"
@@ -51,7 +52,7 @@ defaults = {
     "N_STEPS": 300,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "N_LAYERS": 3,
+    "N_LAYERS": 2,
     "CELL": LSTM,
     "UNITS": 256,
     "DROPOUT": 0.4,

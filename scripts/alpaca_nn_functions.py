@@ -12,14 +12,13 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
-from time_functions import get_time_string, get_end_date, get_date_string, zero_pad_date_string
-from functions import deleteFiles
+from time_functions import get_time_string, get_date_string, zero_pad_date_string
+from functions import make_current_price, excel_output
 from symbols import trading_real_money
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
-import time as timey
 import os
 import sys
 import traceback
@@ -83,61 +82,6 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N
 
     return percent, future_price
 
-def make_excel_file():
-    date_string = get_date_string()
-
-    fsym = open(excel_directory + "/" + date_string + "symbol" + ".txt", "r")
-    sym_vals = fsym.read()
-    fsym.close()
-
-    freal = open(excel_directory + "/" + date_string + "real" + ".txt", "r")
-    real_vals = freal.read()
-    freal.close()
-
-    fpred = open(excel_directory + "/" + date_string + "predict" + ".txt", "r")
-    pred_vals = fpred.read()
-    fpred.close()
-
-    f = open(excel_directory + "/" + date_string + ".txt", "a+")
-    
-    f.write(sym_vals + "\n")
-    f.write(str(real_vals) + "\n")
-    f.write(str(pred_vals))
-    f.close()
-
-    os.remove(excel_directory + "/" + date_string + "symbol" + ".txt")
-    os.remove(excel_directory + "/" + date_string + "real" + ".txt")
-    os.remove(excel_directory + "/" + date_string + "predict" + ".txt")
-    
-def make_current_price(curr_price):
-    date_string = get_date_string()
-
-    f = open(current_price_directory + "/" + date_string + ".txt", "a")
-    f.write(str(round(curr_price, 2)) + "\t")
-    f.close()
-
-def excel_output(symbol, real_price, predicted_price):
-    date_string = get_date_string()
-
-    f = open(excel_directory + "/" + date_string + "symbol" + ".txt", "a")
-    f.write(symbol + ":" + "\t")
-    f.close()
-
-    f = open(excel_directory + "/" + date_string + "real" + ".txt", "a")
-    f.write(str(round(real_price, 2)) + "\t")
-    f.close()
-
-    f = open(excel_directory + "/" + date_string + "predict" + ".txt", "a")
-    f.write(str(round(predicted_price, 2)) + "\t")
-    f.close()
-
-def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, percent_away):
-    date_string = get_date_string()
-    f = open(load_run_excel + "/" + date_string + ".txt", "a")
-    f.write(symbol + "\t" + str(round(train_acc * 100, 2)) + "\t" + str(round(valid_acc * 100, 2)) + "\t" 
-    + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 
-    + "\n")
-    f.close()
 
 def percent_from_real(y_real, y_predict):
     the_diffs = []
@@ -516,7 +460,7 @@ def buy_all_at_once(symbols, owned, price_list):
                 
             else:
                 if symbol in owned:
-                    qty = owned[symbol]
+                    qty = owned.pop(symbol)
 
                     sell = api.submit_order(
                         symbol=symbol,
@@ -769,6 +713,12 @@ if __name__ == "__main__":
     time_s = time.time()
     data, train, valid, test = load_data(ticker, 300, True, True, 1, .2, ["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"], 64, end_date=None)
     print("load data took " + str(time.time() - time_s))
+
+    # the_dict = {"AGYS" : 22, "STLD" : 44}
+
+    # print(the_dict.pop("AGYS"))
+
+
 
     # time_s = time.time()
     # df = make_dataframe(ticker, limit=600, end_date=None)

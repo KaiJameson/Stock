@@ -201,4 +201,7 @@ def make_neural_net(ticker, end_date=None,
         
         train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
 
+    if not save_logs:
+        delete_files_in_folder(logs)
+
     return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
