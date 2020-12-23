@@ -1,5 +1,5 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-from alpaca_nn_functions import (load_data, predict, getOwnedStocks, decide_trades, return_real_predict, 
+from alpaca_nn_functions import (load_data, predict, getOwnedStocks, return_real_predict, 
 get_all_accuracies, nn_report,  percent_from_real, buy_all_at_once, create_model)
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
@@ -34,15 +34,16 @@ def load_trade(symbols):
             else:
                 N_STEPS = int(defaults["N_STEPS"])
                 time_s = time.time()
-                data, train, valid, test = load_data(symbol, int(defaults["N_STEPS"]), shuffle=False)
+                data, train, valid, test = load_data(symbol, n_steps=defaults["N_STEPS"], batch_size=defaults["BATCH_SIZE"],
+                limit=defaults["LIMIT"], shuffle=False)
                 print("Loading the data took " + str(time.time() - time_s) + " seconds")    
 
             LOOKUP_STEP = defaults["LOOKUP_STEP"]
 
             time_s = time.time()
-            model = create_model(N_STEPS, loss=defaults["LOSS"], units=defaults["UNITS"], 
-            cell=defaults["CELL"], n_layers=defaults["N_LAYERS"], dropout=defaults["DROPOUT"], 
-            optimizer=defaults["OPTIMIZER"], bidirectional=defaults["BIDIRECTIONAL"])
+            model = create_model(N_STEPS, defaults["UNITS"], defaults["CELL"], defaults["N_LAYERS"], 
+                defaults["DROPOUT"],  defaults["LOSS"], defaults["OPTIMIZER"], defaults["BIDIRECTIONAL"]
+            )
             model.load_weights(model_saveload_directory + "/" + symbol + ".h5")
             # model.summary()
             print("Loading the model took " + str(time.time() - time_s) + " seconds")    

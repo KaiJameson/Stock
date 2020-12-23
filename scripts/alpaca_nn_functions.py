@@ -92,7 +92,7 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
-def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None):
+def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
     api = get_api()
 
     if end_date is not None:
@@ -244,18 +244,29 @@ def make_dataframe(symbol, timeframe="day", limit=1000, time=None, end_date=None
     # df = convert_date_values(df)
 
     # get_feature_importance(df)
-    print(df)
+    if to_print:
+        print(df)
     return df
 
-def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, test_size=0.2, 
-feature_columns=["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"],
-                batch_size=64, end_date=None):
+def convert_date_values(df):	    
+    df["day_of_week"] = df.index	
+    df["day_of_week"] = df["day_of_week"].dt.dayofweek
+
+    return df
+
+def load_data(ticker, end_date=None, n_steps=50, batch_size=64, limit=4000,
+        feature_columns=["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"],
+        shuffle=True, scale=True, lookup_step=1, test_size=0.2, to_print=True
+    ):
+
+    print("\n\n\n\THE LIMIT")
+    print(limit)
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, limit=4000, end_date=end_date)
+            df = make_dataframe(ticker, limit, end_date, to_print)
         else:
-            df = make_dataframe(ticker, limit=4000)
+            df = make_dataframe(ticker, limit, to_print=to_print)
 
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
@@ -377,67 +388,6 @@ def getOwnedStocks():
     for position in positions:
         owned[position.symbol] = position.qty
     return owned
-
-def decide_trades(symbol, owned, accuracy, percent, api_id, api_key):
-    api = get_api()
-    clock = api.get_clock()
-    if clock.is_open:
-        try:
-            qty = owned[symbol]
-            if percent < 1:
-                sell = api.submit_order(
-                    symbol=symbol,
-                    qty=qty,
-                    side="sell",
-                    type="market",
-                    time_in_force="day"
-                )
-
-                print("\n~~~SELLING " + sell.symbol + "~~~")
-                print("Quantity: " + sell.qty)
-                print("Status: " + sell.status)
-                print("Type: " + sell.type)
-                print("Time in force: "  + sell.time_in_force + "\n\n")
-            else:
-                print("\n~~~Holding " + symbol + "~~~")
-
-        except KeyError:
-            if accuracy >= .5:
-                if percent > 1:
-                    account_equity = api.get_account().equity
-                    barset = api.get_barset(symbol, "day", limit=1)
-                    current_price = 0
-                    for symbol, bars in barset.items():
-                        for bar in bars:
-                            current_price = bar.c
-                    if current_price == 0:
-                        print("\n\nSOMETHING WENT WRONG AND COULDNT GET CURRENT PRICE\n\n")
-                    else:
-                        buy_qty = (float(account_equity) / stocks_traded) // current_price
-                        buy = api.submit_order(
-                            symbol=symbol,
-                            qty=buy_qty,
-                            side="buy",
-                            type="market",
-                            time_in_force="day"
-                        )
-                    print("\n~~~Buying " + buy.symbol + "~~~")
-                    print("Quantity: " + buy.qty)
-                    print("Status: " + buy.status)
-                    print("Type: " + buy.type)
-                    print("Time in force: "  + buy.time_in_force + "\n\n")
-
-        except:
-            f = open(error_file, "a")
-            f.write("Problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
-    else:
-        print("You tried to trade while the market was closed! You're either ")
-        print("testing or stupid. Good thing I'm here!")
 
 def buy_all_at_once(symbols, owned, price_list):
     api = get_api()

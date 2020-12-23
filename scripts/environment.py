@@ -46,6 +46,9 @@ using_all_accuracies = False
 # loss it takes before the training loop is ended early.
 # SAVELOAD = Whether or not to temporarily save the weights of the 
 # model or to save the whole thing 
+# LIMIT = how many days of data do you want 
+# FEATURE_COLUMNS = what types of data do you want to include for
+# your model to train on
 """
 
 defaults = {
@@ -63,5 +66,7 @@ defaults = {
     "EPOCHS": 800,
     "PATIENCE": 200,
     "SAVELOAD": False,
+    "LIMIT": 4000,
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"]
 }
 
