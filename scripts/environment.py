@@ -11,6 +11,7 @@ excel_directory = "../excel"
 error_file = "../error_file.txt"
 load_run_excel = "../load_run_test"
 current_price_directory = "../curr_price"
+real_test_directory = "../real_test"
 
 
 test_var = "close"
@@ -22,7 +23,7 @@ back_test_days = 100
 save_logs = False
 to_plot = False
 make_config = False
-using_all_accuracies = True
+using_all_accuracies = False
 
 """
 # N_STEPS = Window size or the sequence length.
@@ -45,13 +46,16 @@ using_all_accuracies = True
 # loss it takes before the training loop is ended early.
 # SAVELOAD = Whether or not to temporarily save the weights of the 
 # model or to save the whole thing 
+# LIMIT = how many days of data do you want 
+# FEATURE_COLUMNS = what types of data do you want to include for
+# your model to train on
 """
 
 defaults = {
     "N_STEPS": 300,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "N_LAYERS": 3,
+    "N_LAYERS": 2,
     "CELL": LSTM,
     "UNITS": 256,
     "DROPOUT": 0.4,
@@ -62,5 +66,7 @@ defaults = {
     "EPOCHS": 800,
     "PATIENCE": 200,
     "SAVELOAD": False,
+    "LIMIT": 4000,
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"]
 }
 

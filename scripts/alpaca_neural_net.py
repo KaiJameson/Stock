@@ -36,16 +36,15 @@ def decision_neural_net(
     BATCH_SIZE=defaults["BATCH_SIZE"], 
     EPOCHS=defaults["EPOCHS"],
     PATIENCE=defaults["PATIENCE"],
-    SAVELOAD=defaults["SAVELOAD"]):
-#description of these parameters located inside environment.py
+    SAVELOAD=defaults["SAVELOAD"],
+    LIMIT=defaults["LIMIT"],
+    FEATURE_COLUMNS=defaults["FEATURE_COLUMNS"]):
+    #description of these parameters located inside environment.py
 
     start_time = time.time()
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        ticker, N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
-        N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
-        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
-        BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS, PATIENCE=PATIENCE,
-        SAVELOAD=SAVELOAD
+        ticker, None, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, DROPOUT, 
+        BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, FEATURE_COLUMNS
     )
 
     end_time = time.time()
@@ -69,16 +68,15 @@ def tuning_neural_net(ticker, end_date,
     BATCH_SIZE=defaults["BATCH_SIZE"], 
     EPOCHS=defaults["EPOCHS"],
     PATIENCE=defaults["PATIENCE"],
-    SAVELOAD=defaults["SAVELOAD"]):
-#description of these parameters located inside environment.py
+    SAVELOAD=defaults["SAVELOAD"],
+    LIMIT=defaults["LIMIT"],
+    FEATURE_COLUMNS=defaults["FEATURE_COLUMNS"]):
+    #description of these parameters located inside environment.py
     
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        ticker, end_date=end_date, 
-        N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
-        N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
-        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
-        BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS, PATIENCE=PATIENCE,
-        SAVELOAD=SAVELOAD
+        ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
+        DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
+        FEATURE_COLUMNS
     )
     
     return test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
@@ -97,33 +95,20 @@ def saveload_neural_net(ticker, end_date=None,
     BATCH_SIZE=defaults["BATCH_SIZE"], 
     EPOCHS=defaults["EPOCHS"],
     PATIENCE=defaults["PATIENCE"],
-    SAVELOAD=defaults["SAVELOAD"]):
+    SAVELOAD=defaults["SAVELOAD"],
+    LIMIT=defaults["LIMIT"],
+    FEATURE_COLUMNS=defaults["FEATURE_COLUMNS"]):
 
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        ticker, end_date=end_date, 
-        N_STEPS=N_STEPS, LOOKUP_STEP=LOOKUP_STEP, TEST_SIZE=TEST_SIZE, 
-        N_LAYERS=N_LAYERS, CELL=CELL, UNITS=UNITS, DROPOUT=DROPOUT, 
-        BIDIRECTIONAL=BIDIRECTIONAL, LOSS=LOSS, OPTIMIZER=OPTIMIZER, 
-        BATCH_SIZE=BATCH_SIZE, EPOCHS=EPOCHS, PATIENCE=PATIENCE,
-        SAVELOAD=SAVELOAD
+        ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
+        DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
+        FEATURE_COLUMNS
     )
 
 
-def make_neural_net(ticker, end_date=None, 
-    N_STEPS=defaults["N_STEPS"], 
-    LOOKUP_STEP=defaults["LOOKUP_STEP"], 
-    TEST_SIZE=defaults["TEST_SIZE"], 
-    N_LAYERS=defaults["N_LAYERS"], 
-    CELL=defaults["CELL"], 
-    UNITS=defaults["UNITS"], 
-    DROPOUT=defaults["DROPOUT"], 
-    BIDIRECTIONAL=defaults["BIDIRECTIONAL"], 
-    LOSS=defaults["LOSS"],
-    OPTIMIZER=defaults["OPTIMIZER"], 
-    BATCH_SIZE=defaults["BATCH_SIZE"], 
-    EPOCHS=defaults["EPOCHS"],
-    PATIENCE=defaults["PATIENCE"],
-    SAVELOAD=defaults["SAVELOAD"]):
+def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
+        DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
+        FEATURE_COLUMNS):
     #description of these parameters located inside environment.py
 
     tf.keras.backend.clear_session()
@@ -139,26 +124,22 @@ def make_neural_net(ticker, end_date=None,
     
     # date now
     date_now = time.strftime("%Y-%m-%d")
-    #ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
     # model name to save, making it as unique as possible based on parameters
-    model_name = f"{date_now}_{ticker}-{LOSS}-{OPTIMIZER}-{CELL.__name__}-seq-{N_STEPS}-step-{LOOKUP_STEP}-layers-{N_LAYERS}-units-{UNITS}"
+    model_name = f"{ticker}-{FEATURE_COLUMNS}-limit-{LIMIT}-{CELL.__name__}-n_step-{N_STEPS}-layers-{N_LAYERS}-units-{UNITS}"
     if BIDIRECTIONAL:
         model_name += "-b"
     # create these folders if they do not exist
     results_folder = "results"
     if not os.path.isdir(results_folder):
        os.mkdir(results_folder)
-    data, train, valid, test = load_data(
-        ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
-        test_size=TEST_SIZE, batch_size=BATCH_SIZE, end_date=end_date
-    )
-    model = create_model(N_STEPS, loss=LOSS, units=UNITS, cell=CELL, n_layers=N_LAYERS,
-                        dropout=DROPOUT, optimizer=OPTIMIZER, bidirectional=BIDIRECTIONAL)
+    data, train, valid, test = load_data(ticker, end_date, N_STEPS, BATCH_SIZE, LIMIT, FEATURE_COLUMNS)
+
+    model = create_model(N_STEPS, UNITS, CELL, N_LAYERS, DROPOUT, LOSS, OPTIMIZER, BIDIRECTIONAL)
 
     logs = "logs/" + get_time_string()
 
     if SAVELOAD:
-        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + ticker + ".h5", save_weights_only=False, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + ticker + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
@@ -185,23 +166,21 @@ def make_neural_net(ticker, end_date=None,
     if SAVELOAD:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
-        data, train, valid, test = load_data(
-            ticker, N_STEPS, lookup_step=LOOKUP_STEP, 
-            test_size=TEST_SIZE, shuffle=False, batch_size=BATCH_SIZE,
-            end_date=end_date
+        data, train, valid, test = load_data( ticker, end_date, N_STEPS, BATCH_SIZE, 
+            LIMIT, FEATURE_COLUMNS, False
         )
 
         model_path = os.path.join("results", model_name + ".h5")
         model.load_weights(model_path)
 
-        # mse, mae = model.evaluate(test, verbose=0)
-        # mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
-        
         test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
 
         delete_files_in_folder(results_folder)
         os.rmdir(results_folder)
         
         train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
+
+    if not save_logs:
+        delete_files_in_folder(logs)
 
     return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used

@@ -6,6 +6,7 @@ import subprocess
 import time
 from functions import check_directories
 from environment import config_directory, tuning_directory, error_file, make_config
+from time_functions import get_short_end_date
 import traceback
 import datetime
 import pandas as pd
@@ -76,7 +77,7 @@ def get_info():
             best_step = N_STEPS[0]
             best_unit = UNITS[0]
             best_drop = DROPOUT[0]
-            info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_end_date()]
+            info = (2 * [best_mae, best_step, best_unit, best_drop]) + [get_short_end_date(exhaust_year, exhaust_month, exhaust_day)]
             info[4] = 0
             info = info + [0, 0, 0, 0, 0, 0, 0]
             print("NEW INFO:", info)
@@ -173,12 +174,7 @@ def print_params(file_name, step, unit, drop, epoch, indent="", punct=","):
 check_directories()
 start_time = time.time()
 
-def get_end_date():
-    tz = "US/EASTERN"
-    end_date = datetime.datetime(exhaust_year, exhaust_month, exhaust_day)
-    end_date = time.mktime(end_date.timetuple())
-    end_date = pd.Timestamp(end_date, unit="s", tz=tz).isoformat()
-    return end_date
+
 
 
 def get_indexs(info):

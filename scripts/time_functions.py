@@ -19,7 +19,7 @@ def get_start_end():
     month = date.month
     day = date.day
     if on_linux:
-        start = datetime.datetime(year, month, day, 9, 15)+ td
+        start = datetime.datetime(year, month, day, 9, 15) + td
     else:
         start = datetime.datetime(year, month, day, 9, 15)
     start = time.mktime(start.timetuple())
@@ -72,7 +72,12 @@ def zero_pad_date_string():
     padded = datetime.date(now.year, now.month, now.day) + datetime.timedelta(1)
     return str(padded)
 
-def get_end_date():
+def get_short_end_date(year, month, day):
+    end_date = datetime.datetime(year, month, day)
+    
+    return end_date.date()
+
+def get_full_end_date():
     tz = 'US/EASTERN'
     now = time.time()
     n = datetime.datetime.fromtimestamp(now)
