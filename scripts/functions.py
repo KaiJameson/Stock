@@ -1,4 +1,4 @@
-from time_functions import get_date_string
+from time_functions import get_date_string, get_time_string
 from environment import *
 import os
 import sys
@@ -110,3 +110,22 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
     + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 
     + "\n")
     f.close()
+
+def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
+    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, time_taken, total_days):
+
+    test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
+    f = open(real_test_directory + "/" + test_name + ".txt", "a")
+
+    f.write("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",")
+    f.write("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",")
+    f.write("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",")
+    f.write("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",")
+    f.write("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".")
+    f.write("Feature Columns: " + str(feature_columns) + "\n\n")
+
+    f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
+    f.write("and it predicted the correct direction " + avg_d + " percent of the time.")
+    f.write("Testing all of the days took " + str(time_taken) + " minutes.")
+    f.close()
+

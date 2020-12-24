@@ -114,13 +114,13 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["relative_strength_index"] = ta.RSI(df.close)
     
-    # df["linear_regres"] = ta.LINEARREG(df.close, timeperiod=14)
+    # df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=14)
 
-    # df["linear_regres_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
+    # df["lin_regres_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
-    # df["linear_regres_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
+    # df["lin_regres_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    # df["linear_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
+    # df["lin_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
     # df["pearson's_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
 

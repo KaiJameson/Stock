@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import LSTM
-from time_functions import get_short_end_date, get_time_string
-from functions import check_directories
+from time_functions import get_short_end_date
+from functions import check_directories, real_test_excel
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from alpaca_nn_functions import get_api, create_model, get_all_accuracies, predict, load_data, return_real_predict
 from alpaca_neural_net import saveload_neural_net
@@ -30,7 +30,7 @@ bidirectional = False
 loss = "huber_loss"
 optimizer = "adam"
 batch_size = 256
-epochs = 800
+epochs = 2
 patience = 200
 saveload = True
 limit = 4000
@@ -90,12 +90,6 @@ while test_days > 0:
             else:
                 correct_dir = 0.0
 
-            print("curr price " + str(current_price))
-            print("predicted price " + str(predicted_price))
-            print("actual price " + str(actual_price))
-            print("percent difference between predicted and actual " + str(p_diff))
-            print("did it predict the correct direction? " + str(correct_dir))
-
             percent_away_list.append(p_diff)
             correct_direction_list.append(correct_dir)
 
@@ -135,6 +129,14 @@ print("Feature Columns: " + str(feature_columns) + "\n\n")
 print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
 print("and it predicted the correct direction " + avg_d + " percent of the time.")
 
-print("Testing all of the days took " + str(round((time.time() - time_ss) / 60, 2)) + " minutes.")
+time_taken = round((time.time() - time_ss) / 60, 2)
+
+real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
+    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, time_taken, total_days)
+
+print("Testing all of the days took " + str(time_taken) + " minutes.")
+
+
+
 
     
