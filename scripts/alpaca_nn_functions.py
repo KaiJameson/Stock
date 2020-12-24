@@ -244,6 +244,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
     # df = convert_date_values(df)
 
     # get_feature_importance(df)
+
     if to_print:
         print(df)
     return df
@@ -256,11 +257,11 @@ def convert_date_values(df):
 
 def load_data(ticker, end_date=None, n_steps=50, batch_size=64, limit=4000,
         feature_columns=["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"],
-        shuffle=True, scale=True, lookup_step=1, test_size=0.2, to_print=True
-    ):
+        shuffle=True, scale=True, lookup_step=1, test_size=0.2, to_print=True):
 
-    print("\n\n\n\THE LIMIT")
-    print(limit)
+    if to_print:
+        print("Included features: " + str(feature_columns))
+
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:

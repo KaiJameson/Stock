@@ -111,27 +111,6 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
         FEATURE_COLUMNS):
     #description of these parameters located inside environment.py
 
-    print(ticker)
-    print(end_date)
-    print(N_STEPS)
-    print(LOOKUP_STEP)
-    print(TEST_SIZE)
-    print(N_LAYERS)
-    print(CELL)
-    print(UNITS)
-    print(DROPOUT)
-    print(BIDIRECTIONAL)
-    print(LOSS)
-    print(OPTIMIZER)
-    print(BATCH_SIZE)
-    print(EPOCHS)
-    print(PATIENCE)
-    print(SAVELOAD)
-    print(LIMIT)
-    print(FEATURE_COLUMNS)
-
-
-
     tf.keras.backend.clear_session()
     tf.config.optimizer.set_jit(True)
 

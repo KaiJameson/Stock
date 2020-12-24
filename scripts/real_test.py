@@ -1,10 +1,11 @@
 from tensorflow.keras.layers import LSTM
-from time_functions import get_short_end_date
+from time_functions import get_short_end_date, get_time_string
 from functions import check_directories
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from alpaca_nn_functions import get_api, create_model, get_all_accuracies, predict, load_data, return_real_predict
 from alpaca_neural_net import saveload_neural_net
 from environment import error_file, model_saveload_directory, test_var, back_test_days
+from statistics import mean
 import pandas as pd
 import traceback
 import datetime
@@ -28,19 +29,20 @@ dropout = 0.4
 bidirectional = False
 loss = "huber_loss"
 optimizer = "adam"
-batch_size = 64
-epochs = 2
+batch_size = 256
+epochs = 800
 patience = 200
 saveload = True
 limit = 4000
-feature_columns = ["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"]
+feature_columns = ["open", "low", "high", "close", "mid", "volume"]
 
 total_days = test_days
+percent_away_list = []
+correct_direction_list = []
 time_ss = time.time()
 
 while test_days > 0:
     try:
-        # current_date = current_date + datetime.timedelta(0)
         calendar = api.get_calendar(start=current_date, end=current_date)[0]
         if calendar.date != current_date:
             print("Skipping " + str(current_date) + " because it was not a market day.")
@@ -49,6 +51,8 @@ while test_days > 0:
 
         time_s = time.time()
         
+        print("\n Moving forward one day in time: \n\n")
+
         current_date = current_date + datetime.timedelta(1)
 
         for symbol in real_test_symbols:
@@ -57,7 +61,7 @@ while test_days > 0:
             
         for symbol in real_test_symbols:
             # setup to allow the rest of the values to be calculated
-            data, train, valid, test = load_data(symbol, current_date, n_steps, batch_size, feature_columns, False)
+            data, train, valid, test = load_data(symbol, current_date, n_steps, batch_size, limit, feature_columns, False, to_print=False)
             model = create_model(n_steps, units, cell, n_layers, dropout, loss, optimizer, bidirectional)
             model.load_weights(model_saveload_directory + "/" + symbol + ".h5")
 
@@ -81,11 +85,10 @@ while test_days > 0:
             if ((predicted_price > current_price and actual_price > current_price) or 
             (predicted_price < current_price and actual_price < current_price)): 
                 correct_dir = 1.0
-            elif predicted_price == current_price or predicted_price == current_price: 
+            elif predicted_price == current_price or actual_price == current_price: 
                 correct_dir = 0.5
             else:
                 correct_dir = 0.0
-
 
             print("curr price " + str(current_price))
             print("predicted price " + str(predicted_price))
@@ -93,7 +96,10 @@ while test_days > 0:
             print("percent difference between predicted and actual " + str(p_diff))
             print("did it predict the correct direction? " + str(correct_dir))
 
-            
+            percent_away_list.append(p_diff)
+            correct_direction_list.append(correct_dir)
+
+            sys.stdout.flush()
 
 
         print("Day " + str(days_done) + " of " + str(total_days) + " took " + str((time.time() - time_s) / 60) + " minutes.")
@@ -115,9 +121,20 @@ while test_days > 0:
         f.close()
         print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
+print(percent_away_list)
+print(correct_direction_list)
+avg_p = str(round(mean(percent_away_list), 2))
+avg_d = str(round(mean(correct_direction_list) * 100, 2))
+print("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",")
+print("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",")
+print("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",")
+print("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",")
+print("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".")
+print("Feature Columns: " + str(feature_columns) + "\n\n")
 
-print("Testing all of the days took " + str((time.time() - time_ss) / 60) + " minutes.")
+print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
+print("and it predicted the correct direction " + avg_d + " percent of the time.")
+
+print("Testing all of the days took " + str(round((time.time() - time_ss) / 60, 2)) + " minutes.")
 
     
-
-
