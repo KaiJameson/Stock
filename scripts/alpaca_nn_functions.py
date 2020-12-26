@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
-from time_functions import get_time_string, get_date_string, zero_pad_date_string
+from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date
 from functions import make_current_price, excel_output
 from symbols import trading_real_money
 import numpy as np
@@ -256,7 +256,7 @@ def convert_date_values(df):
     return df
 
 def load_data(ticker, end_date=None, n_steps=50, batch_size=64, limit=4000,
-        feature_columns=["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"],
+        feature_columns=["open", "low", "high", "close", "mid", "volume"],
         shuffle=True, scale=True, lookup_step=1, test_size=0.2, to_print=True):
 
     if to_print:
@@ -661,8 +661,10 @@ if __name__ == "__main__":
 
     symbol = ticker = "AGYS"
 
+    end_date = get_short_end_date(2020, 11, 9)
+
     time_s = time.time()
-    data, train, valid, test = load_data(ticker, 300, True, True, 1, .2, ["open", "low", "high", "close", "mid", "volume", "stochas_fast_k", "stochas_fast_d"], 64, end_date=None)
+    data, train, valid, test = load_data(ticker, end_date=end_date)
     print("load data took " + str(time.time() - time_s))
 
     # the_dict = {"AGYS" : 22, "STLD" : 44}

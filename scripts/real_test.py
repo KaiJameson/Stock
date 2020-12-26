@@ -37,6 +37,7 @@ limit = 4000
 feature_columns = ["open", "low", "high", "close", "mid", "volume"]
 
 total_days = test_days
+total_tests = len(real_test_symbols) * total_days
 percent_away_list = []
 correct_direction_list = []
 time_ss = time.time()
@@ -51,11 +52,12 @@ while test_days > 0:
 
         time_s = time.time()
         
-        print("\n Moving forward one day in time: \n\n")
+        print("\nMoving forward one day in time: \n\n")
 
         current_date = current_date + datetime.timedelta(1)
 
         for symbol in real_test_symbols:
+            print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + ".\n")
             saveload_neural_net(symbol, current_date, n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
             bidirectional, loss, optimizer, batch_size, epochs, patience, saveload, limit, feature_columns)
             
@@ -135,6 +137,8 @@ real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
     optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, time_taken, total_days)
 
 print("Testing all of the days took " + str(time_taken) + " minutes.")
+print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
+    str(len([percent_away_list])) + ".")
 
 
 
