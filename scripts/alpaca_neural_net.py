@@ -145,7 +145,7 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
-        tboard_callback = TensorBoard(log_dir=logs, profile_batch="100,200") 
+        tboard_callback = TensorBoard(log_dir=logs, profile_batch="100, 400") 
     else:
         tboard_callback = TensorBoard(log_dir=logs, profile_batch=0)
 
