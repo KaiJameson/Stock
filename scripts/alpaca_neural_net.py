@@ -112,10 +112,11 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     #description of these parameters located inside environment.py
 
     tf.keras.backend.clear_session()
+    
     tf.config.optimizer.set_jit(True)
 
-    policy = mixed_precision.Policy("mixed_float16")
-    mixed_precision.set_policy(policy)
+    # policy = mixed_precision.Policy("mixed_float16")
+    # mixed_precision.set_policy(policy)
 
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(random_seed)
