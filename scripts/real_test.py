@@ -52,7 +52,7 @@ while test_days > 0:
 
         time_s = time.time()
         
-        print("\nMoving forward one day in time: \n\n")
+        print("\nMoving forward one day in time: \n")
 
         current_date = current_date + datetime.timedelta(1)
 
@@ -138,7 +138,7 @@ real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
 
 print("Testing all of the days took " + str(time_taken) + " minutes.")
 print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
-    str(len([percent_away_list])) + ".")
+    str(len(percent_away_list)) + ".")
 
 
 

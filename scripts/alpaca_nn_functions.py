@@ -1,6 +1,6 @@
-from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-import alpaca_trade_api as tradeapi
-import tensorflow as tf
+from __future__ import print_function
+from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
+intrinio_sandbox_key, intrinio_production_key)
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
@@ -15,9 +15,18 @@ test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_al
 from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date
 from functions import make_current_price, excel_output
 from symbols import trading_real_money
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from bs4 import BeautifulSoup
+from urllib.request import urlopen, Request
+from intrinio_sdk.rest import ApiException
+import alpaca_trade_api as tradeapi
+import tensorflow as tf
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import talib as ta
+import xgboost as xgb
+import intrinio_sdk as intrinio
 import time
 import os
 import sys
@@ -25,8 +34,7 @@ import traceback
 import random
 import datetime
 import math 
-import talib as ta
-import xgboost as xgb
+
 
 
 def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
@@ -244,6 +252,8 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
     # df = convert_date_values(df)
 
     # get_feature_importance(df)
+
+    # sentiment_data(df)
 
     if to_print:
         print(df)
@@ -531,6 +541,125 @@ def get_api():
 
     return api
 
+def sentiment_data(df):
+    finviz_url = "https://finviz.com/quote.ashx?t="
+
+    # nltk.download('vader_lexicon')
+
+    time_s = time.time()
+
+    news_tables = {}
+    tickers = ["AGYS", "BG"]
+
+    for ticker in tickers:
+        url = finviz_url + ticker
+        req = Request(url=url, headers={'user-agent': 'my-app/0.0.1'}) 
+        response = urlopen(req)    
+        # Read the contents of the file into 'html'
+        html = BeautifulSoup(response, features="lxml")
+        # Find 'news-table' in the Soup and load it into 'news_table'
+        news_table = html.find(id='news-table')
+        # Add the table to our dictionary
+        news_tables[ticker] = news_table
+
+    # Read one single day of headlines for 'AMZN' 
+    amzn = news_tables['AGYS']
+    # Get all the table rows tagged in HTML with <tr> into 'amzn_tr'
+    amzn_tr = amzn.findAll('tr')
+
+    # for i, table_row in enumerate(amzn_tr):
+    #     # Read the text of the element 'a' into 'link_text'
+    #     a_text = table_row.a.text
+    #     # Read the text of the element 'td' into 'data_text'
+    #     td_text = table_row.td.text
+    #     # Print the contents of 'link_text' and 'data_text' 
+    #     print(a_text)
+    #     print(td_text)
+    #     # Exit after printing 4 rows of data
+    #     # if i == 3:
+    #     #     break
+
+
+    parsed_news = []
+
+    # Iterate through the news
+    for file_name, news_table in news_tables.items():
+        # Iterate through all tr tags in 'news_table'
+        for x in news_table.findAll('tr'):
+            # read the text from each tr tag into text
+            # get text from a only
+            text = x.a.get_text() 
+            # splite text in the td tag into a list 
+            date_scrape = x.td.text.split()
+            # if the length of 'date_scrape' is 1, load 'time' as the only element
+
+            if len(date_scrape) == 1:
+                the_time = date_scrape[0]
+                
+            # else load 'date' as the 1st element and 'time' as the second    
+            else:
+                date = date_scrape[0]
+                the_time = date_scrape[1]
+            # Extract the ticker from the file name, get the string up to the 1st '_'  
+            ticker = file_name.split('_')[0]
+            
+            # Append ticker, date, time and headline as a list to the 'parsed_news' list
+            parsed_news.append([ticker, date, the_time, text])
+            
+    parsed_news
+
+    vader = SentimentIntensityAnalyzer()
+
+    # Set column names
+    columns = ['ticker', 'date', 'time', 'headline']
+
+    # Convert the parsed_news list into a DataFrame called 'parsed_and_scored_news'
+    parsed_and_scored_news = pd.DataFrame(parsed_news, columns=columns)
+
+    # Iterate through the headlines and get the polarity scores using vader
+    scores = parsed_and_scored_news['headline'].apply(vader.polarity_scores).tolist()
+
+    # Convert the 'scores' list of dicts into a DataFrame
+    scores_df = pd.DataFrame(scores)
+
+    # Join the DataFrames of the news and the list of dicts
+    parsed_and_scored_news = parsed_and_scored_news.join(scores_df, rsuffix='_right')
+
+    # Convert the date column from string to datetime
+    parsed_and_scored_news['date'] = pd.to_datetime(parsed_and_scored_news.date).dt.date
+
+    print(parsed_and_scored_news)
+
+    plt.rcParams['figure.figsize'] = [10, 6]
+
+    # Group by date and ticker columns from scored_news and calculate the mean
+    mean_scores = parsed_and_scored_news.groupby(['ticker','date']).mean()
+
+    # Unstack the column ticker
+    mean_scores = mean_scores.unstack()
+
+    # Get the cross-section of compound in the 'columns' axis
+    mean_scores = mean_scores.xs('compound', axis="columns").transpose()
+
+    # Plot a bar chart with pandas
+    mean_scores.plot(kind = 'bar')
+    plt.grid()
+
+
+    print("this took " + str(time.time() - time_s))
+
+
+def intrinio_news():
+    intrinio.ApiClient().set_api_key(intrinio_sandbox_key)
+    intrinio.ApiClient().allow_retries(True)
+
+    identifier = "AXP"
+    page_size = 1250
+    next_page = ""
+
+    response = intrinio.CompanyApi().get_company_news(identifier, page_size=page_size, next_page=next_page)
+    print(str(response))
+
 def get_feature_importance(df):
     data = df.copy()
     y = data["close"]
@@ -664,21 +793,8 @@ if __name__ == "__main__":
     end_date = get_short_end_date(2020, 11, 9)
 
     time_s = time.time()
-    data, train, valid, test = load_data(ticker, end_date=end_date)
+    # data, train, valid, test = load_data(ticker, end_date=end_date)
+    intrinio_news()
     print("load data took " + str(time.time() - time_s))
 
-    # the_dict = {"AGYS" : 22, "STLD" : 44}
-
-    # print(the_dict.pop("AGYS"))
-
-
-
-    # time_s = time.time()
-    # df = make_dataframe(ticker, limit=600, end_date=None)
-    # print("make data took " + str(time.time() - time_s))
-
-    # time_s = time.time()
-    # api = get_api()
-    # current_price = 0
-    # barset = api.get_barset(symbol, "day", limit=1)
-    # print("getting one day took " + str(time.time() - time_s))
+    
