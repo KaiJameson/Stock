@@ -343,14 +343,22 @@ def load_data(ticker, end_date=None, n_steps=50, batch_size=64, limit=4000,
     train = train.batch(batch_size)
     valid = valid.batch(batch_size)
     test = test.batch(batch_size)
-    # train = train.prefetch(buffer_size=AUTOTUNE)
-    # test = test.prefetch(buffer_size=AUTOTUNE)
+    
+    train = train.cache()
+    valid = valid.cache()
+    test = test.cache()
+
+    train = train.prefetch(buffer_size=AUTOTUNE)
+    valid = valid.prefetch(buffer_size=AUTOTUNE)
+    test = test.prefetch(buffer_size=AUTOTUNE)
 
     # return the result
     return result, train, valid, test
 
 def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
                 loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
+    
+    # with strat.scope():
     model = Sequential()
     for i in range(n_layers):
         if i == 0:

@@ -35,7 +35,7 @@ def load_trade(symbols):
                 N_STEPS = int(defaults["N_STEPS"])
                 time_s = time.time()
                 data, train, valid, test = load_data(symbol, n_steps=defaults["N_STEPS"], batch_size=defaults["BATCH_SIZE"],
-                limit=defaults["LIMIT"], shuffle=False)
+                limit=defaults["LIMIT"], feature_columns=defaults["FEATURE_COLUMNS"], shuffle=False, to_print=False)
                 print("Loading the data took " + str(time.time() - time_s) + " seconds")    
 
             LOOKUP_STEP = defaults["LOOKUP_STEP"]

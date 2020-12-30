@@ -19,10 +19,10 @@ def save_models(symbols):
                 for line in f:
                     parts = line.strip().split(",")
                     values[parts[0]] = parts[1]
-                saveload_neural_net(symbol, UNITS=int(values["UNITS"]), DROPOUT=float(values["DROPOUT"]),
+                epochs = saveload_neural_net(symbol, UNITS=int(values["UNITS"]), DROPOUT=float(values["DROPOUT"]),
                 N_STEPS=int(values["N_STEPS"]), EPOCHS=int(values["EPOCHS"]), SAVELOAD=True)
             else:
-                saveload_neural_net(symbol, SAVELOAD=True)
+                epochs = saveload_neural_net(symbol, SAVELOAD=True)
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")

@@ -40,6 +40,7 @@ total_days = test_days
 total_tests = len(real_test_symbols) * total_days
 percent_away_list = []
 correct_direction_list = []
+epochs_list = []
 time_ss = time.time()
 
 while test_days > 0:
@@ -58,8 +59,9 @@ while test_days > 0:
 
         for symbol in real_test_symbols:
             print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + ".\n")
-            saveload_neural_net(symbol, current_date, n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
+            epochs = saveload_neural_net(symbol, current_date, n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
             bidirectional, loss, optimizer, batch_size, epochs, patience, saveload, limit, feature_columns)
+            epochs_list.append(epochs)
             
         for symbol in real_test_symbols:
             # setup to allow the rest of the values to be calculated
@@ -121,6 +123,7 @@ print(percent_away_list)
 print(correct_direction_list)
 avg_p = str(round(mean(percent_away_list), 2))
 avg_d = str(round(mean(correct_direction_list) * 100, 2))
+avg_e = str(round(mean(epochs_list), 2))
 print("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",")
 print("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",")
 print("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",")
@@ -129,12 +132,13 @@ print("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + 
 print("Feature Columns: " + str(feature_columns) + "\n\n")
 
 print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
-print("and it predicted the correct direction " + avg_d + " percent of the time.")
+print("and it predicted the correct direction " + avg_d + " percent of the time ")
+print("while using an average of " + avg_e + " epochs.")
 
 time_taken = round((time.time() - time_ss) / 60, 2)
 
 real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, time_taken, total_days)
+    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
 
 print("Testing all of the days took " + str(time_taken) + " minutes.")
 print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 

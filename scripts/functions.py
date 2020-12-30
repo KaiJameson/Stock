@@ -27,6 +27,8 @@ def check_directories():
         os.mkdir(current_price_directory)
     if not os.path.isdir(real_test_directory):
         os.mkdir(real_test_directory)
+    if not os.path.isdir(results_directory):
+       os.mkdir(results_directory)
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
@@ -112,7 +114,7 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
     f.close()
 
 def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, time_taken, total_days):
+    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days):
 
     test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
     f = open(real_test_directory + "/" + test_name + ".txt", "a")
@@ -125,7 +127,8 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     f.write("Feature Columns: " + str(feature_columns) + "\n\n")
 
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
-    f.write("and it predicted the correct direction " + avg_d + " percent of the time.")
+    f.write("and it predicted the correct direction " + avg_d + " percent of the time")
+    f.write("while using an average of " + avg_e + " epochs.")
     f.write("Testing all of the days took " + str(time_taken) + " minutes.")
     f.close()
 

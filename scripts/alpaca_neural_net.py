@@ -105,15 +105,25 @@ def saveload_neural_net(ticker, end_date=None,
         FEATURE_COLUMNS
     )
 
+    return epochs_used
 
 def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
         DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
         FEATURE_COLUMNS):
     #description of these parameters located inside environment.py
 
+    # tf.debugging.set_log_device_placement(True)
+
+    # strategy = tf.distribute.OneDeviceStrategy(device="/device:GPU:0")
+    # print("Is there a GPU available: "),
+    # print(tf.config.experimental.list_physical_devices("GPU"))
+
     tf.keras.backend.clear_session()
-    
+    # tf.config.set_soft_device_placement(False)
     tf.config.optimizer.set_jit(True)
+
+    os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit"
+    # os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
 
     # policy = mixed_precision.Policy("mixed_float16")
     # mixed_precision.set_policy(policy)
@@ -129,10 +139,7 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     model_name = f"{ticker}-{FEATURE_COLUMNS}-limit-{LIMIT}-{CELL.__name__}-n_step-{N_STEPS}-layers-{N_LAYERS}-units-{UNITS}"
     if BIDIRECTIONAL:
         model_name += "-b"
-    # create these folders if they do not exist
-    results_folder = "results"
-    if not os.path.isdir(results_folder):
-       os.mkdir(results_folder)
+    
     data, train, valid, test = load_data(ticker, end_date, N_STEPS, BATCH_SIZE, LIMIT, FEATURE_COLUMNS)
 
     model = create_model(N_STEPS, UNITS, CELL, N_LAYERS, DROPOUT, LOSS, OPTIMIZER, BIDIRECTIONAL)
@@ -145,21 +152,23 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
-        tboard_callback = TensorBoard(log_dir=logs, profile_batch="100,200") 
+        tboard_callback = TensorBoard(log_dir=logs, profile_batch="300, 800") 
     else:
         tboard_callback = TensorBoard(log_dir=logs, profile_batch=0)
 
     early_stop = EarlyStopping(patience=PATIENCE)
     
-    
+    # with(tf.device("/device:GPU:0")):
+    # with strategy.scope():
     history = model.fit(train,
-                        batch_size=BATCH_SIZE,
-                        epochs=EPOCHS,
-                        verbose=2,
-                        use_multiprocessing=True,
-                        validation_data=valid,
-                        callbacks = [tboard_callback, checkpointer, early_stop]   
-                        )
+        batch_size=BATCH_SIZE,
+        epochs=EPOCHS,
+        verbose=2,
+        use_multiprocessing=True,
+        workers=10,
+        validation_data=valid,
+        callbacks = [tboard_callback, checkpointer, early_stop]   
+    )
 
     epochs_used = len(history.history["loss"])
 
