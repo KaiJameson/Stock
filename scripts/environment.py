@@ -12,6 +12,7 @@ error_file = "../error_file.txt"
 load_run_excel = "../load_run_test"
 current_price_directory = "../curr_price"
 real_test_directory = "../real_test"
+results_directory = "results"
 
 
 test_var = "close"
