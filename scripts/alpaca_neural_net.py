@@ -117,9 +117,10 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     # strategy = tf.distribute.OneDeviceStrategy(device="/device:GPU:0")
     # print("Is there a GPU available: "),
     # print(tf.config.experimental.list_physical_devices("GPU"))
+    # tf.config.set_soft_device_placement(False)
 
     tf.keras.backend.clear_session()
-    # tf.config.set_soft_device_placement(False)
+   
     tf.config.optimizer.set_jit(True)
 
     os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit"

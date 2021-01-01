@@ -173,7 +173,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["ultimate_osc"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
 
-    # df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
+    df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
 
     # df["chaikin_osc"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
 
@@ -207,7 +207,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["percentage_price_osc"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    # df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
     # df["stochas_relative_strength_k"], df["stochas_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
