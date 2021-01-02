@@ -173,7 +173,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["ultimate_osc"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
 
-    df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
+    # df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
 
     # df["chaikin_osc"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
 
@@ -183,7 +183,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["variance"] = ta.VAR(df.close, timeperiod=5, nbdev=1)
 
-    # df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
+    df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
 
     # df["aroon_osc"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
 

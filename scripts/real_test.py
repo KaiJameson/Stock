@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import LSTM
 from time_functions import get_short_end_date, get_year_month_day
-from functions import check_directories, real_test_excel, real_test_directory. delete_files
+from functions import check_directories, real_test_excel, real_test_directory, delete_files
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from alpaca_nn_functions import get_api, create_model, get_all_accuracies, predict, load_data, return_real_predict
 from alpaca_neural_net import saveload_neural_net
@@ -36,7 +36,7 @@ epochs = 800
 patience = 200
 saveload = True
 limit = 4000
-feature_columns = ["open", "low", "high", "close", "mid", "volume", "aroon_down", "aroon_up"]
+feature_columns = ["open", "low", "high", "close", "mid", "volume", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist"]
 
 test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
 total_days = test_days
@@ -160,9 +160,6 @@ while test_days > 0:
             sys.exit(-1)
 
     except:
-        # Subtract one day from the current date becuase it crashed and we now want it to rerun the stocks that it would have just skipped
-        # This is because the increment for the datetime object is at the start of the function
-        current_date = current_date - datetime.timedelta(1) 
         f = open(error_file, "a")
         f.write("Problem with configged stock: " + symbol + "\n")
         exit_info = sys.exc_info()
@@ -180,7 +177,7 @@ print("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_ste
 print("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",")
 print("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",")
 print("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",")
-print("Epochs: " + str(epochs_run) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".")
+print("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".")
 print("Feature Columns: " + str(feature_columns) + "\n\n")
 
 print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
@@ -190,15 +187,15 @@ print("while using an average of " + avg_e + " epochs.")
 time_taken = round((time.time() - time_ss) / 60, 2)
 
 real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-    optimizer, batch_size, epochs_run, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
+    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
 
 print("time taken so far " + str(time_so_far / 60))
-print("Testing all of the days took " + str(time_taken) + " minutes.")
+print("Testing all of the days took " + str(time_taken / 60 ) + "hours and " + str(time_taken % 60) + " minutes.")
 print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
     str(len(percent_away_list)) + ".")
 
 #TODO delete the save file
-if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
-    delete_files("SAVE-" + test_name + ".txt", real_test_directory)
+# if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
+#     delete_files("SAVE-" + test_name + ".txt", real_test_directory)
 
     
