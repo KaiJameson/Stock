@@ -119,16 +119,16 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
     f = open(real_test_directory + "/" + test_name + ".txt", "a")
 
-    f.write("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",")
-    f.write("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",")
-    f.write("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",")
-    f.write("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",")
-    f.write("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".")
+    f.write("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",\n")
+    f.write("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",\n")
+    f.write("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",\n")
+    f.write("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",\n")
+    f.write("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".\n")
     f.write("Feature Columns: " + str(feature_columns) + "\n\n")
 
-    f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
-    f.write("and it predicted the correct direction " + avg_d + " percent of the time")
-    f.write("while using an average of " + avg_e + " epochs.")
+    f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
+    f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
+    f.write("while using an average of " + avg_e + " epochs.\n")
     f.write("Testing all of the days took " + str(time_taken) + " minutes.")
     f.close()
 

@@ -183,7 +183,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["variance"] = ta.VAR(df.close, timeperiod=5, nbdev=1)
 
-    # df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
+    df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
 
     # df["aroon_osc"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
 
@@ -207,7 +207,7 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
 
     # df["percentage_price_osc"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    # df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
     # df["stochas_relative_strength_k"], df["stochas_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 

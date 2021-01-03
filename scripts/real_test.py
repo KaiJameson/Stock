@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import LSTM
-from time_functions import get_short_end_date
-from functions import check_directories, real_test_excel
+from time_functions import get_short_end_date, get_year_month_day
+from functions import check_directories, real_test_excel, real_test_directory, delete_files
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from alpaca_nn_functions import get_api, create_model, get_all_accuracies, predict, load_data, return_real_predict
 from alpaca_neural_net import saveload_neural_net
@@ -11,6 +11,8 @@ import traceback
 import datetime
 import sys
 import time
+import os
+import ast
 
 
 days_done = 1
@@ -34,14 +36,44 @@ epochs = 800
 patience = 200
 saveload = True
 limit = 4000
-feature_columns = ["open", "low", "high", "close", "mid", "volume"]
+feature_columns = ["open", "low", "high", "close", "mid", "volume", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist"]
 
+test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
 total_days = test_days
 total_tests = len(real_test_symbols) * total_days
+time_so_far = 0.0
 percent_away_list = []
 correct_direction_list = []
 epochs_list = []
 time_ss = time.time()
+
+if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
+    f = open(real_test_directory + "/" + "SAVE-" + test_name + ".txt", "r")
+
+    file_contents = {}
+    for line in f:
+        parts = line.strip().split(":")
+        file_contents[parts[0]] = parts[1]
+
+    print(file_contents)
+
+    total_days = int(file_contents["total_days"])
+    days_done = int(file_contents["days_done"])
+    test_days = int(file_contents["test_days"])
+    time_so_far = float(file_contents["time_so_far"])
+    test_year = int(file_contents["test_year"])
+    test_month = int(file_contents["test_month"])
+    test_day = int(file_contents["test_day"])
+    percent_away_list = ast.literal_eval(file_contents["percent_away_list"])
+    correct_direction_list = ast.literal_eval(file_contents["correct_direction_list"])
+    epochs_list = ast.literal_eval(file_contents["epochs_list"])
+    f.close()
+
+    print("\nOpening an exising test file that was on day " + str(days_done) + " of " + str(total_days) + ".")
+    print("It is using these parameters: " + test_name + ".\n")
+
+    current_date = get_short_end_date(test_year, test_month, test_day)
+
 
 while test_days > 0:
     try:
@@ -59,9 +91,9 @@ while test_days > 0:
 
         for symbol in real_test_symbols:
             print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + ".\n")
-            epochs = saveload_neural_net(symbol, current_date, n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
+            epochs_run = saveload_neural_net(symbol, current_date, n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
             bidirectional, loss, optimizer, batch_size, epochs, patience, saveload, limit, feature_columns)
-            epochs_list.append(epochs)
+            epochs_list.append(epochs_run)
             
         for symbol in real_test_symbols:
             # setup to allow the rest of the values to be calculated
@@ -99,12 +131,29 @@ while test_days > 0:
 
             sys.stdout.flush()
 
-
+        day_took = (time.time() - time_s)
+        print("Day took: " + str(day_took))
         print("Day " + str(days_done) + " of " + str(total_days) + " took " + str((time.time() - time_s) / 60) + " minutes.")
+        time_so_far += day_took
 
         days_done += 1
         test_days -= 1
-    #if the day is a valid market day
+
+        t_year, t_month, t_day = get_year_month_day(current_date)
+
+        f = open(real_test_directory + "/" + "SAVE-" + test_name + ".txt", "w")
+        f.write("total_days:" + str(total_days) + "\n")
+        f.write("days_done:" + str(days_done) + "\n")
+        f.write("test_days:" + str(test_days) + "\n")
+        f.write("time_so_far:" + str(time_so_far) + "\n")
+        f.write("test_year:" + str(t_year) + "\n")
+        f.write("test_month:" + str(t_month) + "\n")
+        f.write("test_day:" + str(t_day) + "\n")
+        f.write("percent_away_list:" + str(percent_away_list) + "\n")
+        f.write("correct_direction_list:" + str(correct_direction_list) + "\n")
+        f.write("epochs_list:" + str(epochs_list))
+        f.close()
+
     except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")
             print("Thy will be done.")
@@ -112,7 +161,7 @@ while test_days > 0:
 
     except:
         f = open(error_file, "a")
-        f.write("problem with configged stock: " + symbol + "\n")
+        f.write("Problem with configged stock: " + symbol + "\n")
         exit_info = sys.exc_info()
         f.write(str(exit_info[1]) + "\n")
         traceback.print_tb(tb=exit_info[2], file=f)
@@ -140,11 +189,13 @@ time_taken = round((time.time() - time_ss) / 60, 2)
 real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
     optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
 
-print("Testing all of the days took " + str(time_taken) + " minutes.")
+print("time taken so far " + str(time_so_far / 60))
+print("Testing all of the days took " + str(time_taken / 60 ) + "hours and " + str(time_taken % 60) + " minutes.")
 print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
     str(len(percent_away_list)) + ".")
 
-
-
+#TODO delete the save file
+# if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
+#     delete_files("SAVE-" + test_name + ".txt", real_test_directory)
 
     

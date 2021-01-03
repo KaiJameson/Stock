@@ -100,4 +100,10 @@ def get_trade_day_back(last_day, days_back):
     time_int = time.mktime(trade_day.date.timetuple())
     trade_date = pd.Timestamp(time_int, unit='s', tz=tz).isoformat()
     return trade_date
+
+def get_year_month_day(datetiObj):
+
+    return datetiObj.year, datetiObj.month, datetiObj.day
+
+
     
