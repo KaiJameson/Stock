@@ -100,7 +100,7 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
-def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
+def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=True):
     api = get_api()
 
     if end_date is not None:
@@ -112,151 +112,214 @@ def make_dataframe(symbol, limit=1000, end_date=None, to_print=True):
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
 
-    # df["7_moving_avg"] = df.close.rolling(window=7).mean()
+    if "7_moving_avg" in feature_columns:
+        df["7_moving_avg"] = df.close.rolling(window=7).mean()
     
-    # upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
-    # df["upper_band"] = upperband
-    # df["lower_band"] = lowerband
+    if ("upper_band" or "lower_band") in feature_columns:
+        upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
+        df["upper_band"] = upperband
+        df["lower_band"] = lowerband
 
-    # df["OBV"] = ta.OBV(df.close, df.volume)
+    if "OBV" in feature_columns:
+        df["OBV"] = ta.OBV(df.close, df.volume)
 
-    # df["relative_strength_index"] = ta.RSI(df.close)
+    if "relative_strength_index" in feature_columns:
+        df["relative_strength_index"] = ta.RSI(df.close)
     
-    # df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=14)
+    if "lin_regres" in feature_columns:
+        df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=14)
 
-    # df["lin_regres_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
+    if "lin_regres_angle" in feature_columns:
+        df["lin_regres_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
-    # df["lin_regres_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
+    if "lin_regres_intercept" in feature_columns:
+        df["lin_regres_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    # df["lin_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
+    if "lin_regres_slope" in feature_columns:
+        df["lin_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
-    # df["pearson's_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
+    if "pearson's_correl" in feature_columns:
+        df["pearson's_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
 
-    # df["money_flow_ind"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
+    if "money_flow_ind" in feature_columns:
+        df["money_flow_ind"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
 
-    # df["williams_r"] = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
+    if "williams_r" in feature_columns:
+        df["williams_r"] = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
 
-    # df["std_dev"] = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
+    if "std_dev" in feature_columns:
+        df["std_dev"] = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
 
-    # minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
-    # df["min"] = minimum
-    # df["max"] = maximum
+    if ("min" or "max") in feature_columns:
+        minimum, maximum = ta.MINMAX(df.close, timeperiod=30)
+        df["min"] = minimum
+        df["max"] = maximum
 
-    # df["commodity_channel_ind"] = ta.CCI(df.high, df.low, df.close, timeperiod=14)
+    if "commodity_channel_ind" in feature_columns:
+        df["commodity_channel_ind"] = ta.CCI(df.high, df.low, df.close, timeperiod=14)
 
-    # df["parabolic_SAR"] = ta.SAR(df.high, df.low)
+    if "parabolic_SAR" in feature_columns:
+        df["parabolic_SAR"] = ta.SAR(df.high, df.low)
 
-    # df["parabolic_SAR_extended"] = ta.SAREXT(df.high, df.low, startvalue=0, offsetonreverse=0, accelerationinitlong=0, 
-    # accelerationlong=0, accelerationmaxlong=0, accelerationinitshort=0, accelerationshort=0, accelerationmaxshort=0)
+    if "parabolic_SAR_extended" in feature_columns:
+        df["parabolic_SAR_extended"] = ta.SAREXT(df.high, df.low, startvalue=0, offsetonreverse=0, accelerationinitlong=0, 
+        accelerationlong=0, accelerationmaxlong=0, accelerationinitshort=0, accelerationshort=0, accelerationmaxshort=0)
 
-    # df["rate_of_change"] = ta.ROC(df.close, timeperiod=10)
+    if "rate_of_change" in feature_columns:
+        df["rate_of_change"] = ta.ROC(df.close, timeperiod=10)
 
-    # df["ht_dcperiod"] = ta.HT_DCPERIOD(df.close)
+    if "ht_dcperiod" in feature_columns:
+        df["ht_dcperiod"] = ta.HT_DCPERIOD(df.close)
 
-    # df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
+    if "ht_trendmode" in feature_columns:
+        df["ht_trendmode"] = ta.HT_TRENDMODE(df.close)
 
-    # df["ht_dcphase"] = ta.HT_DCPHASE(df.close)
+    if "ht_dcphase" in feature_columns:
+        df["ht_dcphase"] = ta.HT_DCPHASE(df.close)
 
-    # df["ht_inphase"], df["quadrature"] = ta.HT_PHASOR(df.close)
+    if ("ht_inphase" or "quadrature") in feature_columns:
+        df["ht_inphase"], df["quadrature"] = ta.HT_PHASOR(df.close)
 
-    # df["ht_sine"], df["ht_leadsine"] = ta.HT_SINE(df.close)
+    if ("ht_sine" or "ht_leadsine") in feature_columns:
+        df["ht_sine"], df["ht_leadsine"] = ta.HT_SINE(df.close)
 
-    # df["ht_trendline"] = ta.HT_TRENDLINE(df.close)
+    if "ht_trendline" in feature_columns:
+        df["ht_trendline"] = ta.HT_TRENDLINE(df.close)
 
-    # df["momentum"] = ta.MOM(df.close, timeperiod=10)
+    if "momentum" in feature_columns:
+        df["momentum"] = ta.MOM(df.close, timeperiod=10)
 
-    # df["abs_price_osc"] = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
+    if "abs_price_osc" in feature_columns:
+        df["abs_price_osc"] = ta.APO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    # df["KAMA"] = ta.KAMA(df.close, timeperiod=30)
+    if "KAMA" in feature_columns:
+        df["KAMA"] = ta.KAMA(df.close, timeperiod=30)
 
-    # df["typical_price"] = ta.TYPPRICE(df.high, df.low, df.close)
+    if "typical_price" in feature_columns:    
+        df["typical_price"] = ta.TYPPRICE(df.high, df.low, df.close)
 
-    # df["ultimate_osc"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
+    if "ultimate_osc" in feature_columns:
+        df["ultimate_osc"] = ta.ULTOSC(df.high, df.low, df.close, timeperiod1=7, timeperiod2=14, timeperiod3=28)
 
-    # df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
+    if "chaikin_line" in feature_columns:
+        df["chaikin_line"] = ta.AD(df.high, df.low, df.close, df.volume)
 
-    # df["chaikin_osc"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
+    if "chaikin_osc" in feature_columns:
+        df["chaikin_osc"] = ta.ADOSC(df.high, df.low, df.close, df.volume, fastperiod=3, slowperiod=10)
 
-    # df["norm_average_true_range"] = ta.NATR(df.high, df.low, df.close, timeperiod=14)
+    if "norm_average_true_range" in feature_columns:
+        df["norm_average_true_range"] = ta.NATR(df.high, df.low, df.close, timeperiod=14)
 
-    # df["median_price"] = ta.MEDPRICE(df.high, df.low)
+    if "median_price" in feature_columns:
+        df["median_price"] = ta.MEDPRICE(df.high, df.low)
 
-    # df["variance"] = ta.VAR(df.close, timeperiod=5, nbdev=1)
+    if "variance" in feature_columns:
+        df["variance"] = ta.VAR(df.close, timeperiod=5, nbdev=1)
 
-    df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
+    if ("aroon_down" or "aroon_up") in feature_columns:
+        df["aroon_down"], df["aroon_up"] = ta.AROON(df.high, df.low, timeperiod=14)
 
-    # df["aroon_osc"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
+    if "aroon_osc" in feature_columns:
+        df["aroon_osc"] = ta.AROONOSC(df.high, df.low, timeperiod=14)
 
-    # df["balance_of_pow"] = ta.BOP(df.open, df.high, df.low, df.close)
+    if "balance_of_pow" in feature_columns:
+        df["balance_of_pow"] = ta.BOP(df.open, df.high, df.low, df.close)
 
-    # df["chande_momen_osc"] = ta.CMO(df.close, timeperiod=14)
+    if "chande_momen_osc" in feature_columns:    
+        df["chande_momen_osc"] = ta.CMO(df.close, timeperiod=14)
 
-    # df["macd"], df["macdsignal"], df["macdhist"] = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
+    if ("macd" or "macdsignal" or "macdhist") in feature_columns:
+        df["macd"], df["macdsignal"], df["macdhist"] = ta.MACD(df.close, fastperiod=12, slowperiod=26, signalperiod=9)
 
-    # df["control_MACD"], df["control_MACD_signal"], df["control_MACD_hist"] = ta.MACDEXT(df.close, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
+    if ("control_MACD" or "control_MACD_signal" or "control_MACD_hist") in feature_columns:
+        df["control_MACD"], df["control_MACD_signal"], df["control_MACD_hist"] = ta.MACDEXT(df.close, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
 
-    # df["fix_MACD"], df["fix_MACD_signal"], df["fix_MACD_hist"] = ta.MACDFIX(df.close, signalperiod=9)
+    if ("fix_MACD" or "fix_MACD_signal" or "fix_MACD_hist") in feature_columns:
+        df["fix_MACD"], df["fix_MACD_signal"], df["fix_MACD_hist"] = ta.MACDFIX(df.close, signalperiod=9)
 
-    # df["minus_directional_ind"] = ta.MINUS_DI(df.high, df.low, df.close, timeperiod=14)
+    if "minus_directional_ind" in feature_columns:
+        df["minus_directional_ind"] = ta.MINUS_DI(df.high, df.low, df.close, timeperiod=14)
 
-    # df["minus_directional_move"] = ta.MINUS_DM(df.high, df.low, timeperiod=14)
+    if "minus_directional_move" in feature_columns:
+        df["minus_directional_move"] = ta.MINUS_DM(df.high, df.low, timeperiod=14)
 
-    # df["plus_directional_ind"] = ta.PLUS_DI(df.high, df.low, df.close, timeperiod=14)
+    if "plus_directional_ind" in feature_columns:
+        df["plus_directional_ind"] = ta.PLUS_DI(df.high, df.low, df.close, timeperiod=14)
 
-    # df["plus_directional_move"] = ta.PLUS_DM(df.high, df.low, timeperiod=14)
+    if "plus_directional_move" in feature_columns:
+        df["plus_directional_move"] = ta.PLUS_DM(df.high, df.low, timeperiod=14)
 
-    # df["percentage_price_osc"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
+    if "percentage_price_osc" in feature_columns:
+        df["percentage_price_osc"] = ta.PPO(df.close, fastperiod=12, slowperiod=26, matype=0)
 
-    # df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    if ("stochas_fast_k" or "stochas_fast_d") in feature_columns:
+        df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.high, df.low, df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
-    # df["stochas_relative_strength_k"], df["stochas_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
+    if ("stochas_relative_strength_k" or "stochas_relative_strength_d") in feature_columns:
+        df["stochas_relative_strength_k"], df["stochas_relative_strength_d"] = ta.STOCHRSI(df.close, fastk_period=5, fastd_period=3, fastd_matype=0)
 
-    # df["stochas_slowk"], df["stochas_slowd"] = ta.STOCH(df.high, df.low, df.close, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
+    if ("stochas_slowk" or "stochas_slowd") in feature_columns:
+        df["stochas_slowk"], df["stochas_slowd"] = ta.STOCH(df.high, df.low, df.close, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
 
-    # df["TRIX"] = ta.TRIX(df.close, timeperiod=30)
+    if "TRIX" in feature_columns:
+        df["TRIX"] = ta.TRIX(df.close, timeperiod=30)
 
-    # df["weighted_moving_avg"] = ta.WMA(df.close, timeperiod=30)
+    if "weighted_moving_avg" in feature_columns:
+        df["weighted_moving_avg"] = ta.WMA(df.close, timeperiod=30)
 
-    # df["upband"], df["midband"], df["lowband"] = ta.BBANDS(df.close, timeperiod=5, nbdevup=2, nbdevdn=2, matype=0)
+    if ("upband" or "midband" or "lowband") in feature_columns:
+        df["upband"], df["midband"], df["lowband"] = ta.BBANDS(df.close, timeperiod=5, nbdevup=2, nbdevdn=2, matype=0)
 
-    # df["double_exponetial_moving_avg"] = ta.DEMA(df.close, timeperiod=30)
+    if "double_exponetial_moving_avg" in feature_columns:
+        df["double_exponetial_moving_avg"] = ta.DEMA(df.close, timeperiod=30)
 
-    # df["exponential_moving_avg"] = ta.EMA(df.close, timeperiod=30)
+    if "exponential_moving_avg" in feature_columns:
+        df["exponential_moving_avg"] = ta.EMA(df.close, timeperiod=30)
 
-    # df["MESA_mama"], df["MESA_fama"] = ta.MAMA(df.close)
+    if ("MESA_mama" or "MESA_fama") in feature_columns:
+        df["MESA_mama"], df["MESA_fama"] = ta.MAMA(df.close)
 
-    # df["midpoint"] = ta.MIDPOINT(df.close, timeperiod=14)
+    if "midpoint" in feature_columns:
+        df["midpoint"] = ta.MIDPOINT(df.close, timeperiod=14)
 
-    # df["midprice"] = ta.MIDPRICE(df.high, df.low, timeperiod=14)
+    if "midprice" in feature_columns:
+        df["midprice"] = ta.MIDPRICE(df.high, df.low, timeperiod=14)
 
-    # df["triple_exponential_moving_avg"] = ta.TEMA(df.close, timeperiod=30)
+    if "triple_exponential_moving_avg" in feature_columns:
+        df["triple_exponential_moving_avg"] = ta.TEMA(df.close, timeperiod=30)
 
-    # df["triangular_moving_avg"] = ta.TRIMA(df.close, timeperiod=30)
+    if "triangular_moving_avg" in feature_columns:
+        df["triangular_moving_avg"] = ta.TRIMA(df.close, timeperiod=30)
 
-    # df["avg_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
+    if "avg_directional_movement_index" in feature_columns:
+        df["avg_directional_movement_index"] = ta.ADX(df.high, df.low, df.close, timeperiod=14)
 
-    # df["true_range"] = ta.TRANGE(df.high, df.low, df.close)
+    if "true_range" in feature_columns:
+        df["true_range"] = ta.TRANGE(df.high, df.low, df.close)
 
-    # df["avg_price"] = ta.AVGPRICE(df.open, df.high, df.low, df.close)
+    if "avg_price" in feature_columns:
+        df["avg_price"] = ta.AVGPRICE(df.open, df.high, df.low, df.close)
 
-    # df["weighted_close_price"] = ta.WCLPRICE(df.high, df.low, df.close)
+    if "weighted_close_price" in feature_columns:
+        df["weighted_close_price"] = ta.WCLPRICE(df.high, df.low, df.close)
 
-    # df["beta"] = ta.BETA(df.high, df.low, timeperiod=5)
+    if "beta" in feature_columns:
+        df["beta"] = ta.BETA(df.high, df.low, timeperiod=5)
 
-    # df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
+    if "time_series_forecast" in feature_columns:
+        df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
-    # pd.set_option("display.max_rows", None, "display.max_columns", None)
-    # print(df.head(1))
-    # print(df.tail(5))
-
-    # df = convert_date_values(df)
+    if "day_of_week" in feature_columns:
+        df = convert_date_values(df)
 
     # get_feature_importance(df)
 
     # sentiment_data(df)
 
     if to_print:
-        print(df)
+        pd.set_option("display.max_columns", None)
+        print(df.head(1))
+        print(df.tail(3))
     return df
 
 def convert_date_values(df):	    
@@ -275,9 +338,9 @@ def load_data(ticker, end_date=None, n_steps=50, batch_size=64, limit=4000,
     if isinstance(ticker, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, limit, end_date, to_print)
+            df = make_dataframe(ticker, feature_columns, limit, end_date, to_print)
         else:
-            df = make_dataframe(ticker, limit, to_print=to_print)
+            df = make_dataframe(ticker, feature_columns, limit, to_print=to_print)
 
     elif isinstance(ticker, pd.DataFrame):
         # already loaded, use it directly
@@ -800,9 +863,21 @@ if __name__ == "__main__":
 
     end_date = get_short_end_date(2020, 11, 9)
 
+    feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg", "upper_band", "lower_band", "OBV", "lin_regres", "lin_regres_angle",
+    "lin_regres_intercept", "lin_regres_slope", "pearson's_correl", "money_flow_ind", "williams_r", "std_dev", "min", "max", "commodity_channel_ind",
+    "parabolic_SAR", "parabolic_SAR_extended", "rate_of_change", "ht_dcperiod", "ht_trendmode", "ht_dcphase", "ht_inphase", "quadrature", "ht_sine",
+    "ht_leadsine", "ht_trendline", "momentum", "abs_price_osc", "KAMA", "typical_price", "ultimate_osc", "chaikin_line", "chaikin_osc", "norm_average_true_range",
+    "median_price", "variance", "aroon_down", "aroon_up", "aroon_osc", "balance_of_pow", "chande_momen_osc", "macd", "macdsignal", "macdhist", "control_MACD",
+    "control_MACD_signal", "control_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "minus_directional_ind", "minus_directional_move",
+    "plus_directional_ind", "plus_directional_move", "percentage_price_osc", "stochas_fast_k", "stochas_fast_d", "stochas_relative_strength_k",
+    "stochas_relative_strength_d", "stochas_slowk", "stochas_slowd", "TRIX", "weighted_moving_avg", "upband", "midband", "lowband", "exponential_moving_avg",
+    "MESA_mama", "MESA_fama", "midpoint", "midprice", "triple_exponential_moving_avg", "triangular_moving_avg", "avg_directional_movement_index", "true_range",
+    "avg_price", "weighted_close_price", "beta", "time_series_forecast", "day_of_week"]
+
+    feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg", "upper_band", "lower_band"]
+
     time_s = time.time()
-    # data, train, valid, test = load_data(ticker, end_date=end_date)
-    intrinio_news()
+    data, train, valid, test = load_data(ticker, feature_columns=feature_columns, end_date=end_date)
     print("load data took " + str(time.time() - time_s))
 
     

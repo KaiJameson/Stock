@@ -36,7 +36,7 @@ epochs = 800
 patience = 200
 saveload = True
 limit = 4000
-feature_columns = ["open", "low", "high", "close", "mid", "volume", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist"]
+feature_columns = ["open", "low", "high", "close", "mid", "volume", "chaikin_line"]
 
 test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
 total_days = test_days
@@ -190,7 +190,7 @@ real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
     optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
 
 print("time taken so far " + str(time_so_far / 60))
-print("Testing all of the days took " + str(time_taken / 60 ) + "hours and " + str(time_taken % 60) + " minutes.")
+print("Testing all of the days took " + str(round((time_taken / 60), 2)) + "hours and " + str(round((time_taken % 60), 2)) + " minutes.")
 print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
     str(len(percent_away_list)) + ".")
 
