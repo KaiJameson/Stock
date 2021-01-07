@@ -861,23 +861,12 @@ if __name__ == "__main__":
 
     symbol = ticker = "AGYS"
 
-    end_date = get_short_end_date(2020, 11, 9)
-
-    feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg", "upper_band", "lower_band", "OBV", "lin_regres", "lin_regres_angle",
-    "lin_regres_intercept", "lin_regres_slope", "pearson's_correl", "money_flow_ind", "williams_r", "std_dev", "min", "max", "commodity_channel_ind",
-    "parabolic_SAR", "parabolic_SAR_extended", "rate_of_change", "ht_dcperiod", "ht_trendmode", "ht_dcphase", "ht_inphase", "quadrature", "ht_sine",
-    "ht_leadsine", "ht_trendline", "momentum", "abs_price_osc", "KAMA", "typical_price", "ultimate_osc", "chaikin_line", "chaikin_osc", "norm_average_true_range",
-    "median_price", "variance", "aroon_down", "aroon_up", "aroon_osc", "balance_of_pow", "chande_momen_osc", "macd", "macdsignal", "macdhist", "control_MACD",
-    "control_MACD_signal", "control_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "minus_directional_ind", "minus_directional_move",
-    "plus_directional_ind", "plus_directional_move", "percentage_price_osc", "stochas_fast_k", "stochas_fast_d", "stochas_relative_strength_k",
-    "stochas_relative_strength_d", "stochas_slowk", "stochas_slowd", "TRIX", "weighted_moving_avg", "upband", "midband", "lowband", "exponential_moving_avg",
-    "MESA_mama", "MESA_fama", "midpoint", "midprice", "triple_exponential_moving_avg", "triangular_moving_avg", "avg_directional_movement_index", "true_range",
-    "avg_price", "weighted_close_price", "beta", "time_series_forecast", "day_of_week"]
+    end_date = get_short_end_date(2020, 11, 2)
 
     feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg", "upper_band", "lower_band"]
 
     time_s = time.time()
-    data, train, valid, test = load_data(ticker, feature_columns=feature_columns, end_date=end_date)
-    print("load data took " + str(time.time() - time_s))
+    
+    print("1st test took " + str(time.time() - time_s))
 
     
