@@ -3,9 +3,8 @@ from alpaca_nn_functions import (load_data, predict, getOwnedStocks, return_real
 get_all_accuracies, nn_report,  percent_from_real, buy_all_at_once, create_model)
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
-from functions import check_directories, make_excel_file, make_load_run_excel
+from functions import check_directories, make_excel_file, make_load_run_excel, error_handler
 from tensorflow.keras.models import load_model
-import traceback
 import time
 import os
 import sys
@@ -69,14 +68,8 @@ def load_trade(symbols):
             print("I acknowledge that you want this to stop")
             print("Thy will be done")
             sys.exit(-1)
-        except:
-            f = open(error_file, "a")
-            f.write("problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except Exception:
+            error_handler(symbol, Exception)
 
     if do_the_trades:
         time_s = time.time()

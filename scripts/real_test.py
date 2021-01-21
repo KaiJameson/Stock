@@ -7,7 +7,6 @@ from alpaca_neural_net import saveload_neural_net
 from environment import error_file, model_saveload_directory, test_var, back_test_days
 from statistics import mean
 import pandas as pd
-import traceback
 import datetime
 import sys
 import time
@@ -57,8 +56,6 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
             parts = line.strip().split(":")
             file_contents[parts[0]] = parts[1]
 
-        print(file_contents)
-
         total_days = int(file_contents["total_days"])
         days_done = int(file_contents["days_done"])
         test_days = int(file_contents["test_days"])
@@ -79,14 +76,13 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
 
     while test_days > 0:
         try:
+            time_s = time.time()
             calendar = api.get_calendar(start=current_date, end=current_date)[0]
             if calendar.date != current_date:
                 print("Skipping " + str(current_date) + " because it was not a market day.")
                 current_date = current_date + datetime.timedelta(1)
                 continue
 
-            time_s = time.time()
-            
             print("\nMoving forward one day in time: \n")
 
             current_date = current_date + datetime.timedelta(1)
@@ -134,8 +130,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
                 sys.stdout.flush()
 
             day_took = (time.time() - time_s)
-            print("Day took: " + str(day_took))
-            print("Day " + str(days_done) + " of " + str(total_days) + " took " + str((time.time() - time_s) / 60) + " minutes.")
+            print("Day " + str(days_done) + " of " + str(total_days) + " took " + str((day_took) / 60) + " minutes.")
             time_so_far += day_took
 
             days_done += 1
@@ -161,14 +156,8 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
                 print("Thy will be done.")
                 sys.exit(-1)
 
-        except:
-            f = open(error_file, "a")
-            f.write("Problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except Exception:
+            error_handler(symbol, Exception)
 
     print(percent_away_list)
     print(correct_direction_list)
@@ -186,15 +175,11 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
     print("while using an average of " + avg_e + " epochs.")
 
-    time_taken = round((time.time() - time_ss) / 60, 2)
-
     real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-        optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
+        optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_so_far, total_days)
 
     print("time taken so far " + str(time_so_far / 60))
-    print("Testing all of the days took " + str(round((time_taken / 60), 2)) + "hours and " + str(round((time_taken % 60), 2)) + " minutes.")
-    print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
-        str(len(percent_away_list)) + ".")
+    print("Testing all of the days took " + str(round((time_so_far / 60), 2)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
         os.remove(real_test_directory + "/" + "SAVE-" + test_name + ".txt")
