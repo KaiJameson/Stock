@@ -9,7 +9,7 @@ from environment import (test_var, reports_directory, model_saveload_directory, 
 save_logs)
 from alpaca_nn_functions import (load_data, create_model, predict, accuracy_score, plot_graph, 
 get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
-from functions import delete_files_in_folder
+from functions import delete_files_in_folder, interwebz_pls
 from time_functions import get_time_string
 from datetime import datetime
 from environment import defaults
@@ -22,7 +22,7 @@ import time
 
 
 def decision_neural_net(
-    ticker, 
+    symbol, 
     N_STEPS=defaults["N_STEPS"], 
     LOOKUP_STEP=defaults["LOOKUP_STEP"], 
     TEST_SIZE=defaults["TEST_SIZE"], 
@@ -43,18 +43,18 @@ def decision_neural_net(
 
     start_time = time.time()
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        ticker, None, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, DROPOUT, 
+        symbol, None, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, DROPOUT, 
         BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, FEATURE_COLUMNS
     )
 
     end_time = time.time()
     total_time = end_time - start_time
-    percent = nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
+    percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
 
     return percent, test_acc
 
 
-def tuning_neural_net(ticker, end_date, 
+def tuning_neural_net(symbol, end_date, 
     N_STEPS=defaults["N_STEPS"], 
     LOOKUP_STEP=defaults["LOOKUP_STEP"], 
     TEST_SIZE=defaults["TEST_SIZE"], 
@@ -74,14 +74,14 @@ def tuning_neural_net(ticker, end_date,
     #description of these parameters located inside environment.py
     
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
+        symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
         DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
         FEATURE_COLUMNS
     )
     
     return test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
 
-def saveload_neural_net(ticker, end_date=None, 
+def saveload_neural_net(symbol, end_date=None, 
     N_STEPS=defaults["N_STEPS"], 
     LOOKUP_STEP=defaults["LOOKUP_STEP"], 
     TEST_SIZE=defaults["TEST_SIZE"], 
@@ -100,14 +100,14 @@ def saveload_neural_net(ticker, end_date=None,
     FEATURE_COLUMNS=defaults["FEATURE_COLUMNS"]):
 
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
+        symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
         DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
         FEATURE_COLUMNS
     )
 
     return epochs_used
 
-def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
+def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS, CELL, UNITS, 
         DROPOUT, BIDIRECTIONAL, LOSS, OPTIMIZER, BATCH_SIZE, EPOCHS, PATIENCE, SAVELOAD, LIMIT, 
         FEATURE_COLUMNS):
     #description of these parameters located inside environment.py
@@ -137,18 +137,19 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     # date now
     date_now = time.strftime("%Y-%m-%d")
     # model name to save, making it as unique as possible based on parameters
-    model_name = f"{ticker}-{FEATURE_COLUMNS}-limit-{LIMIT}-{CELL.__name__}-n_step-{N_STEPS}-layers-{N_LAYERS}-units-{UNITS}"
+    model_name = f"{symbol}-{FEATURE_COLUMNS}-limit-{LIMIT}-{CELL.__name__}-n_step-{N_STEPS}-layers-{N_LAYERS}-units-{UNITS}"
     if BIDIRECTIONAL:
         model_name += "-b"
     
-    data, train, valid, test = load_data(ticker, end_date, N_STEPS, BATCH_SIZE, LIMIT, FEATURE_COLUMNS)
+    interwebz_pls(symbol, end_date)
+    data, train, valid, test = load_data(symbol, end_date, N_STEPS, BATCH_SIZE, LIMIT, FEATURE_COLUMNS)
 
     model = create_model(N_STEPS, UNITS, CELL, N_LAYERS, DROPOUT, LOSS, OPTIMIZER, BIDIRECTIONAL)
 
     logs = "logs/" + get_time_string()
 
     if SAVELOAD:
-        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + ticker + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + symbol + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
@@ -177,7 +178,8 @@ def make_neural_net(ticker, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     if SAVELOAD:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
-        data, train, valid, test = load_data( ticker, end_date, N_STEPS, BATCH_SIZE, 
+        interwebz_pls(symbol, end_date)
+        data, train, valid, test = load_data(symbol, end_date, N_STEPS, BATCH_SIZE, 
             LIMIT, FEATURE_COLUMNS, False
         )
 

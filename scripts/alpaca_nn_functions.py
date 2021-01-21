@@ -30,27 +30,26 @@ import intrinio_sdk as intrinio
 import time
 import os
 import sys
-import traceback
 import random
 import datetime
 import math 
 
 
 
-def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
+def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
     
     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
 
-    report_dir = reports_directory + "/" + ticker + "/" + time_string + ".txt"
-    reports_folder = reports_directory + "/" + ticker
+    report_dir = reports_directory + "/" + symbol + "/" + time_string + ".txt"
+    reports_folder = reports_directory + "/" + symbol
     if not os.path.isdir(reports_folder):
         os.mkdir(reports_folder)
 
     if to_plot:
-        plot_graph(y_real, y_pred, ticker, back_test_days, time_string)
+        plot_graph(y_real, y_pred, symbol, back_test_days, time_string)
 
     total_minutes = total_time / 60
 
@@ -61,7 +60,7 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N
 
     spencer_money = test_money * (curr_price/real_y_values[0])
     f = open(report_dir, "a")
-    f.write("~~~~~~~" + ticker + "~~~~~~~\n")
+    f.write("~~~~~~~" + symbol + "~~~~~~~\n")
     f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
     money_made = model_money(test_money, real_y_values, predicted_y_values)
     f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
@@ -86,7 +85,7 @@ def nn_report(ticker, total_time, model, data, test_acc, valid_acc, train_acc, N
     f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
     f.close()
 
-    excel_output(ticker, curr_price, future_price)
+    excel_output(symbol, curr_price, future_price)
 
     return percent, future_price
 
@@ -111,6 +110,12 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
   
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
+
+    # time_now = zero_pad_date_string()
+    # df_vix = api.polygon.historic_agg_v2("VIXY", 1, "day", _from="2000-01-01", to=time_now).df
+    # print("df vix::::")
+    # print(df_vix)
+    # # df["VIX"] = 
 
     if "7_moving_avg" in feature_columns:
         df["7_moving_avg"] = df.close.rolling(window=7).mean()
@@ -328,23 +333,23 @@ def convert_date_values(df):
 
     return df
 
-def load_data(ticker, end_date=None, n_steps=50, batch_size=64, limit=4000,
+def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
         feature_columns=["open", "low", "high", "close", "mid", "volume"],
         shuffle=True, scale=True, lookup_step=1, test_size=0.2, to_print=True):
 
     if to_print:
         print("Included features: " + str(feature_columns))
 
-    if isinstance(ticker, str):
+    if isinstance(symbol, str):
         # load data from alpaca
         if end_date is not None:
-            df = make_dataframe(ticker, feature_columns, limit, end_date, to_print)
+            df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
         else:
-            df = make_dataframe(ticker, feature_columns, limit, to_print=to_print)
+            df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
 
-    elif isinstance(ticker, pd.DataFrame):
+    elif isinstance(symbol, pd.DataFrame):
         # already loaded, use it directly
-        df = ticker
+        df = symbol
     # this will contain all the elements we want to return from this function
     result = {}
     # we will also return the original dataframe itself
@@ -511,14 +516,8 @@ def buy_all_at_once(symbols, owned, price_list):
             print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
             make_current_price(current_price)
 
-        except:
-            f = open(error_file, "a")
-            f.write("Problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except Exception:
+            error_handler(symbol, Exception)
 
             
     print("The Owned list: " + str(owned))
@@ -534,26 +533,26 @@ def buy_all_at_once(symbols, owned, price_list):
 
     stock_portion_adjuster = 0
 
-    if value_in_stocks > .6:
+    if value_in_stocks > .7:
         stock_portion_adjuster = len(buy_list)
     elif value_in_stocks > .3:
         if (len(buy_list) / stocks_traded) > .8:
-            stock_portion_adjuster = len(buy_list)
+            stock_portion_adjuster = len(buy_list) # want 100%
         elif (len(buy_list) / stocks_traded) > .6:
-            stock_portion_adjuster = len(buy_list) / .95  # want 95%
+            stock_portion_adjuster = len(buy_list)  # want 100%
         elif (len(buy_list) / stocks_traded) > .4:
             stock_portion_adjuster = len(buy_list) / .90 # want 90%
         else:
-            stock_portion_adjuster = len(buy_list) / .80 # want 80%
+            stock_portion_adjuster = len(buy_list) / .70 # want 70%
     else:
         if (len(buy_list) / stocks_traded) > .8:
-            stock_portion_adjuster = len(buy_list)
+            stock_portion_adjuster = len(buy_list) # want 100%
         elif (len(buy_list) / stocks_traded) > .6:
             stock_portion_adjuster = len(buy_list) / .90 # want 90%
         elif (len(buy_list) / stocks_traded) > .4:
-            stock_portion_adjuster = len(buy_list) / .75 # want 75%
+            stock_portion_adjuster = len(buy_list) / .70 # want 70%
         else:
-            stock_portion_adjuster = len(buy_list) / .65 # want 65%
+            stock_portion_adjuster = len(buy_list) / .60 # want 60%
             
 
     print("\nThe value in stocks is " + str(value_in_stocks))
@@ -595,14 +594,8 @@ def buy_all_at_once(symbols, owned, price_list):
                 print("Type: " + buy.type)
                 print("Time in force: "  + buy.time_in_force + "\n")
                 
-        except:
-            f = open(error_file, "a")
-            f.write("Problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except Exception:
+            error_handler(symbol, Exception)
 
 def get_api():
     if trading_real_money:
@@ -764,11 +757,11 @@ def get_feature_importance(df):
         i += 1
 
 
-def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
+def plot_graph(y_real, y_pred, symbol, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
     
-    plot_dir = graph_directory + "/" + ticker
+    plot_dir = graph_directory + "/" + symbol
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
     plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
@@ -776,7 +769,7 @@ def plot_graph(y_real, y_pred, ticker, back_test_days, time_string):
     plt.plot(predicted_y_values, c="r")
     plt.xlabel("Days")
     plt.ylabel("Price")
-    plt.title(ticker)
+    plt.title(symbol)
     plt.legend(["Actual Price", "Predicted Price"])
     plt.savefig(plot_name)
     plt.close()
@@ -859,14 +852,14 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    symbol = ticker = "AGYS"
+    symbol = "AGYS"
 
     end_date = get_short_end_date(2020, 11, 2)
 
-    feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg", "upper_band", "lower_band"]
+    feature_columns = ["open", "low", "high", "close", "mid", "volume"]
 
     time_s = time.time()
-    
+    data, train, valid, test = load_data(symbol, None, 300, 64, 4000, feature_columns)
     print("1st test took " + str(time.time() - time_s))
 
     

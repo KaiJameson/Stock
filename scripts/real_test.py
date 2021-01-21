@@ -7,7 +7,6 @@ from alpaca_neural_net import saveload_neural_net
 from environment import error_file, model_saveload_directory, test_var, back_test_days
 from statistics import mean
 import pandas as pd
-import traceback
 import datetime
 import sys
 import time
@@ -56,8 +55,6 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
         for line in f:
             parts = line.strip().split(":")
             file_contents[parts[0]] = parts[1]
-
-        print(file_contents)
 
         total_days = int(file_contents["total_days"])
         days_done = int(file_contents["days_done"])
@@ -161,14 +158,8 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
                 print("Thy will be done.")
                 sys.exit(-1)
 
-        except:
-            f = open(error_file, "a")
-            f.write("Problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except Exception:
+            error_handler(symbol, Exception)
 
     print(percent_away_list)
     print(correct_direction_list)
@@ -192,7 +183,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
         optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days)
 
     print("time taken so far " + str(time_so_far / 60))
-    print("Testing all of the days took " + str(round((time_taken / 60), 2)) + "hours and " + str(round((time_taken % 60), 2)) + " minutes.")
+    print("Testing all of the days took " + str(round((time_taken / 60), 2)) + " hours and " + str(round((time_taken % 60), 2)) + " minutes.")
     print("\nTheoretically should of had " + str(total_tests) + " tests while in reality there were only " + 
         str(len(percent_away_list)) + ".")
 

@@ -1,8 +1,7 @@
 from alpaca_neural_net import saveload_neural_net
 from symbols import load_save_symbols
-from functions import check_directories
+from functions import check_directories, error_handler
 from environment import model_saveload_directory, error_file, config_directory, defaults
-import traceback
 import os
 import sys
 import time
@@ -28,14 +27,8 @@ def save_models(symbols):
             print("I acknowledge that you want this to stop.")
             print("Thy will be done.")
             sys.exit(-1)
-        except:
-            f = open(error_file, "a")
-            f.write("problem with configged stock: " + symbol + "\n")
-            exit_info = sys.exc_info()
-            f.write(str(exit_info[1]) + "\n")
-            traceback.print_tb(tb=exit_info[2], file=f)
-            f.close()
-            print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+        except Exception:
+            error_handler(symbol, Exception)
         
 s = time.time()
 save_models(load_save_symbols)

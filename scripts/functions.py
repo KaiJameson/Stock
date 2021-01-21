@@ -1,5 +1,8 @@
-from time_functions import get_date_string, get_time_string
+from time_functions import get_date_string, get_time_string, zero_pad_date_string
 from environment import *
+import urllib
+import traceback
+import time
 import os
 import sys
 
@@ -132,3 +135,30 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     f.write("Testing all of the days took " + str(time_taken) + " minutes.")
     f.close()
 
+def error_handler(symbol, exception):
+    f = open(error_file, "a")
+    f.write("Problem encountered with stock: " + symbol + "\n")
+    f.write("Error is of type: " + str(type(exception)))
+    exit_info = sys.exc_info()
+    f.write(str(exit_info[1]) + "\n")
+    traceback.print_tb(tb=exit_info[2], file=f)
+    f.close()
+    print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+
+def interwebz_pls(symbol, end_date):
+    if end_date != None:
+        url = "https://api.polygon.io/v2/aggs/ticker/" + symbol + "/range/1/day/2000-01-01/" + str(end_date) + "?unadjusted=False&apiKey=AKVRXC2RTVB1C86IZI2M"
+    else:
+        time_now = zero_pad_date_string()
+        url = "https://api.polygon.io/v2/aggs/ticker/" + symbol + "/range/1/day/2000-01-01/" + str(time_now) + "?unadjusted=False&apiKey=AKVRXC2RTVB1C86IZI2M"
+
+    no_connection = True
+    while no_connection:
+        try:
+            file = urllib.request.urlopen(url)
+            print("connected")
+            no_connection = False
+
+        except urllib.error.URLError:
+            print("no connect")
+            time.sleep(1)
