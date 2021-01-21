@@ -117,7 +117,7 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
     f.close()
 
 def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_taken, total_days):
+    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_so_far, total_days):
 
     test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
     f = open(real_test_directory + "/" + test_name + ".txt", "a")
@@ -132,7 +132,7 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
-    f.write("Testing all of the days took " + str(time_taken) + " minutes.")
+    f.write("Testing all of the days took " + str(round((time_so_far / 60), 2)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
 def error_handler(symbol, exception):
