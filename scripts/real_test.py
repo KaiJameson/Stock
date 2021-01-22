@@ -14,7 +14,7 @@ import os
 import ast
 
 
-feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"]
+feature_columns = ["open", "low", "high", "close", "mid", "volume"]
 
 n_steps = 300
 lookup_step = 1
@@ -188,6 +188,6 @@ if __name__ == "__main__":
     # needed to add this line because otherwise the batch run module would get an extra unwanted test
     check_directories()
 
-    the_real_test(test_year, test_month, test_day, test_days, feature_columns, lookup_step
-        test_size, n_layers, cell, units, dropout, bidirectional, loss, optimizer, 
-        batch_size, epochs, patience, saveload, limit)
+    the_real_test(test_year, test_month, test_day, test_days, feature_columns, n_steps,
+        lookup_step,test_size, n_layers, cell, units, dropout, bidirectional, loss, 
+        optimizer, batch_size, epochs, patience, saveload, limit)
