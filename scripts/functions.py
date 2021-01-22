@@ -132,7 +132,7 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
-    f.write("Testing all of the days took " + str(round((time_so_far / 60), 2)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
+    f.write("Testing all of the days took " + str(round((time_so_far / 360), 0)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
 def error_handler(symbol, exception):

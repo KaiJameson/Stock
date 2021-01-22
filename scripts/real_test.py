@@ -14,30 +14,32 @@ import os
 import ast
 
 
-feature_columns = ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"]
+feature_columns = ["open", "low", "high", "close", "mid", "volume"]
 
-def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
+n_steps = 300
+lookup_step = 1
+test_size = .2
+n_layers = 2
+cell = LSTM
+units = 256
+dropout = 0.4
+bidirectional = False
+loss = "huber_loss"
+optimizer = "adam"
+batch_size = 256
+epochs = 800
+patience = 200
+saveload = True
+limit = 4000
+
+def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n_steps, lookup_step, 
+    test_size, n_layers, cell, units, dropout, bidirectional, loss, optimizer, batch_size, epochs, 
+    patience, saveload, limit):
     days_done = 1
 
     api = get_api()
     
     current_date = get_short_end_date(test_year, test_month, test_day)
-
-    n_steps = 300
-    lookup_step = 1
-    test_size = .2
-    n_layers = 2
-    cell = LSTM
-    units = 256
-    dropout = 0.4
-    bidirectional = False
-    loss = "huber_loss"
-    optimizer = "adam"
-    batch_size = 256
-    epochs = 800
-    patience = 200
-    saveload = True
-    limit = 4000
 
     test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
     total_days = test_days
@@ -177,9 +179,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns):
 
     real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
         optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_so_far, total_days)
-
-    print("time taken so far " + str(time_so_far / 60))
-    print("Testing all of the days took " + str(round((time_so_far / 60), 2)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
+    print("Testing all of the days took " + str(round((time_so_far / 360), 0)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
         os.remove(real_test_directory + "/" + "SAVE-" + test_name + ".txt")
@@ -188,4 +188,6 @@ if __name__ == "__main__":
     # needed to add this line because otherwise the batch run module would get an extra unwanted test
     check_directories()
 
-    the_real_test(test_year, test_month, test_day, test_days, feature_columns)
+    the_real_test(test_year, test_month, test_day, test_days, feature_columns, n_steps,
+        lookup_step,test_size, n_layers, cell, units, dropout, bidirectional, loss, 
+        optimizer, batch_size, epochs, patience, saveload, limit)
