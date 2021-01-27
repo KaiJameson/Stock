@@ -68,6 +68,6 @@ defaults = {
     "PATIENCE": 200,
     "SAVELOAD": False,
     "LIMIT": 4000,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"]
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "time_series_forecast"]
 }
 

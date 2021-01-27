@@ -120,6 +120,7 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     # tf.config.set_soft_device_placement(False)
 
     tf.keras.backend.clear_session()
+    tf.keras.backend.reset_uids()
    
     tf.config.optimizer.set_jit(True)
 
@@ -141,7 +142,7 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     if BIDIRECTIONAL:
         model_name += "-b"
     
-    interwebz_pls(symbol, end_date)
+    interwebz_pls(symbol, end_date, "polygon")
     data, train, valid, test = load_data(symbol, end_date, N_STEPS, BATCH_SIZE, LIMIT, FEATURE_COLUMNS)
 
     model = create_model(N_STEPS, UNITS, CELL, N_LAYERS, DROPOUT, LOSS, OPTIMIZER, BIDIRECTIONAL)
@@ -178,7 +179,7 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
     if SAVELOAD:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
-        interwebz_pls(symbol, end_date)
+        interwebz_pls(symbol, end_date, "polygon")
         data, train, valid, test = load_data(symbol, end_date, N_STEPS, BATCH_SIZE, 
             LIMIT, FEATURE_COLUMNS, False
         )
