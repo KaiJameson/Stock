@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import LSTM
 from time_functions import get_short_end_date, get_year_month_day
-from functions import check_directories, real_test_excel, real_test_directory, delete_files
+from functions import check_directories, real_test_excel, real_test_directory, delete_files, error_handler, interwebz_pls
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from alpaca_nn_functions import get_api, create_model, get_all_accuracies, predict, load_data, return_real_predict
 from alpaca_neural_net import saveload_neural_net
@@ -37,6 +37,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     patience, saveload, limit):
     days_done = 1
 
+    symbol = real_test_symbols[0]
     api = get_api()
     
     current_date = get_short_end_date(test_year, test_month, test_day)
@@ -50,6 +51,12 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     epochs_list = []
     time_ss = time.time()
 
+    if os.path.isfile(real_test_directory + "/" + test_name + ".txt"):
+        print("A fully completed file with the name " + test_name + " already exists.")
+        print("Exiting the_real_test now: ")
+        return
+
+    # check if we already have a save file, if we do, extract the info and run it
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
         f = open(real_test_directory + "/" + "SAVE-" + test_name + ".txt", "r")
 
@@ -79,6 +86,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     while test_days > 0:
         try:
             time_s = time.time()
+            interwebz_pls("NA", current_date, "calendar")
             calendar = api.get_calendar(start=current_date, end=current_date)[0]
             if calendar.date != current_date:
                 print("Skipping " + str(current_date) + " because it was not a market day.")
@@ -110,6 +118,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
                 predicted_price = predict(model, data, n_steps)
 
                 # get the actual price for the next day the model tried to predict by incrementing the calandar by one day
+                interwebz_pls(symbol, current_date, "calendar")
                 cal = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
                 one_day_in_future = pd.Timestamp.to_pydatetime(cal.date).date()
                 df = api.polygon.historic_agg_v2(symbol, 1, "day", _from=one_day_in_future, to=one_day_in_future).df
@@ -179,7 +188,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
 
     real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
         optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_so_far, total_days)
-    print("Testing all of the days took " + str(round((time_so_far / 360), 0)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
+    print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
         os.remove(real_test_directory + "/" + "SAVE-" + test_name + ".txt")

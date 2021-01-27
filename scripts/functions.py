@@ -1,5 +1,8 @@
 from time_functions import get_date_string, get_time_string, zero_pad_date_string
 from environment import *
+from symbols import trading_real_money
+from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
+import alpaca_trade_api as tradeapi
 import urllib
 import traceback
 import time
@@ -132,33 +135,55 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
-    f.write("Testing all of the days took " + str(round((time_so_far / 360), 0)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
+    f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
 def error_handler(symbol, exception):
     f = open(error_file, "a")
     f.write("Problem encountered with stock: " + symbol + "\n")
-    f.write("Error is of type: " + str(type(exception)))
+    f.write("Error is of type: " + str(type(exception)) + "\n")
     exit_info = sys.exc_info()
     f.write(str(exit_info[1]) + "\n")
     traceback.print_tb(tb=exit_info[2], file=f)
     f.close()
     print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
-def interwebz_pls(symbol, end_date):
-    if end_date != None:
-        url = "https://api.polygon.io/v2/aggs/ticker/" + symbol + "/range/1/day/2000-01-01/" + str(end_date) + "?unadjusted=False&apiKey=AKVRXC2RTVB1C86IZI2M"
-    else:
-        time_now = zero_pad_date_string()
-        url = "https://api.polygon.io/v2/aggs/ticker/" + symbol + "/range/1/day/2000-01-01/" + str(time_now) + "?unadjusted=False&apiKey=AKVRXC2RTVB1C86IZI2M"
-
+def interwebz_pls(symbol, end_date, conn_type):
+    f = open(error_file, "a")
+    # f.write("at beginning of interwebz: " + "\n")
+    
     no_connection = True
     while no_connection:
+        # f.write("in while loop: " + "\n")
         try:
-            file = urllib.request.urlopen(url)
-            print("connected")
+            # f.write("conn_type == " + conn_type + "\n")
+            # f.write("before request " + "\n")
+
+            if trading_real_money:
+                api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
+            else:
+                api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+
+            if conn_type == "polygon":
+                if end_date is not None:
+                    df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=end_date).df
+                else:
+                    time_now = zero_pad_date_string()
+                    df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=time_now).df
+
+            if conn_type == "calendar":
+                calendar = api.get_calendar(start=end_date, end=end_date)[0]
+
+            # f.write("after request \n")
             no_connection = False
 
-        except urllib.error.URLError:
-            print("no connect")
+        except Exception:
+            f.write("\n\n EXCEPTION HANDLED \n\n")
+            f.write("Error is of type: " + str(type(Exception)) + "\n")
+            exit_info = sys.exc_info()
+            f.write(str(exit_info[1]) + "\n")
             time.sleep(1)
+            pass
+            
+
+    f.close()

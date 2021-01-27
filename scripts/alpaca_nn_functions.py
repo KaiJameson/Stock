@@ -143,8 +143,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "lin_regres_slope" in feature_columns:
         df["lin_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
-    if "pearson's_correl" in feature_columns:
-        df["pearson's_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
+    if "pearsons_correl" in feature_columns:
+        df["pearsons_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
 
     if "money_flow_ind" in feature_columns:
         df["money_flow_ind"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
