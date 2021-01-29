@@ -141,7 +141,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
                 sys.stdout.flush()
 
             day_took = (time.time() - time_s)
-            print("Day " + str(days_done) + " of " + str(total_days) + " took " + str((day_took) / 60) + " minutes.")
+            print("Day " + str(days_done) + " of " + str(total_days) + " took " + str(round(day_took / 60, 2)) + " minutes.")
             time_so_far += day_took
 
             days_done += 1
@@ -185,9 +185,11 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
     print("while using an average of " + avg_e + " epochs.")
+    print("The start day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
 
-    real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-        optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_so_far, total_days)
+    real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_size, n_layers, cell, units, 
+        dropout, bidirectional, loss, optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, 
+        avg_d, avg_e, time_so_far, total_days)
     print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):

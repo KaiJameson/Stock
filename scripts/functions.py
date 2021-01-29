@@ -119,8 +119,9 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
     + "\n")
     f.close()
 
-def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-    optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, avg_d, avg_e, time_so_far, total_days):
+def real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_size, n_layers, cell, units, 
+    dropout, bidirectional, loss, optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, 
+    avg_d, avg_e, time_so_far, total_days):
 
     test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
     f = open(real_test_directory + "/" + test_name + ".txt", "a")
@@ -135,6 +136,7 @@ def real_test_excel(n_steps, lookup_step, test_size, n_layers, cell, units, drop
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
+    f.write("The start day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + "\n")
     f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
@@ -149,15 +151,10 @@ def error_handler(symbol, exception):
     print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
 
 def interwebz_pls(symbol, end_date, conn_type):
-    f = open(error_file, "a")
-    # f.write("at beginning of interwebz: " + "\n")
     
     no_connection = True
     while no_connection:
-        # f.write("in while loop: " + "\n")
         try:
-            # f.write("conn_type == " + conn_type + "\n")
-            # f.write("before request " + "\n")
 
             if trading_real_money:
                 api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
@@ -174,16 +171,15 @@ def interwebz_pls(symbol, end_date, conn_type):
             if conn_type == "calendar":
                 calendar = api.get_calendar(start=end_date, end=end_date)[0]
 
-            # f.write("after request \n")
             no_connection = False
 
         except Exception:
+            f = open(error_file, "a")
             f.write("\n\n EXCEPTION HANDLED \n\n")
             f.write("Error is of type: " + str(type(Exception)) + "\n")
             exit_info = sys.exc_info()
             f.write(str(exit_info[1]) + "\n")
+            f.close()
             time.sleep(1)
             pass
             
-
-    f.close()

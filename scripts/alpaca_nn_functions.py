@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 from collections import deque
 from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
-from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date
+from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
 from functions import make_current_price, excel_output
 from symbols import trading_real_money
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -111,11 +111,43 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     df["mid"] = (df.low + df.high) / 2
     df = df.tail(limit)
 
-    # time_now = zero_pad_date_string()
-    # df_vix = api.polygon.historic_agg_v2("VIXY", 1, "day", _from="2000-01-01", to=time_now).df
-    # print("df vix::::")
-    # print(df_vix)
-    # # df["VIX"] = 
+
+    if "S&P" in feature_columns:
+        if end_date is not None:
+            df2 = api.polygon.historic_agg_v2("SPY", 1, "day", _from="2000-01-01", to=end_date).df
+        else:
+            time_now = zero_pad_date_string()
+            df2 = api.polygon.historic_agg_v2("SPY", 1, "day", _from="2000-01-01", to=time_now).df
+        df2.tail(limit)
+        df["S&P"] = df2.close 
+
+    if "DOW" in feature_columns:
+        if end_date is not None:
+            df2 = api.polygon.historic_agg_v2("DIA", 1, "day", _from="2000-01-01", to=end_date).df
+        else:
+            time_now = zero_pad_date_string()
+            df2 = api.polygon.historic_agg_v2("DIA", 1, "day", _from="2000-01-01", to=time_now).df
+        df2.tail(limit)
+        df["DOW"] = df2.close 
+
+    if "NASDAQ" in feature_columns:
+        if end_date is not None:
+            df2 = api.polygon.historic_agg_v2("QQQ", 1, "day", _from="2000-01-01", to=end_date).df
+        else:
+            time_now = zero_pad_date_string()
+            df2 = api.polygon.historic_agg_v2("QQQ", 1, "day", _from="2000-01-01", to=time_now).df
+        df2.tail(limit)
+        df["NASDAQ"] = df2.close 
+    
+    if "VIX" in feature_columns:
+        if end_date is not None:
+            df_vix = api.polygon.historic_agg_v2("VIXY", 1, "day", _from="2000-01-01", to=end_date).df
+        else:
+            time_now = zero_pad_date_string()
+            df_vix = api.polygon.historic_agg_v2("VIXY", 1, "day", _from="2000-01-01", to=time_now).df
+        print("df vix::::")
+        print(df_vix)
+        df["VIX"] = df_vix.close
 
     if "7_moving_avg" in feature_columns:
         df["7_moving_avg"] = df.close.rolling(window=7).mean()
@@ -856,7 +888,7 @@ if __name__ == "__main__":
 
     end_date = get_short_end_date(2020, 11, 2)
 
-    feature_columns = ["open", "low", "high", "close", "mid", "volume"]
+    feature_columns = ["open", "low", "high", "close", "mid", "volume", "S&P", "DOW", "NASDAQ", "VIX"]
 
     time_s = time.time()
     data, train, valid, test = load_data(symbol, None, 300, 64, 4000, feature_columns)
