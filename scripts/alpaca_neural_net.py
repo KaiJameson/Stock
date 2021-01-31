@@ -6,7 +6,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from sklearn import preprocessing
 from time_functions import get_time_string
 from environment import (test_var, reports_directory, model_saveload_directory, random_seed, error_file, back_test_days, 
-save_logs)
+save_logs, results_directory)
 from alpaca_nn_functions import (load_data, create_model, predict, accuracy_score, plot_graph, 
 get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
 from functions import delete_files_in_folder, interwebz_pls
@@ -116,8 +116,15 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
 
     # strategy = tf.distribute.OneDeviceStrategy(device="/device:GPU:0")
     # print("Is there a GPU available: "),
-    # print(tf.config.experimental.list_physical_devices("GPU"))
     # tf.config.set_soft_device_placement(False)
+
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+
+    if gpus:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+
+    
 
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
@@ -155,7 +162,7 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
-        tboard_callback = TensorBoard(log_dir=logs, profile_batch="300, 800") 
+        tboard_callback = TensorBoard(log_dir=logs, profile_batch="1000, 1200") 
     else:
         tboard_callback = TensorBoard(log_dir=logs, profile_batch=0)
 
@@ -189,12 +196,13 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
 
         test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
 
-        delete_files_in_folder(results_folder)
-        os.rmdir(results_folder)
+        delete_files_in_folder(results_directory)
+        os.rmdir(results_directory)
         
         train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
 
     if not save_logs:
         delete_files_in_folder(logs)
+        os.rmdir(logs)
 
     return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used

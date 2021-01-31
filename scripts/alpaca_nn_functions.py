@@ -13,7 +13,7 @@ from collections import deque
 from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
 from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
-from functions import make_current_price, excel_output
+from functions import make_current_price, excel_output, error_handler
 from symbols import trading_real_money
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
@@ -685,7 +685,7 @@ def sentiment_data(df):
             # read the text from each tr tag into text
             # get text from a only
             text = x.a.get_text() 
-            # splite text in the td tag into a list 
+            # splice text in the td tag into a list 
             date_scrape = x.td.text.split()
             # if the length of 'date_scrape' is 1, load 'time' as the only element
 

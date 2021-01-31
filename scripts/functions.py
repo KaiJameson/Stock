@@ -136,7 +136,7 @@ def real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
-    f.write("The start day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + "\n")
+    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + "\n")
     f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
