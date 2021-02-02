@@ -101,6 +101,7 @@ def read_attributes(file):
 
 check_directories()
 
+
 symbols = decision_symbols
 
 file_name = stock_decisions_directory + "/" + get_time_string() + ".txt"

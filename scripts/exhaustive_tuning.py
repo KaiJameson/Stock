@@ -20,6 +20,7 @@ UNITS = [128, 256, 448]
 N_STEPS = [50, 100, 150, 200, 250, 300]
 DROPOUT = [.35, .4, .45]
 
+
 iteration_num = len(UNITS) * len(N_STEPS) * len(DROPOUT)
 
 done_dir = tuning_directory + "/done"
@@ -189,9 +190,11 @@ def get_indexs(info):
     unit_index = UNITS.index(info[6])
     start_unit = unit_index
     print("UNIT_INDEX:", unit_index)
+
     if drop_index == 0:
         print("INCREMENTING UNIT")
         unit_index = (unit_index + 1) % len(UNITS)
+
         print("UNIT_INDEX:", unit_index)
     step_index = N_STEPS.index(info[5])
     start_step = step_index
@@ -204,6 +207,7 @@ def get_indexs(info):
         write_info(info)
         print("SHOULD NOT HAVE MADE IT HERE")
         sys.exit(-1)
+
     return drop_index, unit_index, step_index
 
 

@@ -22,9 +22,11 @@ stocks_traded = 20
 random_seed = 314
 back_test_days = 100
 save_logs = False
+do_the_trades = True
 to_plot = False
 make_config = False
 using_all_accuracies = False
+
 
 """
 # N_STEPS = Window size or the sequence length.
