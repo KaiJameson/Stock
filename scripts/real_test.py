@@ -170,6 +170,8 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
         except Exception:
             error_handler(symbol, Exception)
 
+    test_year, test_month, test_day = get_year_month_day(current_date)
+
     print(percent_away_list)
     print(correct_direction_list)
     avg_p = str(round(mean(percent_away_list), 2))

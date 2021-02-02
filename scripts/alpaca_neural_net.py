@@ -124,8 +124,6 @@ def make_neural_net(symbol, end_date, N_STEPS, LOOKUP_STEP, TEST_SIZE, N_LAYERS,
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
-    
-
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
    
