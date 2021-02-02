@@ -7,6 +7,13 @@ results/
 plots/
 information/
 old/
+excel/
+curr_price/
+real_test/
+models/
+reports/
+tuning_info/
+load_run_test/
 error_file.txt
 scripts/testing.py
 scripts/symbols.py

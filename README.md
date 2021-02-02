@@ -6,6 +6,25 @@
 3. Inside of the scripts directory make an api_key.py file and include the following lines inside of it
  * real_api_key_id = '_your key id_'
  * real_api_secret_key = '_your secret key_'
+4. Install ta-lib with a whrl file from https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib
+
+### List of Dependancies You Need to Install
+* tensorflow
+* sklearn
+* pandas
+* nltk
+* alpaca_trade_api
+* matplotlib
+* intrinio_sdk
+* numpy
+* bs4
+
+### Settings
+* Most of the necessary settings are included in the environment.py file, however to get load_run and save_train to run you will
+need to make a load_save_symbols list with the stocks that you want to run
+ * The same applies for all of the other files like decision tree and real test
+* You also need a do_the_trades bool to control whether or not you trade and a trading_real_money bool for whether to use
+alpaca paper or real account
 
 ### Types of orders
 * Market order: fill the order right now at whatever price
@@ -21,14 +40,11 @@
   
 ### Running Files
 * To run scripts you must first make sure to run them from inside of the scripts directory
-* In order to run specific stocks and generate their reports, edit symbols=[] inside of decision_tree.py to include the stocks you want to generate reports for and run python decision_tree.py
+* In order to run specific stocks and generate their reports, edit load_trade_symbols=[] inside of 
+symbols.py to include the stocks you want. You will then first run the train_save.py to generate and save the models 
+and then later you can run that model with load_run.py
 * In order to tune a stock, edit ticker='' inside of exhaustive_tuning.py and run python exhaustive_tuning.py
 
 
 ### Owned Stocks
-* Owned stocks will be listed in the trades directory in owned.csv
- * This file will have the first line be the amount of money you currently have to spend and every subsequent line will be in the form of ticker, shares, price per share, purchase date 
-* A history of buys will be listed in the trades/buys/ directory
- * buys will in the form of ticker, shares, price per share
-* A history of sells will be listed in the trades/sells/ directory
- * sells will be in the form of ticker, shares, profit per share, time owned in days (integer)
+* A history of of your buys/sells can be accessed through alpaca's api

@@ -19,7 +19,7 @@ def get_start_end():
     month = date.month
     day = date.day
     if on_linux:
-        start = datetime.datetime(year, month, day, 9, 15)+ td
+        start = datetime.datetime(year, month, day, 9, 15) + td
     else:
         start = datetime.datetime(year, month, day, 9, 15)
     start = time.mktime(start.timetuple())
@@ -44,7 +44,40 @@ def get_time_string():
     s = f"{year}-{month}-{day}-{hour}-{minute}"
     return s
 
-def get_end_date():
+def get_date_string():
+    operating_sys = platform.system()
+    on_linux = operating_sys == 'LINUX'
+    now = time.time()
+    n = datetime.datetime.fromtimestamp(now)
+    if on_linux:
+        td = datetime.timedelta(hours=4)
+        n -= td
+    year = n.year
+    month = n.month
+    day = n.day
+    hour = n.hour
+    minute = n.minute
+    s = f"{year}-{month}-{day}"
+    return s
+
+def zero_pad_date_string():
+    operating_sys = platform.system()
+    on_linux = operating_sys == 'LINUX'
+    now = time.time()
+    now = datetime.datetime.fromtimestamp(now)
+    if on_linux:
+        td = datetime.timedelta(hours=4)
+        now -= td
+
+    padded = datetime.date(now.year, now.month, now.day) + datetime.timedelta(1)
+    return str(padded)
+
+def get_short_end_date(year, month, day):
+    end_date = datetime.datetime(year, month, day)
+    
+    return end_date.date()
+
+def get_full_end_date():
     tz = 'US/EASTERN'
     now = time.time()
     n = datetime.datetime.fromtimestamp(now)
@@ -67,3 +100,10 @@ def get_trade_day_back(last_day, days_back):
     time_int = time.mktime(trade_day.date.timetuple())
     trade_date = pd.Timestamp(time_int, unit='s', tz=tz).isoformat()
     return trade_date
+
+def get_year_month_day(datetiObj):
+
+    return datetiObj.year, datetiObj.month, datetiObj.day
+
+
+    
