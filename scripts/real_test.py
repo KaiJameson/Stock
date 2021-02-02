@@ -85,10 +85,11 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
 
     while test_days > 0:
         try:
+            date_changed = False
             time_s = time.time()
             interwebz_pls("NA", current_date, "calendar")
-            calendar = api.get_calendar(start=current_date, end=current_date)[0]
-            if calendar.date != current_date:
+            calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
+            if calendar.date != current_date + datetime.timedelta(1):
                 print("Skipping " + str(current_date) + " because it was not a market day.")
                 current_date = current_date + datetime.timedelta(1)
                 continue
@@ -96,6 +97,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
             print("\nMoving forward one day in time: \n")
 
             current_date = current_date + datetime.timedelta(1)
+            date_changed = True
 
             for symbol in real_test_symbols:
                 print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + ".\n")
@@ -168,6 +170,8 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
                 sys.exit(-1)
 
         except Exception:
+            if date_changed:
+                current_date = current_date - datetime.timedelta(1)
             error_handler(symbol, Exception)
 
     test_year, test_month, test_day = get_year_month_day(current_date)
