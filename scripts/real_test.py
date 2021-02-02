@@ -77,7 +77,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
         epochs_list = ast.literal_eval(file_contents["epochs_list"])
         f.close()
 
-        print("\nOpening an exising test file that was on day " + str(days_done) + " of " + str(total_days) + ".")
+        print("\nOpening an existing test file that was on day " + str(days_done) + " of " + str(total_days) + ".")
         print("It is using these parameters: " + test_name + ".\n")
 
         current_date = get_short_end_date(test_year, test_month, test_day)
@@ -117,7 +117,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
                 # then use predict fuction to get predicted price
                 predicted_price = predict(model, data, n_steps)
 
-                # get the actual price for the next day the model tried to predict by incrementing the calandar by one day
+                # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
                 interwebz_pls(symbol, current_date, "calendar")
                 cal = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
                 one_day_in_future = pd.Timestamp.to_pydatetime(cal.date).date()
@@ -170,6 +170,8 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
         except Exception:
             error_handler(symbol, Exception)
 
+    test_year, test_month, test_day = get_year_month_day(current_date)
+
     print(percent_away_list)
     print(correct_direction_list)
     avg_p = str(round(mean(percent_away_list), 2))
@@ -185,7 +187,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
     print("while using an average of " + avg_e + " epochs.")
-    print("The start day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
+    print("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
 
     real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_size, n_layers, cell, units, 
         dropout, bidirectional, loss, optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, 
