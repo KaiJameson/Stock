@@ -14,27 +14,7 @@ import os
 import ast
 
 
-feature_columns = ["open", "low", "high", "close", "mid", "volume"]
-
-n_steps = 300
-lookup_step = 1
-test_size = .2
-n_layers = 2
-cell = LSTM
-units = 256
-dropout = 0.4
-bidirectional = False
-loss = "huber_loss"
-optimizer = "adam"
-batch_size = 256
-epochs = 800
-patience = 200
-saveload = True
-limit = 4000
-
-def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n_steps, lookup_step, 
-    test_size, n_layers, cell, units, dropout, bidirectional, loss, optimizer, batch_size, epochs, 
-    patience, saveload, limit):
+def the_real_test(test_year, test_month, test_day, test_days, params):
     days_done = 1
 
     symbol = real_test_symbols[0]
@@ -42,7 +22,8 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     
     current_date = get_short_end_date(test_year, test_month, test_day)
 
-    test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
+    test_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-" + "-n_step-" + str(params["N_STEPS"]) 
+    + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
     total_days = test_days
     total_tests = len(real_test_symbols) * total_days
     time_so_far = 0.0
@@ -101,14 +82,15 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
 
             for symbol in real_test_symbols:
                 print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + ".\n")
-                epochs_run = saveload_neural_net(symbol, current_date, n_steps, lookup_step, test_size, n_layers, cell, units, dropout,
-                bidirectional, loss, optimizer, batch_size, epochs, patience, saveload, limit, feature_columns)
+                epochs_run = saveload_neural_net(symbol, current_date, params)
                 epochs_list.append(epochs_run)
                 
             for symbol in real_test_symbols:
                 # setup to allow the rest of the values to be calculated
-                data, train, valid, test = load_data(symbol, current_date, n_steps, batch_size, limit, feature_columns, False, to_print=False)
-                model = create_model(n_steps, units, cell, n_layers, dropout, loss, optimizer, bidirectional)
+                data, train, valid, test = load_data(symbol, current_date, params["N_STEPS"], params["BATCH_SIZE"], 
+                params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=False)
+                model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
+                params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
                 model.load_weights(model_saveload_directory + "/" + symbol + ".h5")
 
                 # first grab the current price by getting the latest value from the og data frame
@@ -117,7 +99,7 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
                 current_price = real_y_values[-1]
 
                 # then use predict fuction to get predicted price
-                predicted_price = predict(model, data, n_steps)
+                predicted_price = predict(model, data, params["N_STEPS"])
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
                 interwebz_pls(symbol, current_date, "calendar")
@@ -181,21 +163,22 @@ def the_real_test(test_year, test_month, test_day, test_days, feature_columns, n
     avg_p = str(round(mean(percent_away_list), 2))
     avg_d = str(round(mean(correct_direction_list) * 100, 2))
     avg_e = str(round(mean(epochs_list), 2))
-    print("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",")
-    print("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",")
-    print("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",")
-    print("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",")
-    print("Epochs: " + str(epochs) + ", Patience: " + str(patience) + ", Limit: " + str(limit) + ".")
-    print("Feature Columns: " + str(feature_columns) + "\n\n")
+    print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
+    print("N_layers: " + str(params["N_LAYERS"]) + ", Cell: " + str(params["CELL"]) + ",")
+    print("Units: " + str(params["UNITS"]) + "," + " Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
+    print("Loss: " + params["LOSS"] + ", Optimizer: " + 
+    params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
+    print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
+    print("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n\n")
 
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
     print("while using an average of " + avg_e + " epochs.")
     print("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
 
-    real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_size, n_layers, cell, units, 
-        dropout, bidirectional, loss, optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, 
-        avg_d, avg_e, time_so_far, total_days)
+    real_test_excel(test_year, test_month, test_day, params["N_STEPS"], params["LOOKUP_STEP"], params["TEST_SIZE"], params["N_LAYERS"], 
+        params["CELL"], params["UNITS"], params["DROPOUT"], params["BIDIRECTIONAL"], params["LOSS"], params["OPTIMIZER"], params["BATCH_SIZE"],
+         params["EPOCHS"], params["PATIENCE"], params["LIMIT"], params["FEATURE_COLUMNS"], avg_p, avg_d, avg_e, time_so_far, total_days)
     print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
@@ -205,6 +188,24 @@ if __name__ == "__main__":
     # needed to add this line because otherwise the batch run module would get an extra unwanted test
     check_directories()
 
-    the_real_test(test_year, test_month, test_day, test_days, feature_columns, n_steps,
-        lookup_step,test_size, n_layers, cell, units, dropout, bidirectional, loss, 
-        optimizer, batch_size, epochs, patience, saveload, limit)
+    params = {
+        "N_STEPS": 300,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "N_LAYERS": 2,
+        "CELL": LSTM,
+        "UNITS": 256,
+        "DROPOUT": 0.4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 64,
+        "EPOCHS": 800,
+        "PATIENCE": 200,
+        "SAVELOAD": True,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "day_of_week"],
+        "SAVE_FOLDER": "trading"
+    }
+
+    the_real_test(test_year, test_month, test_day, test_days, params)

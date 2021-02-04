@@ -3,7 +3,6 @@ from environment import *
 from symbols import trading_real_money
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 import alpaca_trade_api as tradeapi
-import urllib
 import traceback
 import time
 import os
@@ -35,6 +34,11 @@ def check_directories():
         os.mkdir(real_test_directory)
     if not os.path.isdir(results_directory):
        os.mkdir(results_directory)
+
+def check_model_subfolders(save_folder):
+    if not os.path.isdir(model_saveload_directory + "/" + save_folder):
+        os.mkdir(model_saveload_directory + "/" + save_folder)
+
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
@@ -126,7 +130,7 @@ def real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_
     test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
     f = open(real_test_directory + "/" + test_name + ".txt", "a")
 
-    f.write("Parameters: n_steps: " + str(n_steps) + ", lookup step:" + str(lookup_step) + ", test size: " + str(test_size) + ",\n")
+    f.write("Parameters: N_steps: " + str(n_steps) + ", Lookup Step:" + str(lookup_step) + ", Test Size: " + str(test_size) + ",\n")
     f.write("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",\n")
     f.write("Units: " + str(units) + "," + " Dropout: " + str(dropout) + ", Bidirectional: " + str(bidirectional) + ",\n")
     f.write("Loss: " + loss + ", Optimizer: " + optimizer + ", Batch_size: " + str(batch_size) + ",\n")
@@ -136,7 +140,7 @@ def real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
-    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + "\n")
+    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n")
     f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 

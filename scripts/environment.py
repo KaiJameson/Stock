@@ -68,8 +68,9 @@ defaults = {
     "BATCH_SIZE": 64,
     "EPOCHS": 800,
     "PATIENCE": 200,
-    "SAVELOAD": False,
+    "SAVELOAD": True,
     "LIMIT": 4000,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "day_of_week"]
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "day_of_week"],
+    "SAVE_FOLDER": "trading"
 }
 
