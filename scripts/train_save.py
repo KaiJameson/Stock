@@ -11,17 +11,7 @@ check_directories()
 def save_models(symbols):
     for symbol in symbols:
         try:
-            config_name = config_directory + "/" + symbol + ".csv"
-            if os.path.isfile(config_name):
-                f = open(config_name, "r")
-                values = {}
-                for line in f:
-                    parts = line.strip().split(",")
-                    values[parts[0]] = parts[1]
-                epochs = saveload_neural_net(symbol, UNITS=int(values["UNITS"]), DROPOUT=float(values["DROPOUT"]),
-                N_STEPS=int(values["N_STEPS"]), EPOCHS=int(values["EPOCHS"]), SAVELOAD=True)
-            else:
-                epochs = saveload_neural_net(symbol, SAVELOAD=True)
+            epochs = saveload_neural_net(symbol, end_date=None, params=defaults)
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")

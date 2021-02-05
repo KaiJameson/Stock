@@ -19,41 +19,32 @@ def load_trade(symbols):
     for symbol in symbols:
         try:
             start_time = time.time()
+
+            model_name = (symbol + "-" + str(defaults["FEATURE_COLUMNS"]) + "-limit-" + str(defaults["LIMIT"]) +"-n_step-" + str(defaults["N_STEPS"]) 
+            + "-layers-" + str(defaults["N_LAYERS"]) + "-units-" + str(defaults["UNITS"]) + "-epochs-" + str(defaults["EPOCHS"]))
+
             print("\n~~~Now Starting " + symbol + "~~~")
-
-            config_name = config_directory + "/" + symbol + ".csv"
-            if os.path.isfile(config_name):
-                f = open(config_name, "r")
-                values = {}
-                for line in f:
-                    parts = line.strip().split(",")
-                    values[parts[0]] = parts[1]
-                N_STEPS = int(values["N_STEPS"])
-                data, train, valid, test = load_data(symbol, int(values["N_STEPS"]), shuffle=False)
-            else:
-                N_STEPS = int(defaults["N_STEPS"])
-                time_s = time.time()
-                data, train, valid, test = load_data(symbol, n_steps=defaults["N_STEPS"], batch_size=defaults["BATCH_SIZE"],
-                limit=defaults["LIMIT"], feature_columns=defaults["FEATURE_COLUMNS"], shuffle=False, to_print=False)
-                print("Loading the data took " + str(time.time() - time_s) + " seconds")    
-
-            LOOKUP_STEP = defaults["LOOKUP_STEP"]
+            
+            time_s = time.time()
+            data, train, valid, test = load_data(symbol, n_steps=defaults["N_STEPS"], batch_size=defaults["BATCH_SIZE"],
+            limit=defaults["LIMIT"], feature_columns=defaults["FEATURE_COLUMNS"], shuffle=False, to_print=False)
+            print("Loading the data took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
-            model = create_model(N_STEPS, defaults["UNITS"], defaults["CELL"], defaults["N_LAYERS"], 
+            model = create_model(defaults["N_STEPS"], defaults["UNITS"], defaults["CELL"], defaults["N_LAYERS"], 
                 defaults["DROPOUT"],  defaults["LOSS"], defaults["OPTIMIZER"], defaults["BIDIRECTIONAL"]
             )
-            model.load_weights(model_saveload_directory + "/" + symbol + ".h5")
+            model.load_weights(model_saveload_directory + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
             # model.summary()
             print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
-            train_acc, valid_acc, test_acc = get_all_accuracies(model, data, LOOKUP_STEP)
+            train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"])
             print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
 
             total_time = time.time() - start_time
             time_s = time.time()
-            percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS)
+            percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"])
             price_prediction_list[symbol] = future_price
             print("NN report took " + str(time.time() - time_s) + " seconds")
 
