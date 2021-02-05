@@ -98,7 +98,7 @@ def make_neural_net(symbol, end_date, params):
     model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
     params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
 
-    logs_dir = "logs/" + get_time_string()
+    logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
     if params["SAVELOAD"]:
         checkpointer = ModelCheckpoint(model_saveload_directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
