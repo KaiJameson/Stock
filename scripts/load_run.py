@@ -20,7 +20,7 @@ def load_trade(symbols):
         try:
             start_time = time.time()
 
-            model_name = (symbol + "-" + str(defaults["FEATURE_COLUMNS"]) + "-limit-" + str(defaults["LIMIT"]) + "-" + "-n_step-" + str(defaults["N_STEPS"]) 
+            model_name = (symbol + "-" + str(defaults["FEATURE_COLUMNS"]) + "-limit-" + str(defaults["LIMIT"]) +"-n_step-" + str(defaults["N_STEPS"]) 
             + "-layers-" + str(defaults["N_LAYERS"]) + "-units-" + str(defaults["UNITS"]) + "-epochs-" + str(defaults["EPOCHS"]))
 
             print("\n~~~Now Starting " + symbol + "~~~")

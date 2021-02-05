@@ -22,7 +22,7 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
     
     current_date = get_short_end_date(test_year, test_month, test_day)
 
-    test_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-" + "-n_step-" + str(params["N_STEPS"]) 
+    test_name = (str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" + str(params["N_STEPS"]) 
     + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
     total_days = test_days
     total_tests = len(real_test_symbols) * total_days
@@ -31,6 +31,7 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
     correct_direction_list = []
     epochs_list = []
     time_ss = time.time()
+    print(test_name)
 
     if os.path.isfile(real_test_directory + "/" + test_name + ".txt"):
         print("A fully completed file with the name " + test_name + " already exists.")
@@ -86,12 +87,16 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
                 epochs_list.append(epochs_run)
                 
             for symbol in real_test_symbols:
+                # get model name for future reference
+                model_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" + str(params["N_STEPS"]) 
+                + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
+
                 # setup to allow the rest of the values to be calculated
                 data, train, valid, test = load_data(symbol, current_date, params["N_STEPS"], params["BATCH_SIZE"], 
                 params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=False)
                 model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
                 params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
-                model.load_weights(model_saveload_directory + "/" + symbol + ".h5")
+                model.load_weights(model_saveload_directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")
 
                 # first grab the current price by getting the latest value from the og data frame
                 y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
@@ -199,13 +204,13 @@ if __name__ == "__main__":
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
-        "BATCH_SIZE": 64,
+        "BATCH_SIZE": 256,
         "EPOCHS": 800,
         "PATIENCE": 200,
         "SAVELOAD": True,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "day_of_week"],
-        "SAVE_FOLDER": "trading"
+        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+        "SAVE_FOLDER": "batch1"
     }
 
     the_real_test(test_year, test_month, test_day, test_days, params)

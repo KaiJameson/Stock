@@ -35,7 +35,6 @@ def decision_neural_net(symbol, end_date=None, params=defaults):
 
 
 def tuning_neural_net(symbol, end_date=None, params=defaults):
-    #description of these parameters located inside environment.py
     
     data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
         symbol, end_date, params
@@ -52,7 +51,7 @@ def saveload_neural_net(symbol, end_date=None, params=defaults):
     return epochs_used
 
 def make_neural_net(symbol, end_date, params):
-    #description of these parameters located inside environment.py
+    #description of all the parameters used is located inside environment.py
 
     # tf.debugging.set_log_device_placement(True)
 
@@ -85,7 +84,7 @@ def make_neural_net(symbol, end_date, params):
     check_model_subfolders(params["SAVE_FOLDER"])
     
     # model name to save, making it as unique as possible based on parameters
-    model_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-" + "-n_step-" + str(params["N_STEPS"]) 
+    model_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" + str(params["N_STEPS"]) 
     + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
     if params["BIDIRECTIONAL"]:
         model_name += "-b"
