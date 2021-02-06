@@ -1,3 +1,9 @@
+import os
+import logging
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
@@ -15,10 +21,10 @@ from datetime import datetime
 from environment import defaults
 import numpy as np
 import pandas as pd
-import os
 import random
 import sys
 import time
+
 
 
 def decision_neural_net(symbol, end_date=None, params=defaults):
@@ -59,6 +65,10 @@ def make_neural_net(symbol, end_date, params):
     # print("Is there a GPU available: "),
     # tf.config.set_soft_device_placement(False)
 
+    os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
+    # os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
+
+
     gpus = tf.config.experimental.list_physical_devices("GPU")
 
     if gpus:
@@ -70,9 +80,7 @@ def make_neural_net(symbol, end_date, params):
    
     tf.config.optimizer.set_jit(True)
 
-    os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit"
-    # os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
-
+    
     # policy = mixed_precision.Policy("mixed_float16")
     # mixed_precision.set_policy(policy)
 

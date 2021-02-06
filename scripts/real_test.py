@@ -82,7 +82,7 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
             date_changed = True
 
             for symbol in real_test_symbols:
-                print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + ".\n")
+                print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
                 epochs_run = saveload_neural_net(symbol, current_date, params)
                 epochs_list.append(epochs_run)
                 

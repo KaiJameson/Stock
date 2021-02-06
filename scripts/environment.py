@@ -70,7 +70,7 @@ defaults = {
     "PATIENCE": 200,
     "SAVELOAD": True,
     "LIMIT": 4000,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "day_of_week"],
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"],
     "SAVE_FOLDER": "trading"
 }
 
