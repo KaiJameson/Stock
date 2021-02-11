@@ -3,7 +3,14 @@ from alpaca_nn_functions import (load_data, predict, getOwnedStocks, return_real
 get_all_accuracies, nn_report,  percent_from_real, buy_all_at_once, create_model)
 from symbols import load_save_symbols, do_the_trades
 from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
-from functions import check_directories, make_excel_file, make_load_run_excel, error_handler
+from functions import check_directories, make_excel_file, make_load_run_excel
+from error_functs import error_handler
+import os
+import logging
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 from tensorflow.keras.models import load_model
 import time
 import os

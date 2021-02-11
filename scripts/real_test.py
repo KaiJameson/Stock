@@ -1,8 +1,17 @@
+import os
+import logging
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 from tensorflow.keras.layers import LSTM
-from time_functions import get_short_end_date, get_year_month_day
-from functions import check_directories, real_test_excel, real_test_directory, delete_files, error_handler, interwebz_pls
+from time_functions import get_short_end_date, get_year_month_day, increment_calendar
+from functions import (check_directories, real_test_excel, real_test_directory, delete_files, 
+interwebz_pls, delete_files_in_folder, get_test_name, read_saved_contents)
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
-from alpaca_nn_functions import get_api, create_model, get_all_accuracies, predict, load_data, return_real_predict
+from error_functs import error_handler
+from alpaca_nn_functions import (get_api, create_model, get_all_accuracies, predict, load_data, 
+load_model_with_data, return_real_predict)
 from alpaca_neural_net import saveload_neural_net
 from environment import error_file, model_saveload_directory, test_var, back_test_days
 from statistics import mean
@@ -10,7 +19,6 @@ import pandas as pd
 import datetime
 import sys
 import time
-import os
 import ast
 
 
@@ -20,17 +28,12 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
     symbol = real_test_symbols[0]
     api = get_api()
     
-    current_date = get_short_end_date(test_year, test_month, test_day)
-
-    test_name = (str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" + str(params["N_STEPS"]) 
-    + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
+    test_name = get_test_name(params)
     total_days = test_days
-    total_tests = len(real_test_symbols) * total_days
     time_so_far = 0.0
     percent_away_list = []
     correct_direction_list = []
     epochs_list = []
-    time_ss = time.time()
     print(test_name)
 
     if os.path.isfile(real_test_directory + "/" + test_name + ".txt"):
@@ -40,63 +43,28 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
 
     # check if we already have a save file, if we do, extract the info and run it
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
-        f = open(real_test_directory + "/" + "SAVE-" + test_name + ".txt", "r")
+        total_days, days_done, test_days, time_so_far, test_year, test_month, test_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(real_test_directory, test_name)
 
-        file_contents = {}
-        for line in f:
-            parts = line.strip().split(":")
-            file_contents[parts[0]] = parts[1]
-
-        total_days = int(file_contents["total_days"])
-        days_done = int(file_contents["days_done"])
-        test_days = int(file_contents["test_days"])
-        time_so_far = float(file_contents["time_so_far"])
-        test_year = int(file_contents["test_year"])
-        test_month = int(file_contents["test_month"])
-        test_day = int(file_contents["test_day"])
-        percent_away_list = ast.literal_eval(file_contents["percent_away_list"])
-        correct_direction_list = ast.literal_eval(file_contents["correct_direction_list"])
-        epochs_list = ast.literal_eval(file_contents["epochs_list"])
-        f.close()
-
-        print("\nOpening an existing test file that was on day " + str(days_done) + " of " + str(total_days) + ".")
-        print("It is using these parameters: " + test_name + ".\n")
-
-        current_date = get_short_end_date(test_year, test_month, test_day)
-
+        
+    current_date = get_short_end_date(test_year, test_month, test_day)
 
     while test_days > 0:
         try:
-            date_changed = False
             time_s = time.time()
-            interwebz_pls("NA", current_date, "calendar")
-            calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
-            if calendar.date != current_date + datetime.timedelta(1):
-                print("Skipping " + str(current_date) + " because it was not a market day.")
-                current_date = current_date + datetime.timedelta(1)
-                continue
-
-            print("\nMoving forward one day in time: \n")
-
-            current_date = current_date + datetime.timedelta(1)
-            date_changed = True
+            current_date = increment_calendar(current_date, api, symbol)
 
             for symbol in real_test_symbols:
                 print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
                 epochs_run = saveload_neural_net(symbol, current_date, params)
                 epochs_list.append(epochs_run)
                 
+            print("Model result progress[", end='')
             for symbol in real_test_symbols:
                 # get model name for future reference
-                model_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" + str(params["N_STEPS"]) 
-                + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
+                model_name = (symbol + "-" + get_test_name(params))
 
                 # setup to allow the rest of the values to be calculated
-                data, train, valid, test = load_data(symbol, current_date, params["N_STEPS"], params["BATCH_SIZE"], 
-                params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=False)
-                model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
-                params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
-                model.load_weights(model_saveload_directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")
+                data, model = load_model_with_data(symbol, current_date, params, model_saveload_directory, model_name)
 
                 # first grab the current price by getting the latest value from the og data frame
                 y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
@@ -127,7 +95,11 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
                 percent_away_list.append(p_diff)
                 correct_direction_list.append(correct_dir)
 
+                print("*", end='')
                 sys.stdout.flush()
+
+            print("]")
+            sys.stdout.flush()
 
             day_took = (time.time() - time_s)
             print("Day " + str(days_done) + " of " + str(total_days) + " took " + str(round(day_took / 60, 2)) + " minutes.")
@@ -157,8 +129,8 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
                 sys.exit(-1)
 
         except Exception:
-            if date_changed:
-                current_date = current_date - datetime.timedelta(1)
+            # if date_changed:
+            #     current_date = current_date - datetime.timedelta(1)
             error_handler(symbol, Exception)
 
     test_year, test_month, test_day = get_year_month_day(current_date)
@@ -188,6 +160,8 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
 
     if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
         os.remove(real_test_directory + "/" + "SAVE-" + test_name + ".txt")
+
+    delete_files_in_folder(model_saveload_directory + "/" + params["SAVE_FOLDER"])
 
 if __name__ == "__main__":
     # needed to add this line because otherwise the batch run module would get an extra unwanted test

@@ -1,3 +1,9 @@
+import os
+import logging
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 from tensorflow.keras.layers import LSTM
 
 reports_directory = "../reports"
@@ -55,7 +61,7 @@ using_all_accuracies = False
 """
 
 defaults = {
-    "N_STEPS": 300,
+    "N_STEPS": 100,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 2,

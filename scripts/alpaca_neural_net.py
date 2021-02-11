@@ -2,8 +2,8 @@ import os
 import logging
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
@@ -15,7 +15,7 @@ from environment import (test_var, reports_directory, model_saveload_directory, 
 save_logs, results_directory)
 from alpaca_nn_functions import (load_data, create_model, predict, accuracy_score, plot_graph, 
 get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
-from functions import delete_files_in_folder, interwebz_pls, check_model_subfolders
+from functions import delete_files_in_folder, interwebz_pls, check_model_subfolders, get_test_name
 from time_functions import get_time_string
 from datetime import datetime
 from environment import defaults
@@ -59,16 +59,8 @@ def saveload_neural_net(symbol, end_date=None, params=defaults):
 def make_neural_net(symbol, end_date, params):
     #description of all the parameters used is located inside environment.py
 
-    # tf.debugging.set_log_device_placement(True)
-
-    # strategy = tf.distribute.OneDeviceStrategy(device="/device:GPU:0")
-    # print("Is there a GPU available: "),
-    # tf.config.set_soft_device_placement(False)
-
     os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
-    # os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
-
-
+ 
     gpus = tf.config.experimental.list_physical_devices("GPU")
 
     if gpus:
@@ -92,12 +84,7 @@ def make_neural_net(symbol, end_date, params):
     check_model_subfolders(params["SAVE_FOLDER"])
     
     # model name to save, making it as unique as possible based on parameters
-    model_name = (symbol + "-" + str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" + str(params["N_STEPS"]) 
-    + "-layers-" + str(params["N_LAYERS"]) + "-units-" + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
-    if params["BIDIRECTIONAL"]:
-        model_name += "-b"
-
-    sys.stdout.flush() # trying to get all that setup text to display before the model data
+    model_name = (symbol + "-" + get_test_name(params))
 
     interwebz_pls(symbol, end_date, "polygon")
     data, train, valid, test = load_data(symbol, end_date, params["N_STEPS"], params["BATCH_SIZE"], 
