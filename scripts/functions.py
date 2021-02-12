@@ -7,6 +7,7 @@ import traceback
 import time
 import os
 import sys
+import ast
 
 
 def check_directories():
@@ -144,15 +145,10 @@ def real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_
     f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
-def error_handler(symbol, exception):
-    f = open(error_file, "a")
-    f.write("Problem encountered with stock: " + symbol + "\n")
-    f.write("Error is of type: " + str(type(exception)) + "\n")
-    exit_info = sys.exc_info()
-    f.write(str(exit_info[1]) + "\n")
-    traceback.print_tb(tb=exit_info[2], file=f)
-    f.close()
-    print("\nERROR ENCOUNTERED!! CHECK ERROR FILE!!\n")
+def get_test_name(params):
+    return (str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" 
+        + str(params["N_STEPS"]) + "-layers-" + str(params["N_LAYERS"]) + "-units-" 
+        + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
 
 def interwebz_pls(symbol, end_date, conn_type):
     
@@ -186,4 +182,42 @@ def interwebz_pls(symbol, end_date, conn_type):
             f.close()
             time.sleep(1)
             pass
+
+
+def read_saved_contents(directory, test_name):
+    if os.path.isfile(directory + "/" + "SAVE-" + test_name + ".txt"):
+        f = open(directory + "/" + "SAVE-" + test_name + ".txt", "r")
+
+        file_contents = {}
+        for line in f:
+            parts = line.strip().split(":")
+            file_contents[parts[0]] = parts[1]
+
+        total_days = int(file_contents["total_days"])
+        days_done = int(file_contents["days_done"])
+        test_days = int(file_contents["test_days"])
+        time_so_far = float(file_contents["time_so_far"])
+        if directory == real_test_directory:
+            test_year = int(file_contents["test_year"])
+            test_month = int(file_contents["test_month"])
+            test_day = int(file_contents["test_day"])
+        else:
+            exhaust_year = int(file_contents["exhaust_year"])
+            exhaust_month = int(file_contents["exhaust_month"])
+            exhaust_day = int(file_contents["exhaust_day"])
+        percent_away_list = ast.literal_eval(file_contents["percent_away_list"])
+        correct_direction_list = ast.literal_eval(file_contents["correct_direction_list"])
+        epochs_list = ast.literal_eval(file_contents["epochs_list"])
+        f.close()
+
+        print("\nOpening an existing test file that was on day " + str(days_done) + " of " + str(total_days) + ".")
+        print("It is using these parameters: " + test_name + ".\n")
+
+        if directory == real_test_directory:
+            return (total_days, days_done, test_days, time_so_far, test_year, test_month, 
+            test_day, percent_away_list, correct_direction_list, epochs_list)
+        else:
+            return (total_days, days_done, test_days, time_so_far, exhaust_year, exhaust_month, 
+            exhaust_day, percent_away_list, correct_direction_list, epochs_list)
+
             

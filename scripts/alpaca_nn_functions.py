@@ -1,6 +1,11 @@
-from __future__ import print_function
 from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
 intrinio_sandbox_key, intrinio_production_key)
+import os
+import logging
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
@@ -13,7 +18,8 @@ from collections import deque
 from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
 from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
-from functions import make_current_price, excel_output, error_handler
+from functions import make_current_price, excel_output
+from error_functs import error_handler
 from symbols import trading_real_money
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
@@ -28,7 +34,6 @@ import talib as ta
 import xgboost as xgb
 import intrinio_sdk as intrinio
 import time
-import os
 import sys
 import random
 import datetime
@@ -485,6 +490,15 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
     model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
     return model
 
+def load_model_with_data(symbol, current_date, params, directory, model_name):
+    data, train, valid, test = load_data(symbol, current_date, params["N_STEPS"], params["BATCH_SIZE"], 
+    params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=False)
+    model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
+    params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
+    model.load_weights(directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")
+
+    return data, model
+
 def predict(model, data, n_steps, classification=False):
     # retrieve the last sequence from data
     last_sequence = data["last_sequence"][:n_steps]
@@ -884,14 +898,104 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    symbol = "AGYS"
+    params = {
+        "N_STEPS": [50, 100],
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "N_LAYERS": 2,
+        "CELL": LSTM,
+        "UNITS": [128, 256],
+        "DROPOUT": [.35, .4],
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 64,
+        "EPOCHS": [800, 1000],
+        "PATIENCE": [100, 200],
+        "SAVELOAD": True,
+        "LIMIT": [2000, 4000],
+        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"],
+        "SAVE_FOLDER": "tuning1"
+    }
 
-    end_date = get_short_end_date(2020, 11, 2)
+    n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
 
-    feature_columns = ["open", "low", "high", "close", "mid", "volume", "S&P", "DOW", "NASDAQ", "VIX"]
+    def grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params):
+        while n_step_in < len(params["N_STEPS"]):
+            while unit_in < len(params["UNITS"]):
+                while drop_in < len(params["DROPOUT"]):
+                    while epochs_in < len(params["EPOCHS"]):
+                        while patience_in < len(params["PATIENCE"]):
+                            while limit_in < len(params["LIMIT"]):
+                                limit_in += 1
+                                if limit_in < len(params["LIMIT"]):
+                                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                            patience_in += 1
+                            limit_in %= len(params["LIMIT"])
+                            if patience_in < len(params["PATIENCE"]):
+                                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                        epochs_in += 1
+                        patience_in %= len(params["PATIENCE"])
+                        if epochs_in < len(params["EPOCHS"]):
+                            return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                    drop_in += 1
+                    epochs_in %= len(params["EPOCHS"])
+                    if drop_in < len(params["DROPOUT"]):
+                        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                unit_in += 1
+                drop_in %= len(params["DROPOUT"])
+                if unit_in < len(params["UNITS"]):
+                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+            n_step_in += 1
+            unit_in %= len(params["UNITS"])
+            if n_step_in < len(params["N_STEPS"]):
+                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
 
-    time_s = time.time()
-    data, train, valid, test = load_data(symbol, None, 300, 64, 4000, feature_columns)
-    print("1st test took " + str(time.time() - time_s))
+
+    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params)
+
+    # print("\nN_ST_IN: " + str(n_step_in))
+    # print("unit_in: " + str(unit_in))
+    # print("drop_in: " + str(drop_in))
+    # print("epochs_in: " + str(epochs_in))
+    # print("patience_in: " + str(patience_in))
+    # print("limit_in: " + str(limit_in))
+
+    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 1, 1, 1, 1, 0, params)
+
+    # print("\nN_ST_IN: " + str(n_step_in))
+    # print("unit_in: " + str(unit_in))
+    # print("drop_in: " + str(drop_in))
+    # print("epochs_in: " + str(epochs_in))
+    # print("patience_in: " + str(patience_in))
+    # print("limit_in: " + str(limit_in))
+
+    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 1, 1, 1, 1, 1, params)
+
+    # print("\nN_ST_IN: " + str(n_step_in))
+    # print("unit_in: " + str(unit_in))
+    # print("drop_in: " + str(drop_in))
+    # print("epochs_in: " + str(epochs_in))
+    # print("patience_in: " + str(patience_in))
+    # print("limit_in: " + str(limit_in))
+
+    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 1, 0, 1, 1, 1, params)
+
+    # print("\nN_ST_IN: " + str(n_step_in))
+    # print("unit_in: " + str(unit_in))
+    # print("drop_in: " + str(drop_in))
+    # print("epochs_in: " + str(epochs_in))
+    # print("patience_in: " + str(patience_in))
+    # print("limit_in: " + str(limit_in))
+
+    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 0, 1, 0, 1, 0, params)
+
+    # print("\nN_ST_IN: " + str(n_step_in))
+    # print("unit_in: " + str(unit_in))
+    # print("drop_in: " + str(drop_in))
+    # print("epochs_in: " + str(epochs_in))
+    # print("patience_in: " + str(patience_in))
+    # print("limit_in: " + str(limit_in))
 
     

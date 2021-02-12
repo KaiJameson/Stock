@@ -1,9 +1,11 @@
+from api_key import paper_api_key_id, paper_api_secret_key
+from error_functs import error_handler, net_error_handler
+import alpaca_trade_api as tradeapi
+import pandas as pd
 import platform
+import random
 import time
 import datetime
-import pandas as pd
-from api_key import paper_api_key_id, paper_api_secret_key
-import alpaca_trade_api as tradeapi
 
 def get_start_end():
     operating_sys = platform.system()
@@ -102,8 +104,27 @@ def get_trade_day_back(last_day, days_back):
     return trade_date
 
 def get_year_month_day(datetiObj):
-
     return datetiObj.year, datetiObj.month, datetiObj.day
 
+def increment_calendar(current_date, api, symbol):
+    date_changed = False
+    while not date_changed:    
+        try:
+            time_s = time.time()
+            calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
+            while calendar.date != current_date + datetime.timedelta(1):
+                print("Skipping " + str(current_date + datetime.timedelta(1)) + " because it was not a market day.")
+                current_date = current_date + datetime.timedelta(1)
 
+            print("\nMoving forward one day in time: \n")
+            
+            current_date = current_date + datetime.timedelta(1)
+            date_changed = True
+            
+        except Exception:
+            if date_changed:
+                current_date = current_date - datetime.timedelta(1)
+            net_error_handler(symbol, Exception)
+
+    return current_date
     
