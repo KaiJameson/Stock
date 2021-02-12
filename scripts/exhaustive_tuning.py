@@ -9,6 +9,7 @@ from alpaca_neural_net import saveload_neural_net
 from alpaca_nn_functions import (get_api, create_model, get_all_accuracies, predict, load_data, 
 return_real_predict, load_model_with_data)
 from symbols import exhaustive_symbols, exhaust_year, exhaust_month, exhaust_day
+from time_functions import increment_calendar
 from functions import (check_directories, get_short_end_date, interwebz_pls,  get_test_name, 
 real_test_excel, delete_files_in_folder, read_saved_contents)
 from error_functs import error_handler

@@ -111,8 +111,6 @@ def increment_calendar(current_date, api, symbol):
     while not date_changed:    
         try:
             time_s = time.time()
-            if random.randint(0, 3) == 0:
-                oh_lord = 1/0
             calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
             while calendar.date != current_date + datetime.timedelta(1):
                 print("Skipping " + str(current_date + datetime.timedelta(1)) + " because it was not a market day.")
