@@ -9,7 +9,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from sklearn import preprocessing
 from time_functions import get_time_string
 from environment import (test_var, reports_directory, model_saveload_directory, random_seed, error_file, back_test_days, 
 save_logs, results_directory)

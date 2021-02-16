@@ -124,12 +124,11 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
     + "\n")
     f.close()
 
-def real_test_excel(test_year, test_month, test_day, n_steps, lookup_step, test_size, n_layers, cell, units, 
+def real_test_excel(directory, test_name, test_year, test_month, test_day, n_steps, lookup_step, test_size, n_layers, cell, units, 
     dropout, bidirectional, loss, optimizer, batch_size, epochs, patience, limit, feature_columns, avg_p, 
     avg_d, avg_e, time_so_far, total_days):
 
-    test_name = f"{feature_columns}-limit-{limit}-n_step-{n_steps}-layers-{n_layers}-units-{units}-epochs-{epochs}"
-    f = open(real_test_directory + "/" + test_name + ".txt", "a")
+    f = open(directory + "/" + test_name + ".txt", "a")
 
     f.write("Parameters: N_steps: " + str(n_steps) + ", Lookup Step:" + str(lookup_step) + ", Test Size: " + str(test_size) + ",\n")
     f.write("N_layers: " + str(n_layers) + ", Cell: " + str(cell) + ",\n")

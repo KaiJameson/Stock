@@ -23,12 +23,12 @@ import ast
 
 
 def the_real_test(test_year, test_month, test_day, test_days, params):
-    days_done = 1
 
     symbol = real_test_symbols[0]
     api = get_api()
     
     test_name = get_test_name(params)
+    days_done = 1
     total_days = test_days
     time_so_far = 0.0
     percent_away_list = []
@@ -129,8 +129,6 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
                 sys.exit(-1)
 
         except Exception:
-            # if date_changed:
-            #     current_date = current_date - datetime.timedelta(1)
             error_handler(symbol, Exception)
 
     test_year, test_month, test_day = get_year_month_day(current_date)
@@ -153,7 +151,7 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
     print("while using an average of " + avg_e + " epochs.")
     print("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
 
-    real_test_excel(test_year, test_month, test_day, params["N_STEPS"], params["LOOKUP_STEP"], params["TEST_SIZE"], params["N_LAYERS"], 
+    real_test_excel(real_test_excel, test_name, test_year, test_month, test_day, params["N_STEPS"], params["LOOKUP_STEP"], params["TEST_SIZE"], params["N_LAYERS"], 
         params["CELL"], params["UNITS"], params["DROPOUT"], params["BIDIRECTIONAL"], params["LOSS"], params["OPTIMIZER"], params["BATCH_SIZE"],
          params["EPOCHS"], params["PATIENCE"], params["LIMIT"], params["FEATURE_COLUMNS"], avg_p, avg_d, avg_e, time_so_far, total_days)
     print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")

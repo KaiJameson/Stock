@@ -8,13 +8,13 @@ from tensorflow.keras.layers import LSTM
 from alpaca_neural_net import saveload_neural_net
 from alpaca_nn_functions import (get_api, create_model, get_all_accuracies, predict, load_data, 
 return_real_predict, load_model_with_data)
-from symbols import exhaustive_symbols, exhaust_year, exhaust_month, exhaust_day
+from symbols import exhaustive_symbols, exhaust_year, exhaust_month, exhaust_day, tune_days
 from time_functions import increment_calendar
-from functions import (check_directories, get_short_end_date, interwebz_pls,  get_test_name, 
+from functions import (check_directories, interwebz_pls, get_test_name, 
 real_test_excel, delete_files_in_folder, read_saved_contents)
 from error_functs import error_handler
 from environment import (config_directory, tuning_directory, error_file, make_config, 
-back_test_days, tune_days, test_var, model_saveload_directory)
+back_test_days,  test_var, model_saveload_directory)
 from time_functions import get_short_end_date, get_year_month_day
 from statistics import mean
 import time
@@ -24,55 +24,91 @@ import traceback
 import datetime
 import pandas as pd
 import ast
+import copy
 
-ticker = exhaustive_symbols
 
 check_directories()
 
 
+def grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params):
+    while n_step_in < len(params["N_STEPS"]):
+        while unit_in < len(params["UNITS"]):
+            while drop_in < len(params["DROPOUT"]):
+                while epochs_in < len(params["EPOCHS"]):
+                    while patience_in < len(params["PATIENCE"]):
+                        while limit_in < len(params["LIMIT"]):
+                            limit_in += 1
+                            if limit_in < len(params["LIMIT"]):
+                                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                        patience_in += 1
+                        limit_in %= len(params["LIMIT"])
+                        if patience_in < len(params["PATIENCE"]):
+                            return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                    epochs_in += 1
+                    patience_in %= len(params["PATIENCE"])
+                    if epochs_in < len(params["EPOCHS"]):
+                        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+                drop_in += 1
+                epochs_in %= len(params["EPOCHS"])
+                if drop_in < len(params["DROPOUT"]):
+                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+            unit_in += 1
+            drop_in %= len(params["DROPOUT"])
+            if unit_in < len(params["UNITS"]):
+                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+        n_step_in += 1
+        unit_in %= len(params["UNITS"])
+        if n_step_in < len(params["N_STEPS"]):
+            return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+
+
+
+def change_params(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params):
+    new_params = copy.deepcopy(params)
+    new_params["N_STEPS"] =  params["N_STEPS"][n_step_in]
+    new_params["UNITS"] = params["UNITS"][unit_in]
+    new_params["DROPOUT"] = params["DROPOUT"][drop_in]
+    new_params["EPOCHS"] = params["EPOCHS"][epochs_in]
+    new_params["PATIENCE"] = params["PATIENCE"][patience_in]
+    new_params["LIMIT"] = params["LIMIT"][limit_in]
+
+    return new_params
+
 master_params = {
-    "N_STEPS": [50, 100],
+    "N_STEPS": [300],
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 2,
     "CELL": LSTM,
-    "UNITS": [128, 256],
-    "DROPOUT": [.35, .4],
+    "UNITS": [256],
+    "DROPOUT": [.4],
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
-    "BATCH_SIZE": 64,
-    "EPOCHS": [800, 1000],
-    "PATIENCE": [100, 200],
+    "BATCH_SIZE": 256,
+    "EPOCHS": [800],
+    "PATIENCE": [200],
     "SAVELOAD": True,
-    "LIMIT": [2000, 4000],
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"],
+    "LIMIT": [4000],
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
     "SAVE_FOLDER": "tuning1"
 }
 
 
-
-done_dir = tuning_directory + "/done"
-if not os.path.isdir(done_dir):
-    os.mkdir(done_dir)
-current_dir = tuning_directory + "/current"
-if not os.path.isdir(current_dir):
-    os.mkdir(current_dir)
-f_name = done_dir + "/" + ticker + ".txt"
-file_name = current_dir + "/" + ticker + ".csv"
-tuning_status_file = tuning_directory + "/" + ticker + ".txt"
-if not os.path.isfile(tuning_status_file):
-    f = open(tuning_status_file, "w")
-    f.close()
-done_message = "You are done tuning this stock."
-
 api = get_api()
     
-n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
-still_running = True
+print(exhaustive_symbols)
+
+total_days = tune_days
 
 for symbol in exhaustive_symbols:
     try:
+        n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
+        still_running = True
+
+        tune_days = total_days # reset the days count for while loop
+
         if os.path.isfile(tuning_directory + "/" + symbol + "-status.txt"):
             print("A tuning was in process")
             print("pulling info now")
@@ -95,36 +131,43 @@ for symbol in exhaustive_symbols:
         while still_running:
             params = change_params(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
 
-            test_name = get_test_name(params)
+            # get model name for future reference
+            model_name = (symbol + "-" + get_test_name(params))
+            days_done = 1
             total_days = tune_days
             time_so_far = 0.0
             percent_away_list = []
             correct_direction_list = []
             epochs_list = []
-            print(test_name)
+            print(model_name)
 
-            if os.path.isfile(tuning_directory + "/" + test_name + ".txt"):
-                print("A fully completed file with the name " + test_name + " already exists.")
-                print("Exiting the_real_test now: ")
-                continue
-
+            if os.path.isfile(tuning_directory + "/" + model_name + ".txt"):
+                print("A fully completed file with the name " + model_name + " already exists.")
+                print("Exiting this instance of exhaustive tune now: ")
+                n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
+                if n_step_in == len(master_params["N_STEPS"]):
+                    still_running = False
+                    break
+                else:
+                    continue
+       
             # check if we already have a save file, if we do, extract the info and run it
-            total_days, days_done, test_days, time_so_far, exhaust_year, exhaust_month, exhaust_day = read_saved_contents(tuning_directory, test_name)
+            if os.path.isfile(tuning_directory + "/" + "SAVE-" + model_name + ".txt"):
+                total_days, days_done, tune_days, time_so_far, exhaust_year, exhaust_month, exhaust_day = read_saved_contents(tuning_directory, model_name)
 
             current_date = get_short_end_date(exhaust_year, exhaust_month, exhaust_day)
 
-            while test_days > 0:
+            while tune_days > 0:
+                time_s = time.time()
                 current_date = increment_calendar(current_date, api, symbol)
 
                 print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
                 epochs_run = saveload_neural_net(symbol, current_date, params)
                 epochs_list.append(epochs_run)
-
-                # get model name for future reference
-                model_name = (symbol + "-" + get_test_name(params))
+                
 
                 # setup to allow the rest of the values to be calculated
-                data, model = load_model_with_data(symbol, current_date, params, tuning_directory, model_name)
+                data, model = load_model_with_data(symbol, current_date, params, model_saveload_directory, model_name)
 
                 # first grab the current price by getting the latest value from the og data frame
                 y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
@@ -160,14 +203,14 @@ for symbol in exhaustive_symbols:
                 time_so_far += day_took
 
                 days_done += 1
-                test_days -= 1
+                tune_days -= 1
 
                 t_year, t_month, t_day = get_year_month_day(current_date)
 
-                f = open(tuning_directory + "/" + "SAVE-" + test_name + ".txt", "w")
+                f = open(tuning_directory + "/" + "SAVE-" + model_name + ".txt", "w")
                 f.write("total_days:" + str(total_days) + "\n")
                 f.write("days_done:" + str(days_done) + "\n")
-                f.write("test_days:" + str(test_days) + "\n")
+                f.write("test_days:" + str(tune_days) + "\n")
                 f.write("time_so_far:" + str(time_so_far) + "\n")
                 f.write("exhaust_year:" + str(t_year) + "\n")
                 f.write("exhaust_month:" + str(t_month) + "\n")
@@ -197,23 +240,30 @@ for symbol in exhaustive_symbols:
             print("while using an average of " + avg_e + " epochs.")
             print("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
 
-            real_test_excel(test_year, test_month, test_day, params["N_STEPS"], params["LOOKUP_STEP"], params["TEST_SIZE"], params["N_LAYERS"], 
+            real_test_excel(tuning_directory, model_name, test_year, test_month, test_day, params["N_STEPS"], params["LOOKUP_STEP"], params["TEST_SIZE"], params["N_LAYERS"], 
                 params["CELL"], params["UNITS"], params["DROPOUT"], params["BIDIRECTIONAL"], params["LOSS"], params["OPTIMIZER"], params["BATCH_SIZE"],
                 params["EPOCHS"], params["PATIENCE"], params["LIMIT"], params["FEATURE_COLUMNS"], avg_p, avg_d, avg_e, time_so_far, total_days)
             print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
-            if os.path.isfile(tuning_directory + "/" + "SAVE-" + test_name + ".txt"):
-                os.remove(tuning_directory + "/" + "SAVE-" + test_name + ".txt")
+            if os.path.isfile(tuning_directory + "/" + "SAVE-" + model_name + ".txt"):
+                os.remove(tuning_directory + "/" + "SAVE-" + model_name + ".txt")
 
             delete_files_in_folder(model_saveload_directory + "/" + params["SAVE_FOLDER"])
 
-            n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params = grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params)
+            print(master_params)
+            n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
 
-            if n_step_in == len(params["N_STEPS"]):
+            if n_step_in == len(master_params["N_STEPS"]):
                 still_running = False
+                print("Ending running the stuff for " + symbol)
+
+                tune_days = total_days # reset the days count for while loop
+
+                if os.path.isfile(tuning_directory + "/" + symbol + "-status.txt"):
+                    os.remove(tuning_directory + "/" + symbol + "-status.txt")
                 # TODO say end of file shit
             else:
-                f.open(tuning_directory + "/" + symbol + "-status".txt, "w")
+                f = open(tuning_directory + "/" + symbol + "-status.txt", "w")
                 f.write("n_step_in:" + str(n_step_in) + "\n")
                 f.write("unit_in:" + str(unit_in) + "\n")
                 f.write("drop_in:" + str(drop_in) + "\n")
@@ -221,6 +271,8 @@ for symbol in exhaustive_symbols:
                 f.write("patience_in:" + str(patience_in) + "\n")
                 f.write("limit_in:" + str(limit_in) + "\n")
                 f.close()
+
+                tune_days = total_days # reset the days count for while loop
 
 
 
@@ -230,50 +282,6 @@ for symbol in exhaustive_symbols:
                 sys.exit(-1)
 
     except Exception:
-        if date_changed:
-            current_date = current_date - datetime.timedelta(1)
         error_handler(symbol, Exception)
 
-def grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params):
-        while n_step_in < len(params["N_STEPS"]):
-            while unit_in < len(params["UNITS"]):
-                while drop_in < len(params["DROPOUT"]):
-                    while epochs_in < len(params["EPOCHS"]):
-                        while patience_in < len(params["PATIENCE"]):
-                            while limit_in < len(params["LIMIT"]):
-                                limit_in += 1
-                                if limit_in < len(params["LIMIT"]):
-                                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                            patience_in += 1
-                            limit_in %= len(params["LIMIT"])
-                            if patience_in < len(params["PATIENCE"]):
-                                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                        epochs_in += 1
-                        patience_in %= len(params["PATIENCE"])
-                        if epochs_in < len(params["EPOCHS"]):
-                            return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                    drop_in += 1
-                    epochs_in %= len(params["EPOCHS"])
-                    if drop_in < len(params["DROPOUT"]):
-                        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                unit_in += 1
-                drop_in %= len(params["DROPOUT"])
-                if unit_in < len(params["UNITS"]):
-                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-            n_step_in += 1
-            unit_in %= len(params["UNITS"])
-            if n_step_in < len(params["N_STEPS"]):
-                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
 
-
-
-def change_params(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params):
-    params["N_STEPS"] =  params[n_step_in]
-    params["UNITS"] = params[unit_in]
-    params["DROPOUT"] = params[drop_in]
-    params["EPOCHS"] = params[epochs_in]
-    params["PATIENCE"] = params[patience_in]
-    params["LIMIT"] = params[limit_in]
-
-    return params
