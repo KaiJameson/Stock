@@ -1,7 +1,5 @@
-import json 
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 import alpaca_trade_api as tradeapi
-import time 
 import datetime 
 api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
 acts = api.get_activities()
@@ -10,3 +8,5 @@ for activity in acts:
       dt = activity.transaction_time.to_pydatetime()
       if (dt.year < 2021):
         print(activity.side,activity.qty,"shares of",activity.symbol,"at",activity.price)
+
+        
