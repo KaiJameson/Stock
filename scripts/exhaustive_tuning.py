@@ -92,14 +92,12 @@ master_params = {
     "SAVELOAD": True,
     "LIMIT": [4000],
     "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
-    "SAVE_FOLDER": "tuning1"
+    "SAVE_FOLDER": "tuning2"
 }
 
 
 api = get_api()
     
-print(exhaustive_symbols)
-
 total_days = tune_days
 
 for symbol in exhaustive_symbols:
@@ -153,7 +151,7 @@ for symbol in exhaustive_symbols:
        
             # check if we already have a save file, if we do, extract the info and run it
             if os.path.isfile(tuning_directory + "/" + "SAVE-" + model_name + ".txt"):
-                total_days, days_done, tune_days, time_so_far, exhaust_year, exhaust_month, exhaust_day = read_saved_contents(tuning_directory, model_name)
+                total_days, days_done, tune_days, time_so_far, exhaust_year, exhaust_month, exhaust_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(tuning_directory, model_name)
 
             current_date = get_short_end_date(exhaust_year, exhaust_month, exhaust_day)
 

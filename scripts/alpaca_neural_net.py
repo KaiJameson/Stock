@@ -14,7 +14,7 @@ from environment import (test_var, reports_directory, model_saveload_directory, 
 save_logs, results_directory)
 from alpaca_nn_functions import (load_data, create_model, predict, accuracy_score, plot_graph, 
 get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
-from functions import delete_files_in_folder, interwebz_pls, check_model_subfolders, get_test_name
+from functions import delete_files_in_folder, check_model_subfolders, get_test_name
 from time_functions import get_time_string
 from datetime import datetime
 from environment import defaults
@@ -85,7 +85,6 @@ def make_neural_net(symbol, end_date, params):
     # model name to save, making it as unique as possible based on parameters
     model_name = (symbol + "-" + get_test_name(params))
 
-    interwebz_pls(symbol, end_date, "polygon")
     data, train, valid, test = load_data(symbol, end_date, params["N_STEPS"], params["BATCH_SIZE"], 
     params["LIMIT"], params["FEATURE_COLUMNS"])
 
@@ -124,7 +123,6 @@ def make_neural_net(symbol, end_date, params):
     if params["SAVELOAD"]:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
-        interwebz_pls(symbol, end_date, "polygon")
         data, train, valid, test = load_data(symbol, end_date, params["N_STEPS"], params["BATCH_SIZE"], 
             params["LIMIT"], params["FEATURE_COLUMNS"], False
         )

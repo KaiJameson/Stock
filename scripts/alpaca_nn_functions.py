@@ -19,7 +19,7 @@ from environment import (test_var, reports_directory, current_price_directory, g
 test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
 from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
 from functions import make_current_price, excel_output
-from error_functs import error_handler
+from error_functs import error_handler, net_error_handler
 from symbols import trading_real_money
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
@@ -376,17 +376,28 @@ def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
 
     if to_print:
         print("Included features: " + str(feature_columns))
+        no_connection = True
+        while no_connection:
+            try:
+                # load data from alpaca
+                if end_date is not None:
+                    df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
+                else:
+                    df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
 
-    if isinstance(symbol, str):
+                no_connection = False
+
+            except Exception:
+                net_error_handler(symbol, Exception)
+
+
+    else:
         # load data from alpaca
         if end_date is not None:
             df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
         else:
             df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
 
-    elif isinstance(symbol, pd.DataFrame):
-        # already loaded, use it directly
-        df = symbol
     # this will contain all the elements we want to return from this function
     result = {}
     # we will also return the original dataframe itself
