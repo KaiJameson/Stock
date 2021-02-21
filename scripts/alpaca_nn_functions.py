@@ -503,7 +503,7 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
 
 def load_model_with_data(symbol, current_date, params, directory, model_name):
     data, train, valid, test = load_data(symbol, current_date, params["N_STEPS"], params["BATCH_SIZE"], 
-    params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=False)
+    params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=True)
     model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
     params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
     model.load_weights(directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")

@@ -8,7 +8,7 @@ from tensorflow.keras.layers import LSTM
 from alpaca_neural_net import saveload_neural_net
 from alpaca_nn_functions import (get_api, create_model, get_all_accuracies, predict, load_data, 
 return_real_predict, load_model_with_data)
-from symbols import exhaustive_symbols, exhaust_year, exhaust_month, exhaust_day, tune_days
+from symbols import exhaust_sym_dict, exhaust_year, exhaust_month, exhaust_day, tune_days
 from time_functions import increment_calendar
 from functions import (check_directories, interwebz_pls, get_test_name, 
 real_test_excel, delete_files_in_folder, read_saved_contents)
@@ -92,69 +92,100 @@ master_params = {
     "SAVELOAD": True,
     "LIMIT": [4000],
     "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
-    "SAVE_FOLDER": "tuning2"
+    "SAVE_FOLDER": "tuning1"
 }
+
+def get_user_input():
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "tuning1":
+            exhaustive_symbols = exhaust_sym_dict[sys.argv[1]]
+        elif sys.argv[1] == "tuning2":
+            exhaustive_symbols = exhaust_sym_dict[sys.argv[1]]
+        elif sys.argv[1] == "tuning3":
+            exhaustive_symbols = exhaust_sym_dict[sys.argv[1]]
+        elif sys.argv[1] == "tuning4":
+            exhaustive_symbols = exhaust_sym_dict[sys.argv[1]]
+        elif sys.argv[1] == "tuning5":
+            exhaustive_symbols = exhaust_sym_dict[sys.argv[1]]
+        else:
+            print("You must give this program an argument in the style of \"tuning#\"")
+            print("So that it knows what folder to save your models into.")
+            print("Please try again")
+            sys.exit(-1)
+
+        master_params["SAVE_FOLDER"] = sys.argv[1]
+        return exhaustive_symbols
+
+    else:
+        print("You need to provide a second argument that says which tuning file ")
+        print("and symbols you want to use. Please try again")
+        sys.exit(-1)
+
+
 
 
 api = get_api()
     
 total_days = tune_days
+exhaustive_symbols = get_user_input()
+
+print("Staring exhaustive_tune using these following symbols: " + str(exhaustive_symbols))
 
 for symbol in exhaustive_symbols:
-    try:
-        n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
-        still_running = True
+    n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
+    still_running = True
 
-        tune_days = total_days # reset the days count for while loop
+    tune_days = total_days # reset the days count for while loop
 
-        if os.path.isfile(tuning_directory + "/" + symbol + "-status.txt"):
-            print("A tuning was in process")
-            print("pulling info now")
+    if os.path.isfile(tuning_directory + "/" + symbol + "-status.txt"):
+        print("A tuning was in process")
+        print("pulling info now")
 
-            f = open(tuning_directory + "/" + symbol + "-status.txt")
+        f = open(tuning_directory + "/" + symbol + "-status.txt")
 
-            file_contents = {}
-            for line in f:
-                parts = line.strip().split(":")
-                file_contents[parts[0]] = parts[1]
+        file_contents = {}
+        for line in f:
+            parts = line.strip().split(":")
+            file_contents[parts[0]] = parts[1]
 
-            n_step_in = int(file_contents["n_step_in"])
-            unit_in = int(file_contents["unit_in"])
-            drop_in = int(file_contents["drop_in"])
-            epochs_in = int(file_contents["epochs_in"])
-            patience_in = int(file_contents["patience_in"])
-            limit_in = int(file_contents["limit_in"])
-            f.close()
+        n_step_in = int(file_contents["n_step_in"])
+        unit_in = int(file_contents["unit_in"])
+        drop_in = int(file_contents["drop_in"])
+        epochs_in = int(file_contents["epochs_in"])
+        patience_in = int(file_contents["patience_in"])
+        limit_in = int(file_contents["limit_in"])
+        f.close()
 
-        while still_running:
-            params = change_params(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
+    
+    while still_running:
+        params = change_params(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
 
-            # get model name for future reference
-            model_name = (symbol + "-" + get_test_name(params))
-            days_done = 1
-            total_days = tune_days
-            time_so_far = 0.0
-            percent_away_list = []
-            correct_direction_list = []
-            epochs_list = []
-            print(model_name)
+        # get model name for future reference
+        model_name = (symbol + "-" + get_test_name(params))
+        days_done = 1
+        total_days = tune_days
+        time_so_far = 0.0
+        percent_away_list = []
+        correct_direction_list = []
+        epochs_list = []
+        print(model_name)
 
-            if os.path.isfile(tuning_directory + "/" + model_name + ".txt"):
-                print("A fully completed file with the name " + model_name + " already exists.")
-                print("Exiting this instance of exhaustive tune now: ")
-                n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
-                if n_step_in == len(master_params["N_STEPS"]):
-                    still_running = False
-                    break
-                else:
-                    continue
+        if os.path.isfile(tuning_directory + "/" + model_name + ".txt"):
+            print("A fully completed file with the name " + model_name + " already exists.")
+            print("Exiting this instance of exhaustive tune now: ")
+            n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
+            if n_step_in == len(master_params["N_STEPS"]):
+                still_running = False
+                break
+            else:
+                continue
+    
+        # check if we already have a save file, if we do, extract the info and run it
+        if os.path.isfile(tuning_directory + "/" + "SAVE-" + model_name + ".txt"):
+            total_days, days_done, tune_days, time_so_far, exhaust_year, exhaust_month, exhaust_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(tuning_directory, model_name)
        
-            # check if we already have a save file, if we do, extract the info and run it
-            if os.path.isfile(tuning_directory + "/" + "SAVE-" + model_name + ".txt"):
-                total_days, days_done, tune_days, time_so_far, exhaust_year, exhaust_month, exhaust_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(tuning_directory, model_name)
-
-            current_date = get_short_end_date(exhaust_year, exhaust_month, exhaust_day)
-
+        current_date = get_short_end_date(exhaust_year, exhaust_month, exhaust_day)
+        try:
             while tune_days > 0:
                 time_s = time.time()
                 current_date = increment_calendar(current_date, api, symbol)
@@ -274,12 +305,13 @@ for symbol in exhaustive_symbols:
 
 
 
-    except KeyboardInterrupt:
-                print("I acknowledge that you want this to stop.")
-                print("Thy will be done.")
-                sys.exit(-1)
+        except KeyboardInterrupt:
+                    print("I acknowledge that you want this to stop.")
+                    print("Thy will be done.")
+                    sys.exit(-1)
 
-    except Exception:
-        error_handler(symbol, Exception)
+        except Exception:
+            current_date -= datetime.timedelta(1)
+            error_handler(symbol, Exception)
 
 
