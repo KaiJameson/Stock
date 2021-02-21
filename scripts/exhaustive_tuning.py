@@ -9,7 +9,7 @@ from alpaca_neural_net import saveload_neural_net
 from alpaca_nn_functions import (get_api, create_model, get_all_accuracies, predict, load_data, 
 return_real_predict, load_model_with_data)
 from symbols import exhaust_sym_dict, exhaust_year, exhaust_month, exhaust_day, tune_days
-from time_functions import increment_calendar
+from time_functions import increment_calendar, get_current_price
 from functions import (check_directories, interwebz_pls, get_test_name, 
 real_test_excel, delete_files_in_folder, read_saved_contents)
 from error_functs import error_handler
@@ -207,11 +207,7 @@ for symbol in exhaustive_symbols:
                 predicted_price = predict(model, data, params["N_STEPS"])
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
-                interwebz_pls(symbol, current_date, "calendar")
-                cal = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
-                one_day_in_future = pd.Timestamp.to_pydatetime(cal.date).date()
-                df = api.polygon.historic_agg_v2(symbol, 1, "day", _from=one_day_in_future, to=one_day_in_future).df
-                actual_price = df.iloc[0]["close"]
+                actual_price = get_current_price(current_date, api, symbol)
 
                 # get the percent difference between prediction and actual
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
@@ -279,7 +275,6 @@ for symbol in exhaustive_symbols:
 
             delete_files_in_folder(model_saveload_directory + "/" + params["SAVE_FOLDER"])
 
-            print(master_params)
             n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, master_params)
 
             if n_step_in == len(master_params["N_STEPS"]):
