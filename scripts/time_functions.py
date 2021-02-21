@@ -128,3 +128,19 @@ def increment_calendar(current_date, api, symbol):
 
     return current_date
     
+def get_current_price(current_date, api, symbol):
+    no_price = True
+    while no_price:
+        try:
+            cal = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
+            one_day_in_future = pd.Timestamp.to_pydatetime(cal.date).date()
+            df = api.polygon.historic_agg_v2(symbol, 1, "day", _from=one_day_in_future, to=one_day_in_future).df
+            actual_price = df.iloc[0]["close"]
+            no_price = False
+
+        except Exception:
+            net_error_handler(symbol, Exception)
+
+    return actual_price
+
+
