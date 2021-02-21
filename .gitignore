@@ -14,6 +14,6 @@ models/
 reports/
 tuning_info/
 load_run_test/
+tax/
 error_file.txt
-scripts/testing.py
 scripts/symbols.py

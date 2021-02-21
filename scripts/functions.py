@@ -35,6 +35,8 @@ def check_directories():
         os.mkdir(real_test_directory)
     if not os.path.isdir(results_directory):
        os.mkdir(results_directory)
+    if not os.path.isdir(tax_directory):
+        os.mkdir(tax_directory)
 
 def check_model_subfolders(save_folder):
     if not os.path.isdir(model_saveload_directory + "/" + save_folder):
