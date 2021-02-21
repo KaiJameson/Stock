@@ -1,8 +1,8 @@
-from alpaca_neural_net import saveload_neural_net
+from paca_model import saveload_neural_net
 from symbols import load_save_symbols
 from functions import check_directories
 from error_functs import error_handler
-from environment import model_saveload_directory, error_file, config_directory, defaults
+from environment import defaults
 import os
 import sys
 import time

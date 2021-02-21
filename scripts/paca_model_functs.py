@@ -1,11 +1,5 @@
-from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
-intrinio_sandbox_key, intrinio_production_key)
-import os
-import logging
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
-logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+from functions import silence_tensorflow
+silence_tensorflow()
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
@@ -15,10 +9,12 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-from environment import (test_var, reports_directory, current_price_directory, graph_directory, back_test_days, to_plot, 
-test_money, excel_directory, stocks_traded, error_file, load_run_excel, using_all_accuracies)
-from time_functions import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
-from functions import make_current_price, excel_output
+from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
+intrinio_sandbox_key, intrinio_production_key)
+from environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
+using_all_accuracies, directory_dict)
+from time_functs import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
+from io_functs import excel_output, make_current_price
 from error_functs import error_handler, net_error_handler
 from symbols import trading_real_money
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -38,6 +34,7 @@ import sys
 import random
 import datetime
 import math 
+import os
 
 
 
@@ -48,11 +45,8 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
     
     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
 
-    report_dir = reports_directory + "/" + symbol + "/" + time_string + ".txt"
-    reports_folder = reports_directory + "/" + symbol
-    if not os.path.isdir(reports_folder):
-        os.mkdir(reports_folder)
-
+    report_dir = directory_dict["reports_directory"] + "/" + symbol + "/" + time_string + ".txt"
+    
     if to_plot:
         plot_graph(y_real, y_pred, symbol, back_test_days, time_string)
 
@@ -379,7 +373,6 @@ def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
         no_connection = True
         while no_connection:
             try:
-                # load data from alpaca
                 if end_date is not None:
                     df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
                 else:
@@ -392,7 +385,6 @@ def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
 
 
     else:
-        # load data from alpaca
         if end_date is not None:
             df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
         else:
@@ -818,7 +810,7 @@ def plot_graph(y_real, y_pred, symbol, back_test_days, time_string):
     real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
     
-    plot_dir = graph_directory + "/" + symbol
+    plot_dir = directory_dict["graph_directory"] + "/" + symbol
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
     plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
@@ -891,7 +883,7 @@ def model_money(money, data1, data2):
     return money
 
 def perfect_money(money, data):
-    stonks_owned = 0;
+    stonks_owned = 0
     for i in range(0, len(data) - 1):
         now_price = data[i]
         tommorow_price = data[i + 1]
@@ -909,104 +901,66 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    params = {
-        "N_STEPS": [50, 100],
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "N_LAYERS": 2,
-        "CELL": LSTM,
-        "UNITS": [128, 256],
-        "DROPOUT": [.35, .4],
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 64,
-        "EPOCHS": [800, 1000],
-        "PATIENCE": [100, 200],
-        "SAVELOAD": True,
-        "LIMIT": [2000, 4000],
-        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"],
-        "SAVE_FOLDER": "tuning1"
+    import ast
+
+    progress = {
+        "total_days": 0,
+        "days_done": 1,
+        "test_days": 1,
+        "time_so_far": 0.0,
+        "tune_year": 0,
+        "tune_month": 0,
+        "tune_day": 0,
+        "percent_away_list": [],
+        "correct_direction_list": [],
+        "epochs_list": []
+
     }
 
-    n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
+    print(type("hello"))
+    print(type(10))
+    print(type([]))
+    print(type(0.0))
 
-    def grab_index(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params):
-        while n_step_in < len(params["N_STEPS"]):
-            while unit_in < len(params["UNITS"]):
-                while drop_in < len(params["DROPOUT"]):
-                    while epochs_in < len(params["EPOCHS"]):
-                        while patience_in < len(params["PATIENCE"]):
-                            while limit_in < len(params["LIMIT"]):
-                                limit_in += 1
-                                if limit_in < len(params["LIMIT"]):
-                                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                            patience_in += 1
-                            limit_in %= len(params["LIMIT"])
-                            if patience_in < len(params["PATIENCE"]):
-                                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                        epochs_in += 1
-                        patience_in %= len(params["PATIENCE"])
-                        if epochs_in < len(params["EPOCHS"]):
-                            return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                    drop_in += 1
-                    epochs_in %= len(params["EPOCHS"])
-                    if drop_in < len(params["DROPOUT"]):
-                        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-                unit_in += 1
-                drop_in %= len(params["DROPOUT"])
-                if unit_in < len(params["UNITS"]):
-                    return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-            n_step_in += 1
-            unit_in %= len(params["UNITS"])
-            if n_step_in < len(params["N_STEPS"]):
-                return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
-        return n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in
+    f = open("testing.txt", "r")
+
+    file_contents = {}
+    for line in f:
+        parts = line.strip().split(":")
+        file_contents[parts[0]] = parts[1]
+
+    for key in file_contents:
+        print(str(key) + " " + str(file_contents[key]))
+        if type(progress[key]) == type("str"):
+            progress[key] = file_contents[key]
+        elif type(progress[key]) == type(0):
+            progress[key] = int(file_contents[key])
+        elif type(progress[key]) == type(0.0):
+            progress[key] = float(file_contents[key])
+        elif type(progress[key]) == type([]):
+            progress[key] = ast.literal_eval(file_contents[key])
+        else:
+            print("Unexpected type found in this file")
 
 
-    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in, params)
 
-    # print("\nN_ST_IN: " + str(n_step_in))
-    # print("unit_in: " + str(unit_in))
-    # print("drop_in: " + str(drop_in))
-    # print("epochs_in: " + str(epochs_in))
-    # print("patience_in: " + str(patience_in))
-    # print("limit_in: " + str(limit_in))
+    print(progress)
 
-    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 1, 1, 1, 1, 0, params)
 
-    # print("\nN_ST_IN: " + str(n_step_in))
-    # print("unit_in: " + str(unit_in))
-    # print("drop_in: " + str(drop_in))
-    # print("epochs_in: " + str(epochs_in))
-    # print("patience_in: " + str(patience_in))
-    # print("limit_in: " + str(limit_in))
+    # total_days = int(file_contents["total_days"])
+    # days_done = int(file_contents["days_done"])
+    # test_days = int(file_contents["test_days"])
+    # time_so_far = float(file_contents["time_so_far"])
+    
+    # exhaust_year = int(file_contents["exhaust_year"])
+    # exhaust_month = int(file_contents["exhaust_month"])
+    # exhaust_day = int(file_contents["exhaust_day"])
+    # percent_away_list = ast.literal_eval(file_contents["percent_away_list"])
+    # correct_direction_list = ast.literal_eval(file_contents["correct_direction_list"])
+    # epochs_list = ast.literal_eval(file_contents["epochs_list"])
+    # f.close()
 
-    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 1, 1, 1, 1, 1, params)
+    
 
-    # print("\nN_ST_IN: " + str(n_step_in))
-    # print("unit_in: " + str(unit_in))
-    # print("drop_in: " + str(drop_in))
-    # print("epochs_in: " + str(epochs_in))
-    # print("patience_in: " + str(patience_in))
-    # print("limit_in: " + str(limit_in))
-
-    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 1, 0, 1, 1, 1, params)
-
-    # print("\nN_ST_IN: " + str(n_step_in))
-    # print("unit_in: " + str(unit_in))
-    # print("drop_in: " + str(drop_in))
-    # print("epochs_in: " + str(epochs_in))
-    # print("patience_in: " + str(patience_in))
-    # print("limit_in: " + str(limit_in))
-
-    # n_step_in, unit_in, drop_in, epochs_in, patience_in, limit_in = grab(1, 0, 1, 0, 1, 0, params)
-
-    # print("\nN_ST_IN: " + str(n_step_in))
-    # print("unit_in: " + str(unit_in))
-    # print("drop_in: " + str(drop_in))
-    # print("epochs_in: " + str(epochs_in))
-    # print("patience_in: " + str(patience_in))
-    # print("limit_in: " + str(limit_in))
 
     

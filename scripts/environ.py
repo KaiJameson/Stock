@@ -6,21 +6,20 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from tensorflow.keras.layers import LSTM
 
-reports_directory = "../reports"
-config_directory = "../config"
-stock_decisions_directory = reports_directory + "/decisions"
-graph_directory = "../plots"
-model_saveload_directory = "../models"
-tuning_directory = "../tuning_info"
-data_directory = "../data"
-excel_directory = "../excel"
-error_file = "../error_file.txt"
-load_run_excel = "../load_run_test"
-current_price_directory = "../curr_price"
-real_test_directory = "../real_test"
-results_directory = "results"
-tax_directory = "../tax"
-
+directory_dict = {
+    "reports_directory":        "../reports",
+    "config_directory":         "../config",
+    "graph_directory":          "../plots",
+    "model_directory":          "../models",
+    "tuning_directory":         "../tuning_info",
+    "excel_directory":          "../excel",
+    "error_file":               "../error_file.txt",
+    "load_run_results":         "../load_run_results",
+    "current_price_directory":  "../curr_price",
+    "backtest_directory":       "../backtest",
+    "results_directory":        "results",
+    "tax_directory":            "../tax"
+}
 
 test_var = "close"
 test_money = 10000

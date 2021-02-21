@@ -1,29 +1,23 @@
-import os
-import logging
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
-logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
+from functions import delete_files_in_folder, check_model_subfolders, silence_tensorflow
+silence_tensorflow()
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from time_functions import get_time_string
-from environment import (test_var, reports_directory, model_saveload_directory, random_seed, error_file, back_test_days, 
-save_logs, results_directory)
-from alpaca_nn_functions import (load_data, create_model, predict, accuracy_score, plot_graph, 
+from environment import (test_var, directory_dict, random_seed,  back_test_days, save_logs,
+defaults)
+from time_functs import get_time_string
+from io_functs import get_test_name
+from paca_model_functs import (load_data, create_model, predict, accuracy_score, plot_graph, 
 get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
-from functions import delete_files_in_folder, check_model_subfolders, get_test_name
-from time_functions import get_time_string
 from datetime import datetime
-from environment import defaults
 import numpy as np
 import pandas as pd
 import random
 import sys
 import time
-
+import os
 
 
 def decision_neural_net(symbol, end_date=None, params=defaults):
@@ -57,7 +51,6 @@ def saveload_neural_net(symbol, end_date=None, params=defaults):
 
 def make_neural_net(symbol, end_date, params):
     #description of all the parameters used is located inside environment.py
-
     os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
  
     gpus = tf.config.experimental.list_physical_devices("GPU")
@@ -94,7 +87,7 @@ def make_neural_net(symbol, end_date, params):
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
     if params["SAVELOAD"]:
-        checkpointer = ModelCheckpoint(model_saveload_directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
@@ -105,8 +98,6 @@ def make_neural_net(symbol, end_date, params):
 
         early_stop = EarlyStopping(patience=params["PATIENCE"])
     
-    # with(tf.device("/device:GPU:0")):
-    # with strategy.scope():
     history = model.fit(train,
         batch_size=params["BATCH_SIZE"],
         epochs=params["EPOCHS"],
@@ -132,8 +123,8 @@ def make_neural_net(symbol, end_date, params):
 
         test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
 
-        delete_files_in_folder(results_directory)
-        os.rmdir(results_directory)
+        delete_files_in_folder(directory_dict["results_directory"])
+        os.rmdir(directory_dict["results_directory"])
         
         train_acc, valid_acc, test_acc = get_all_accuracies(model, data, params["LOOKUP_STEP"])
 
