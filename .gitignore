@@ -13,7 +13,7 @@ real_test/
 models/
 reports/
 tuning_info/
-load_run_test/
+load_run_results/
 tax/
 error_file.txt
 scripts/symbols.py

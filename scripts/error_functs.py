@@ -1,4 +1,4 @@
-from environment import error_file
+from environ import error_file
 import sys
 import traceback
 import time
@@ -23,9 +23,9 @@ def net_error_handler(symbol, exception):
 def write_exc_info(err_file):
     exit_info = sys.exc_info()
     err_file.write(str(exit_info[1]) + "\n")
-    traceback.print_tb(tb=exit_info[2], err_file=err_file)
+    traceback.print_tb(tb=exit_info[2], file=err_file)
 
 def write_exception_details(err_file, symbol, exception):
     err_file.write("Problem encountered with stock: " + symbol + "\n")
     err_file.write("Error is of type: " + str(type(exception)) + "\n")
-    err_file.write("Error happened at: " + str(datetime.datetime.now()))
+    err_file.write("Error happened at: " + str(datetime.datetime.now()) + "\n")

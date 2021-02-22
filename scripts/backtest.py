@@ -1,28 +1,25 @@
-import os
-import logging
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
-logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
-from tensorflow.keras.layers import LSTM
-from time_functions import get_short_end_date, get_year_month_day, increment_calendar
-from functions import (check_directories, real_test_excel, real_test_directory, delete_files, 
-interwebz_pls, delete_files_in_folder, get_test_name, read_saved_contents)
+from functions import (check_directories, delete_files, delete_files_in_folder, 
+get_correct_direction, silence_tensorflow)
+silence_tensorflow()
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
+from io_functs import backtest_excel, get_test_name, read_saved_contents, save_to_dictionary
+from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_current_price
 from error_functs import error_handler
-from alpaca_nn_functions import (get_api, create_model, get_all_accuracies, predict, load_data, 
+from paca_model_functs import (get_api, create_model, get_all_accuracies, predict, 
 load_model_with_data, return_real_predict)
-from alpaca_neural_net import saveload_neural_net
-from environment import error_file, model_saveload_directory, test_var, back_test_days
+from paca_model import saveload_neural_net
+from environ import directory_dict, test_var, back_test_days
 from statistics import mean
+from tensorflow.keras.layers import LSTM
 import pandas as pd
 import datetime
 import sys
 import time
 import ast
+import os
 
 
-def the_real_test(test_year, test_month, test_day, test_days, params):
+def back_testing(test_year, test_month, test_day, test_days, params):
 
     symbol = real_test_symbols[0]
     api = get_api()
@@ -36,14 +33,14 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
     epochs_list = []
     print(test_name)
 
-    if os.path.isfile(real_test_directory + "/" + test_name + ".txt"):
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + test_name + ".txt"):
         print("A fully completed file with the name " + test_name + " already exists.")
         print("Exiting the_real_test now: ")
         return
 
     # check if we already have a save file, if we do, extract the info and run it
-    if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
-        total_days, days_done, test_days, time_so_far, test_year, test_month, test_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(real_test_directory, test_name)
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
+        total_days, days_done, test_days, time_so_far, test_year, test_month, test_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(directory_dict["backtest_directory"], test_name)
 
         
     current_date = get_short_end_date(test_year, test_month, test_day)
@@ -64,7 +61,7 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
                 model_name = (symbol + "-" + get_test_name(params))
 
                 # setup to allow the rest of the values to be calculated
-                data, model = load_model_with_data(symbol, current_date, params, model_saveload_directory, model_name)
+                data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_directory"], model_name)
 
                 # first grab the current price by getting the latest value from the og data frame
                 y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
@@ -75,22 +72,12 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
                 predicted_price = predict(model, data, params["N_STEPS"])
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
-                interwebz_pls(symbol, current_date, "calendar")
-                cal = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
-                one_day_in_future = pd.Timestamp.to_pydatetime(cal.date).date()
-                df = api.polygon.historic_agg_v2(symbol, 1, "day", _from=one_day_in_future, to=one_day_in_future).df
-                actual_price = df.iloc[0]["close"]
+                actual_price = get_current_price(current_date, api, symbol)
 
                 # get the percent difference between prediction and actual
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
 
-                if ((predicted_price > current_price and actual_price > current_price) or 
-                (predicted_price < current_price and actual_price < current_price)): 
-                    correct_dir = 1.0
-                elif predicted_price == current_price or actual_price == current_price: 
-                    correct_dir = 0.5
-                else:
-                    correct_dir = 0.0
+                correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
 
                 percent_away_list.append(p_diff)
                 correct_direction_list.append(correct_dir)
@@ -110,7 +97,7 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
 
             t_year, t_month, t_day = get_year_month_day(current_date)
 
-            f = open(real_test_directory + "/" + "SAVE-" + test_name + ".txt", "w")
+            f = open(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", "w")
             f.write("total_days:" + str(total_days) + "\n")
             f.write("days_done:" + str(days_done) + "\n")
             f.write("test_days:" + str(test_days) + "\n")
@@ -150,16 +137,15 @@ def the_real_test(test_year, test_month, test_day, test_days, params):
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
     print("while using an average of " + avg_e + " epochs.")
     print("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
-
-    real_test_excel(real_test_excel, test_name, test_year, test_month, test_day, params["N_STEPS"], params["LOOKUP_STEP"], params["TEST_SIZE"], params["N_LAYERS"], 
-        params["CELL"], params["UNITS"], params["DROPOUT"], params["BIDIRECTIONAL"], params["LOSS"], params["OPTIMIZER"], params["BATCH_SIZE"],
-         params["EPOCHS"], params["PATIENCE"], params["LIMIT"], params["FEATURE_COLUMNS"], avg_p, avg_d, avg_e, time_so_far, total_days)
     print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
-    if os.path.isfile(real_test_directory + "/" + "SAVE-" + test_name + ".txt"):
-        os.remove(real_test_directory + "/" + "SAVE-" + test_name + ".txt")
+    backtest_excel(directory_dict["backtest_directory"], test_name, test_year, test_month, test_day, params, avg_p, avg_d, 
+        avg_e, time_so_far, total_days)
 
-    delete_files_in_folder(model_saveload_directory + "/" + params["SAVE_FOLDER"])
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
+        os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt")
+
+    delete_files_in_folder(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"])
 
 if __name__ == "__main__":
     # needed to add this line because otherwise the batch run module would get an extra unwanted test
@@ -185,4 +171,4 @@ if __name__ == "__main__":
         "SAVE_FOLDER": "batch1"
     }
 
-    the_real_test(test_year, test_month, test_day, test_days, params)
+    back_testing(test_year, test_month, test_day, test_days, params)

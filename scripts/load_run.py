@@ -1,16 +1,12 @@
+from functions import check_directories, silence_tensorflow
+silence_tensorflow()
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-from alpaca_nn_functions import (load_data, predict, getOwnedStocks, return_real_predict, 
+from paca_model_functs import (load_data, predict, getOwnedStocks, return_real_predict, 
 get_all_accuracies, nn_report,  percent_from_real, buy_all_at_once, create_model)
 from symbols import load_save_symbols, do_the_trades
-from environment import model_saveload_directory, error_file, config_directory, defaults, test_var
-from functions import check_directories, make_excel_file, make_load_run_excel
+from environ import directory_dict, defaults, test_var
 from error_functs import error_handler
-import os
-import logging
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
-logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
+from io_functs import  make_excel_file, make_load_run_excel
 from tensorflow.keras.models import load_model
 import time
 import os
@@ -41,8 +37,7 @@ def load_trade(symbols):
             model = create_model(defaults["N_STEPS"], defaults["UNITS"], defaults["CELL"], defaults["N_LAYERS"], 
                 defaults["DROPOUT"],  defaults["LOSS"], defaults["OPTIMIZER"], defaults["BIDIRECTIONAL"]
             )
-            model.load_weights(model_saveload_directory + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
-            # model.summary()
+            model.load_weights(directory_dict["model_directory"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
             print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
