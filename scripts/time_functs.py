@@ -110,6 +110,7 @@ def increment_calendar(current_date, api, symbol):
     date_changed = False
     while not date_changed:    
         try:
+            
             time_s = time.time()
             calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
             while calendar.date != current_date + datetime.timedelta(1):
@@ -120,7 +121,7 @@ def increment_calendar(current_date, api, symbol):
             
             current_date = current_date + datetime.timedelta(1)
             date_changed = True
-            
+                
         except Exception:
             if date_changed:
                 current_date = current_date - datetime.timedelta(1)

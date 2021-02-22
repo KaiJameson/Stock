@@ -2,7 +2,7 @@ from paca_model import saveload_neural_net
 from symbols import load_save_symbols
 from functions import check_directories
 from error_functs import error_handler
-from environment import defaults
+from environ import defaults
 import os
 import sys
 import time

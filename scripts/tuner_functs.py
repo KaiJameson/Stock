@@ -44,7 +44,7 @@ def change_params(index_dict, params):
 
     return new_params
 
-def get_user_input(tune_sym_dict):
+def get_user_input(tune_sym_dict, master_params):
     if len(sys.argv) > 1:
         if sys.argv[1] == "tuning1":
             tune_symbols = tune_sym_dict[sys.argv[1]]

@@ -1,16 +1,16 @@
-from functions import check_directories, delete_files_in_folder, get_correct_direction, silence_tensorflow
+from functions import check_directories, delete_files_in_folder, get_correct_direction, silence_tensorflow, get_test_name
 silence_tensorflow()
 from tensorflow.keras.layers import LSTM
 from paca_model import saveload_neural_net
 from paca_model_functs import (get_api, create_model, get_all_accuracies, predict,  
 return_real_predict, load_model_with_data)
 from symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
-from io_functs import get_test_name, backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results
+from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results
 from time_functs import increment_calendar, get_current_price
 from error_functs import error_handler
 from tuner_functs import grab_index, change_params, get_user_input
 from environ import back_test_days, test_var, directory_dict
-from time_functions import get_short_end_date, get_year_month_day
+from time_functs import get_short_end_date, get_year_month_day
 from statistics import mean
 import time
 import sys
@@ -35,7 +35,7 @@ master_params = {
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 256,
-    "EPOCHS": [800],
+    "EPOCHS": [1],
     "PATIENCE": [200],
     "SAVELOAD": True,
     "LIMIT": [4000],
@@ -47,7 +47,7 @@ master_params = {
 api = get_api()
     
 # total_days = tune_days
-tune_symbols = get_user_input(tune_sym_dict)
+tune_symbols = get_user_input(tune_sym_dict, master_params)
 
 print("\nStaring tuner.py using these following symbols: " + str(tune_symbols) + "\n")
 
@@ -175,7 +175,7 @@ for symbol in tune_symbols:
                 # f.write("epochs_list:" + str(epochs_list))
                 # f.close()
 
-            tune_year, tune_month, tune_day = get_year_month_day(current_date)
+            # tune_year, tune_month, tune_day = get_year_month_day(current_date)
 
             print("Percent away: " + str(progress["percent_away_list"]))
             print("Correct direction %: " + str(progress["correct_direction_list"]))
@@ -183,9 +183,9 @@ for symbol in tune_symbols:
             avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
             avg_e = str(round(mean(progress["epochs_list"]), 2))
             
-            print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, tune_year, tune_month, 
-                tune_day, progress["time_so_far"])
-            backtest_excel(directory_dict["tuning_directory"], model_name, tune_year, tune_month, tune_day, 
+            print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
+                progress["tune_day"], progress["time_so_far"])
+            backtest_excel(directory_dict["tuning_directory"], model_name, progress["tune_year"], progress["tune_month"], progress["tune_day"], 
                 params, avg_p, avg_d, avg_e, progress["time_so_far"], progress["total_days"])
 
             if os.path.isfile(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt"):

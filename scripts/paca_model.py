@@ -1,14 +1,13 @@
-from functions import delete_files_in_folder, check_model_subfolders, silence_tensorflow
+from functions import delete_files_in_folder, check_model_subfolders, silence_tensorflow, get_test_name
 silence_tensorflow()
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from environment import (test_var, directory_dict, random_seed,  back_test_days, save_logs,
+from environ import (test_var, directory_dict, random_seed,  back_test_days, save_logs,
 defaults)
 from time_functs import get_time_string
-from io_functs import get_test_name
 from paca_model_functs import (load_data, create_model, predict, accuracy_score, plot_graph, 
 get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
 from datetime import datetime

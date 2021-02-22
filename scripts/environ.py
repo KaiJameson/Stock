@@ -13,13 +13,13 @@ directory_dict = {
     "model_directory":          "../models",
     "tuning_directory":         "../tuning_info",
     "excel_directory":          "../excel",
-    "error_file":               "../error_file.txt",
     "load_run_results":         "../load_run_results",
     "current_price_directory":  "../curr_price",
     "backtest_directory":       "../backtest",
     "results_directory":        "results",
     "tax_directory":            "../tax"
 }
+error_file = "../error_file.txt"
 
 test_var = "close"
 test_money = 10000

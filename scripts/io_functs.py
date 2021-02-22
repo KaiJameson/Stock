@@ -64,12 +64,12 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
 
     f = open(directory + "/" + test_name + ".txt", "a")
 
-    f.write("Parameters: N_steps: " + str(params["n_steps"]) + ", Lookup Step:" + str(params["lookup_step"]) + ", Test Size: " + str(params["test_size"]) + ",\n")
-    f.write("N_layers: " + str(params["n_layers"]) + ", Cell: " + str(params["cell"]) + ",\n")
-    f.write("Units: " + str(params["units"]) + "," + " Dropout: " + str(params["dropout"]) + ", Bidirectional: " + str(params["bidirectional"]) + ",\n")
-    f.write("Loss: " + params["loss"] + ", Optimizer: " + params["optimizer"] + ", Batch_size: " + str(params["batch_size"]) + ",\n")
-    f.write("Epochs: " + str(params["epochs"]) + ", Patience: " + str(params["patience"]) + ", Limit: " + str(params["limit"]) + ".\n")
-    f.write("Feature Columns: " + str(params["feature_columns"]) + "\n\n")
+    f.write("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
+    f.write("N_layers: " + str(params["N_LAYERS"]) + ", Cell: " + str(params["CELL"]) + ",\n")
+    f.write("Units: " + str(params["UNITS"]) + "," + " Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
+    f.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
+    f.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
+    f.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n\n")
 
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
