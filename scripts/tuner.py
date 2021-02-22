@@ -35,7 +35,7 @@ master_params = {
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 256,
-    "EPOCHS": [1],
+    "EPOCHS": [800],
     "PATIENCE": [200],
     "SAVELOAD": True,
     "LIMIT": [4000],
@@ -46,14 +46,11 @@ master_params = {
 
 api = get_api()
     
-# total_days = tune_days
 tune_symbols = get_user_input(tune_sym_dict, master_params)
 
 print("\nStaring tuner.py using these following symbols: " + str(tune_symbols) + "\n")
 
 for symbol in tune_symbols:
-    # n_step_in = unit_in = drop_in = epochs_in = patience_in = limit_in = 0
-
     index_dict = {
         "n_step_in": 0,
         "unit_in": 0,
@@ -63,10 +60,7 @@ for symbol in tune_symbols:
         "limit_in": 0
     }
 
-
     still_running = True
-
-    # tune_days = total_days # reset the days count for while loop
 
     if os.path.isfile(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt"):
         print("A tuning was in process")
@@ -78,19 +72,11 @@ for symbol in tune_symbols:
     while still_running:
         params = change_params(index_dict, master_params)
 
-        # get model name for future reference
         model_name = (symbol + "-" + get_test_name(params))
-        # days_done = 1
-        # total_days = tune_days
-        # time_so_far = 0.0
-        # percent_away_list = []
-        # correct_direction_list = []
-        # epochs_list = []
 
         progress = {
             "total_days": tune_days,
             "days_done": 1,
-            # "tune_days":
             "time_so_far": 0.0,
             "tune_year": tune_year,
             "tune_month": tune_month,
@@ -98,7 +84,6 @@ for symbol in tune_symbols:
             "percent_away_list": [],
             "correct_direction_list": [],
             "epochs_list": []
-
         }
 
         print(model_name)
@@ -115,7 +100,6 @@ for symbol in tune_symbols:
     
         # check if we already have a save file, if we do, extract the info and run it
         if os.path.isfile(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt"):
-            # total_days, days_done, tune_days, time_so_far, exhaust_year, exhaust_month, exhaust_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(directory_dict["tuning_directory"], model_name)
             progress = read_saved_contents(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt", progress)
        
         current_date = get_short_end_date(progress["tune_year"], progress["tune_month"], progress["tune_day"])
@@ -156,26 +140,11 @@ for symbol in tune_symbols:
                 progress["time_so_far"] += day_took
 
                 progress["days_done"] += 1
-                # tune_days -= 1
 
                 progress["tune_year"], progress["tune_month"], progress["tune_day"] = get_year_month_day(current_date)
 
                 save_to_dictionary(directory_dict["tuning_directory"] + "/" + "SAVE-" + 
                     model_name + ".txt", progress)
-                # f = open(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt", "w")
-                # f.write("total_days:" + str(total_days) + "\n")
-                # f.write("days_done:" + str(days_done) + "\n")
-                # f.write("test_days:" + str(tune_days) + "\n")
-                # f.write("time_so_far:" + str(time_so_far) + "\n")
-                # f.write("exhaust_year:" + str(t_year) + "\n")
-                # f.write("exhaust_month:" + str(t_month) + "\n")
-                # f.write("exhaust_day:" + str(t_day) + "\n")
-                # f.write("percent_away_list:" + str(percent_away_list) + "\n")
-                # f.write("correct_direction_list:" + str(correct_direction_list) + "\n")
-                # f.write("epochs_list:" + str(epochs_list))
-                # f.close()
-
-            # tune_year, tune_month, tune_day = get_year_month_day(current_date)
 
             print("Percent away: " + str(progress["percent_away_list"]))
             print("Correct direction %: " + str(progress["correct_direction_list"]))
@@ -198,24 +167,10 @@ for symbol in tune_symbols:
             if index_dict["n_step_in"] == len(master_params["N_STEPS"]):
                 still_running = False
                 print("Ending running the stuff for " + symbol)
-
-                # tune_days = total_days # reset the days count for while loop
-
                 if os.path.isfile(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt"):
                     os.remove(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt")
             else:
                 save_to_dictionary(directory_dict["tuning_directory"] + "/" + symbol + "-status", index_dict)
-                # f = open(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt", "w")
-                # f.write("n_step_in:" + str(n_step_in) + "\n")
-                # f.write("unit_in:" + str(unit_in) + "\n")
-                # f.write("drop_in:" + str(drop_in) + "\n")
-                # f.write("epochs_in:" + str(epochs_in) + "\n")
-                # f.write("patience_in:" + str(patience_in) + "\n")
-                # f.write("limit_in:" + str(limit_in) + "\n")
-                # f.close()
-
-                # tune_days = total_days # reset the days count for while loop
-
 
 
         except KeyboardInterrupt:
