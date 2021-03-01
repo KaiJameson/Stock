@@ -1,5 +1,6 @@
 from api_key import paper_api_key_id, paper_api_secret_key
 from error_functs import error_handler, net_error_handler
+from environ import time_zone
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import platform
@@ -10,7 +11,6 @@ import datetime
 def get_start_end():
     operating_sys = platform.system()
     on_linux = operating_sys == 'LINUX'
-    tz = 'US/EASTERN'
     now = time.time()
     td = datetime.timedelta(hours=4)
     n = datetime.datetime.fromtimestamp(now)
@@ -26,8 +26,8 @@ def get_start_end():
         start = datetime.datetime(year, month, day, 9, 15)
     start = time.mktime(start.timetuple())
     t = time.mktime(n.timetuple())
-    start = pd.Timestamp(start, unit='s', tz=tz).isoformat()
-    end = pd.Timestamp(t, unit='s', tz=tz).isoformat()
+    start = pd.Timestamp(start, unit='s', tz=time_zone).isoformat()
+    end = pd.Timestamp(t, unit='s', tz=time_zone).isoformat()
     return start, end
 
 def get_time_string():
@@ -80,7 +80,6 @@ def get_short_end_date(year, month, day):
     return end_date.date()
 
 def get_full_end_date():
-    tz = 'US/EASTERN'
     now = time.time()
     n = datetime.datetime.fromtimestamp(now)
     date = n.date()
@@ -89,18 +88,17 @@ def get_full_end_date():
     day = date.day
     end_date = datetime.datetime(year, month, day)
     end_date = time.mktime(end_date.timetuple())
-    end_date = pd.Timestamp(end_date, unit='s', tz=tz).isoformat()
+    end_date = pd.Timestamp(end_date, unit='s', tz=time_zone).isoformat()
     return end_date
 
 
 def get_trade_day_back(last_day, days_back):
-    tz = 'US/EASTERN'
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
     calendar = api.get_calendar(end=last_day)
     reverse_calendar = calendar[::-1]
     trade_day = reverse_calendar[days_back]
     time_int = time.mktime(trade_day.date.timetuple())
-    trade_date = pd.Timestamp(time_int, unit='s', tz=tz).isoformat()
+    trade_date = pd.Timestamp(time_int, unit='s', tz=time_zone).isoformat()
     return trade_date
 
 def get_year_month_day(datetiObj):
@@ -110,7 +108,6 @@ def increment_calendar(current_date, api, symbol):
     date_changed = False
     while not date_changed:    
         try:
-            
             time_s = time.time()
             calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
             while calendar.date != current_date + datetime.timedelta(1):
@@ -129,14 +126,26 @@ def increment_calendar(current_date, api, symbol):
 
     return current_date
     
+def make_Timestamp(old_date):
+    year = old_date.year
+    month = old_date.month
+    day = old_date.day
+    new_date = datetime.datetime(year, month, day)
+    time_int = time.mktime(new_date.timetuple())
+    new_date = pd.Timestamp(time_int, unit='s', tz=time_zone).isoformat()
+
+    return new_date
+
 def get_current_price(current_date, api, symbol):
     no_price = True
     while no_price:
         try:
-            cal = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
-            one_day_in_future = pd.Timestamp.to_pydatetime(cal.date).date()
-            df = api.polygon.historic_agg_v2(symbol, 1, "day", _from=one_day_in_future, to=one_day_in_future).df
-            actual_price = df.iloc[0]["close"]
+            calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
+            one_day_in_future = make_Timestamp(calendar.date + datetime.timedelta(1))
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=1, until=one_day_in_future)
+            for symbol, bars in barset.items():
+                for bar in bars:
+                    actual_price = bar.c
             no_price = False
 
         except Exception:

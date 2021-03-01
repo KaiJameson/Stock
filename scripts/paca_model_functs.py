@@ -13,7 +13,8 @@ from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, pap
 intrinio_sandbox_key, intrinio_production_key)
 from environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
 using_all_accuracies, directory_dict)
-from time_functs import get_time_string, get_date_string, zero_pad_date_string, get_short_end_date, get_trade_day_back, get_full_end_date
+from time_functs import (get_time_string, get_date_string, zero_pad_date_string, 
+get_short_end_date, get_trade_day_back, get_full_end_date, make_Timestamp)
 from io_functs import excel_output, make_current_price
 from error_functs import error_handler, net_error_handler
 from symbols import trading_real_money
@@ -98,55 +99,103 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
+def get_values(items):
+    data = {}
+    for symbol, bar in items:
+        open_values = []
+        close_values = []
+        low_values = []
+        high_values = []
+        mid_values = []
+        volume = []
+        times = []
+        for day in bar:
+            open_price = day.o
+            close_price = day.c
+            low_price = day.l
+            high_price = day.h
+            mid_price = (low_price + high_price) / 2
+            vol = day.v
+            time = day.t
+            open_values.append(open_price)
+            close_values.append(close_price)
+            low_values.append(low_price)
+            high_values.append(high_price)
+            mid_values.append(mid_price)
+            volume.append(vol)
+            times.append(time)
+        data['open'] = open_values
+        data['low'] = low_values
+        data['high'] = high_values
+        data['close'] = close_values
+        data['mid'] = mid_values
+        data['volume'] = volume
+        data["time"] = times
+    df = pd.DataFrame(data=data)
+    return df
+
+def get_alpaca_data(symbol, end_date, api, timeframe='day', limit=1000):
+    frames = []	    
+
+    if end_date is not None:
+        end_date = make_Timestamp(end_date + datetime.timedelta(1)) 
+
+    while limit > 1000:
+        if end_date is not None:
+            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+            new_df = get_values(other_barset.items()) 
+            limit -= 1000
+            end_date = get_trade_day_back(end_date, 1000)
+        else:
+            other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+            new_df = get_values(other_barset.items()) 
+            limit -= 1000
+            end_date = get_trade_day_back(get_full_end_date(), 1000)
+
+        frames.insert(0, new_df)
+
+
+    if limit > 0:	
+        if end_date is not None:	
+            print(end_date)
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
+            items = barset.items()
+            new_df = get_values(items)
+        else:	 
+            barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
+            items = barset.items() 	
+            new_df = get_values(items)	
+
+        frames.insert(0, new_df)
+
+    df = pd.concat(frames) 
+    df = alpaca_date_converter(df)  
+    
+    return df
+
 def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=True):
     api = get_api()
 
-    if end_date is not None:
-        df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=end_date).df
-    else:
-        time_now = zero_pad_date_string()
-        df = api.polygon.historic_agg_v2(symbol, 1, "day", _from="2000-01-01", to=time_now).df
-  
-    df["mid"] = (df.low + df.high) / 2
-    df = df.tail(limit)
-
+    df = get_alpaca_data(symbol, end_date, api, limit=limit)
+    
+    if "mid" in feature_columns:
+        df["mid"] = (df.low + df.high) / 2
 
     if "S&P" in feature_columns:
-        if end_date is not None:
-            df2 = api.polygon.historic_agg_v2("SPY", 1, "day", _from="2000-01-01", to=end_date).df
-        else:
-            time_now = zero_pad_date_string()
-            df2 = api.polygon.historic_agg_v2("SPY", 1, "day", _from="2000-01-01", to=time_now).df
-        df2.tail(limit)
+        df2 = get_alpaca_data("SPY", end_date, api, limit=limit)
         df["S&P"] = df2.close 
 
     if "DOW" in feature_columns:
-        if end_date is not None:
-            df2 = api.polygon.historic_agg_v2("DIA", 1, "day", _from="2000-01-01", to=end_date).df
-        else:
-            time_now = zero_pad_date_string()
-            df2 = api.polygon.historic_agg_v2("DIA", 1, "day", _from="2000-01-01", to=time_now).df
-        df2.tail(limit)
+        df2 = get_alpaca_data("DIA", end_date, api, limit=limit)
         df["DOW"] = df2.close 
 
     if "NASDAQ" in feature_columns:
-        if end_date is not None:
-            df2 = api.polygon.historic_agg_v2("QQQ", 1, "day", _from="2000-01-01", to=end_date).df
-        else:
-            time_now = zero_pad_date_string()
-            df2 = api.polygon.historic_agg_v2("QQQ", 1, "day", _from="2000-01-01", to=time_now).df
-        df2.tail(limit)
+        df2 = get_alpaca_data("QQQ", end_date, api, limit=limit)
         df["NASDAQ"] = df2.close 
     
     if "VIX" in feature_columns:
-        if end_date is not None:
-            df_vix = api.polygon.historic_agg_v2("VIXY", 1, "day", _from="2000-01-01", to=end_date).df
-        else:
-            time_now = zero_pad_date_string()
-            df_vix = api.polygon.historic_agg_v2("VIXY", 1, "day", _from="2000-01-01", to=time_now).df
-        print("df vix::::")
-        print(df_vix)
-        df["VIX"] = df_vix.close
+        df2 = get_alpaca_data("VIXY", end_date, api, limit=limit)
+        df["VIX"] = df2.close
 
     if "7_moving_avg" in feature_columns:
         df["7_moving_avg"] = df.close.rolling(window=7).mean()
@@ -345,8 +394,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "time_series_forecast" in feature_columns:
         df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
 
-    if "day_of_week" in feature_columns:
-        df = convert_date_values(df)
+    # if "day_of_week" in feature_columns:
+    #     df = convert_date_values(df)
 
     # get_feature_importance(df)
 
@@ -354,8 +403,15 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
 
     if to_print:
         pd.set_option("display.max_columns", None)
+        # pd.set_option("display.max_rows", None)
         print(df.head(1))
         print(df.tail(3))
+        # print(df)
+    return df
+
+def alpaca_date_converter(df):
+    df.index = df["time"]
+    df = df.drop("time", axis=1)
     return df
 
 def convert_date_values(df):	    
@@ -901,65 +957,31 @@ def perfect_money(money, data):
 
 if __name__ == "__main__":
 
-    import ast
+    from tuner_functs import update_money
 
-    progress = {
-        "total_days": 0,
-        "days_done": 1,
-        "test_days": 1,
-        "time_so_far": 0.0,
-        "tune_year": 0,
-        "tune_month": 0,
-        "tune_day": 0,
-        "percent_away_list": [],
-        "correct_direction_list": [],
-        "epochs_list": []
+    current_money = 100
 
-    }
-
-    print(type("hello"))
-    print(type(10))
-    print(type([]))
-    print(type(0.0))
-
-    f = open("testing.txt", "r")
-
-    file_contents = {}
-    for line in f:
-        parts = line.strip().split(":")
-        file_contents[parts[0]] = parts[1]
-
-    for key in file_contents:
-        print(str(key) + " " + str(file_contents[key]))
-        if type(progress[key]) == type("str"):
-            progress[key] = file_contents[key]
-        elif type(progress[key]) == type(0):
-            progress[key] = int(file_contents[key])
-        elif type(progress[key]) == type(0.0):
-            progress[key] = float(file_contents[key])
-        elif type(progress[key]) == type([]):
-            progress[key] = ast.literal_eval(file_contents[key])
-        else:
-            print("Unexpected type found in this file")
+    current_money = update_money(100, 30, 20, 24)
+    current_money = update_money(100, 30, 24, 20.4)
+    current_money = update_money(100, 30, 20.4, 24.48)
+    current_money = update_money(100, 30, 24.48, 24)
 
 
 
-    print(progress)
+
+    # symbols = ["FARM", "FOLD", "DISCA", "EGHT", "UNFI", "KTOS", "INTC", "PESI", "SIG",
+    # "PENN", "MOS", "BBBY", "DDD", "DVN", "PRTS", "FORM", "PAAS", "GOLD", "ACIW", "TXT", "GOOGL",
+    # "WEN", "TSN", "F", "HUN", "NFLX", "AMD", "TSN", "UPS", "QCOM", "BA", "TSLA", "SJM", "SBUX",
+    # "GT", "VTR", "BWA", "ABR", "AES", "ZIXI", "ZION", "XRX", "WERN", "WCC", "NWL", "KSS", "LUV",
+    # "IIVI", "AGYS", "AMKR", "AXL", "BG", "BGS", "CAKE", "CCJ", "DFS", "ELY", "FCX", "FLEX", "GLUU",
+    # "JBLU", "LLNW", "RDN", "RICK", "SCSC", "SHO", "SMED", "STLD"]
 
 
-    # total_days = int(file_contents["total_days"])
-    # days_done = int(file_contents["days_done"])
-    # test_days = int(file_contents["test_days"])
-    # time_so_far = float(file_contents["time_so_far"])
     
-    # exhaust_year = int(file_contents["exhaust_year"])
-    # exhaust_month = int(file_contents["exhaust_month"])
-    # exhaust_day = int(file_contents["exhaust_day"])
-    # percent_away_list = ast.literal_eval(file_contents["percent_away_list"])
-    # correct_direction_list = ast.literal_eval(file_contents["correct_direction_list"])
-    # epochs_list = ast.literal_eval(file_contents["epochs_list"])
-    # f.close()
-
+    # # for symbol in symbols:
+    # time_s = time.time()
+    # result, train, valid, test = load_data("AGYS", limit=5000, feature_columns=["DOW", "NASDAQ", "S&P"])
+    # print("took " + str(time.time() - time_s))
     
 
 

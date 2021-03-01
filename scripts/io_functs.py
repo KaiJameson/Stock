@@ -60,7 +60,7 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
     f.close()
 
 def backtest_excel(directory, test_name, test_year, test_month, test_day, params, avg_p, 
-    avg_d, avg_e, time_so_far, total_days):
+    avg_d, avg_e, time_so_far, total_days, current_money, hold_money):
 
     f = open(directory + "/" + test_name + ".txt", "a")
 
@@ -74,11 +74,13 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
     f.write("while using an average of " + avg_e + " epochs.\n")
+    if current_money != None:
+        f.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
     f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n")
     f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
     f.close()
 
-def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far):
+def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
     print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
     print("N_layers: " + str(params["N_LAYERS"]) + ", Cell: " + str(params["CELL"]) + ",")
     print("Units: " + str(params["UNITS"]) + "," + " Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
@@ -90,6 +92,8 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
     print("while using an average of " + avg_e + " epochs.")
+    if current_money != None:
+        print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
     print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 

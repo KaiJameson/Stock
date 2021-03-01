@@ -70,3 +70,13 @@ def get_user_input(tune_sym_dict, master_params):
         print("and symbols you want to use. Please try again")
         sys.exit(-1)
 
+def update_money(current_money, predicted_price, current_price, actual_price):
+    p_change = 1 + ((actual_price - current_price) / actual_price)
+    stocks = 0
+    if predicted_price > current_price:
+        stocks = current_money // current_price
+        if stocks > 0:
+            current_money -= stocks * current_price
+            current_money += stocks * current_price * p_change
+
+    return round(current_money, 2)
