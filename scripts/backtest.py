@@ -2,7 +2,7 @@ from functions import (check_directories, delete_files, delete_files_in_folder,
 get_correct_direction, silence_tensorflow)
 silence_tensorflow()
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
-from io_functs import backtest_excel, get_test_name, read_saved_contents, save_to_dictionary
+from io_functs import backtest_excel, get_test_name, read_saved_contents, save_to_dictionary, print_backtest_results
 from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_current_price
 from error_functs import error_handler
 from paca_model_functs import (get_api, create_model, get_all_accuracies, predict, 
@@ -24,36 +24,43 @@ def back_testing(test_year, test_month, test_day, test_days, params):
     symbol = real_test_symbols[0]
     api = get_api()
     
-    test_name = get_test_name(params)
-    days_done = 1
-    total_days = test_days
-    time_so_far = 0.0
-    percent_away_list = []
-    correct_direction_list = []
-    epochs_list = []
-    print(test_name)
+    model_name = get_test_name(params)
 
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + test_name + ".txt"):
-        print("A fully completed file with the name " + test_name + " already exists.")
+    progress = {
+        "total_days": test_days,
+        "days_done": 1,
+        "time_so_far": 0.0,
+        "test_year": test_year,
+        "test_month": test_month,
+        "test_day": test_day,
+        "percent_away_list": [],
+        "correct_direction_list": [],
+        "epochs_list": []
+    }
+
+    print(model_name)
+
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + model_name + ".txt"):
+        print("A fully completed file with the name " + model_name + " already exists.")
         print("Exiting the_real_test now: ")
         return
 
     # check if we already have a save file, if we do, extract the info and run it
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
-        total_days, days_done, test_days, time_so_far, test_year, test_month, test_day, percent_away_list, correct_direction_list, epochs_list = read_saved_contents(directory_dict["backtest_directory"], test_name)
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt"):
+        progress = read_saved_contents(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt", progress)
 
         
     current_date = get_short_end_date(test_year, test_month, test_day)
 
-    while test_days > 0:
+    while progress["days_done"] <= progress["total_days"]:
         try:
             time_s = time.time()
             current_date = increment_calendar(current_date, api, symbol)
 
             for symbol in real_test_symbols:
-                print("\nCurrently on day " + str(days_done) + " of " + str(total_days) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
+                print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
                 epochs_run = saveload_neural_net(symbol, current_date, params)
-                epochs_list.append(epochs_run)
+                progress["epochs_list"].append(epochs_run)
                 
             print("Model result progress[", end='')
             for symbol in real_test_symbols:
@@ -79,36 +86,23 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
                 correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
 
-                percent_away_list.append(p_diff)
-                correct_direction_list.append(correct_dir)
+                progress["percent_away_list"].append(p_diff)
+                progress["correct_direction_list"].append(correct_dir)
 
-                print("*", end='')
-                sys.stdout.flush()
-
-            print("]")
-            sys.stdout.flush()
+                print("*", end='', flush=True)
+                
+            print("]", flush=True)
+            
 
             day_took = (time.time() - time_s)
-            print("Day " + str(days_done) + " of " + str(total_days) + " took " + str(round(day_took / 60, 2)) + " minutes.")
-            time_so_far += day_took
+            print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " + str(round(day_took / 60, 2)) + " minutes.")
+            progress["time_so_far"] += day_took
 
-            days_done += 1
-            test_days -= 1
+            progress["days_done"] += 1
 
-            t_year, t_month, t_day = get_year_month_day(current_date)
+            progress["test_year"], progress["test_month"], progress["test_day"] = get_year_month_day(current_date)
 
-            f = open(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", "w")
-            f.write("total_days:" + str(total_days) + "\n")
-            f.write("days_done:" + str(days_done) + "\n")
-            f.write("test_days:" + str(test_days) + "\n")
-            f.write("time_so_far:" + str(time_so_far) + "\n")
-            f.write("test_year:" + str(t_year) + "\n")
-            f.write("test_month:" + str(t_month) + "\n")
-            f.write("test_day:" + str(t_day) + "\n")
-            f.write("percent_away_list:" + str(percent_away_list) + "\n")
-            f.write("correct_direction_list:" + str(correct_direction_list) + "\n")
-            f.write("epochs_list:" + str(epochs_list))
-            f.close()
+            save_to_dictionary(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt", progress)
 
         except KeyboardInterrupt:
                 print("I acknowledge that you want this to stop.")
@@ -118,34 +112,24 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         except Exception:
             error_handler(symbol, Exception)
 
-    test_year, test_month, test_day = get_year_month_day(current_date)
 
-    print(percent_away_list)
-    print(correct_direction_list)
-    avg_p = str(round(mean(percent_away_list), 2))
-    avg_d = str(round(mean(correct_direction_list) * 100, 2))
-    avg_e = str(round(mean(epochs_list), 2))
-    print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("N_layers: " + str(params["N_LAYERS"]) + ", Cell: " + str(params["CELL"]) + ",")
-    print("Units: " + str(params["UNITS"]) + "," + " Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
-    print("Loss: " + params["LOSS"] + ", Optimizer: " + 
-    params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
-    print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
-    print("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n\n")
+    print("Percent away: " + str(progress["percent_away_list"]))
+    print("Correct direction %: " + str(progress["correct_direction_list"]))
+    avg_p = str(round(mean(progress["percent_away_list"]), 2))
+    avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
+    avg_e = str(round(mean(progress["epochs_list"]), 2))
 
-    print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
-    print("and it predicted the correct direction " + avg_d + " percent of the time ")
-    print("while using an average of " + avg_e + " epochs.")
-    print("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year))
-    print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
 
-    backtest_excel(directory_dict["backtest_directory"], test_name, test_year, test_month, test_day, params, avg_p, avg_d, 
-        avg_e, time_so_far, total_days)
+    print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
+                progress["test_day"], progress["time_so_far"], None, None)
+    backtest_excel(directory_dict["backtest_directory"], model_name, test_year, test_month, test_day, params, avg_p, avg_d, 
+        avg_e, progress["time_so_far"], progress["total_days"], None, None)
 
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
-        os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt")
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt"):
+        os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt")
 
     delete_files_in_folder(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"])
+
 
 if __name__ == "__main__":
     # needed to add this line because otherwise the batch run module would get an extra unwanted test

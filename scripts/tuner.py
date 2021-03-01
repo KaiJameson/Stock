@@ -8,8 +8,8 @@ from symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results
 from time_functs import increment_calendar, get_current_price
 from error_functs import error_handler
-from tuner_functs import grab_index, change_params, get_user_input
-from environ import back_test_days, test_var, directory_dict
+from tuner_functs import grab_index, change_params, get_user_input, update_money
+from environ import back_test_days, test_var, directory_dict, test_money
 from time_functs import get_short_end_date, get_year_month_day
 from statistics import mean
 import time
@@ -24,7 +24,7 @@ import ast
 check_directories()
 
 master_params = {
-    "N_STEPS": [300],
+    "N_STEPS": [100],
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 2,
@@ -81,12 +81,15 @@ for symbol in tune_symbols:
             "tune_year": tune_year,
             "tune_month": tune_month,
             "tune_day": tune_day,
+            "current_money": test_money,
             "percent_away_list": [],
             "correct_direction_list": [],
             "epochs_list": []
         }
 
         print(model_name)
+        starting_day_price = get_current_price(get_short_end_date(tune_year, tune_month, tune_day) - datetime.timedelta(1), 
+            api, symbol)
 
         if os.path.isfile(directory_dict["tuning_directory"] + "/" + model_name + ".txt"):
             print("A fully completed file with the name " + model_name + " already exists.")
@@ -107,7 +110,6 @@ for symbol in tune_symbols:
             while progress["days_done"] <= progress["total_days"]:
                 time_s = time.time()
                 current_date = increment_calendar(current_date, api, symbol)
-
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
                 epochs_run = saveload_neural_net(symbol, current_date, params)
                 progress["epochs_list"].append(epochs_run)
@@ -127,6 +129,7 @@ for symbol in tune_symbols:
                 actual_price = get_current_price(current_date, api, symbol)
 
                 # get the percent difference between prediction and actual
+                print("predicted, actual, current " + str(predicted_price) + "," + str(actual_price) + "," + str(current_price))
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
 
                 correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
@@ -136,9 +139,11 @@ for symbol in tune_symbols:
 
                 day_took = (time.time() - time_s)
                 print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " 
-                + str(round(day_took / 60, 2)) + " minutes.")
-                progress["time_so_far"] += day_took
+                + str(round(day_took / 60, 2)) + " minutes.", flush=True)
 
+                progress["current_money"] = update_money(progress["current_money"], predicted_price, 
+                    current_price, actual_price)
+                progress["time_so_far"] += day_took
                 progress["days_done"] += 1
 
                 progress["tune_year"], progress["tune_month"], progress["tune_day"] = get_year_month_day(current_date)
@@ -151,11 +156,12 @@ for symbol in tune_symbols:
             avg_p = str(round(mean(progress["percent_away_list"]), 2))
             avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
             avg_e = str(round(mean(progress["epochs_list"]), 2))
+            hold_money = round(test_money * (current_price / starting_day_price), 2)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
-                progress["tune_day"], progress["time_so_far"])
+                progress["tune_day"], progress["time_so_far"], progress["current_money"], hold_money)
             backtest_excel(directory_dict["tuning_directory"], model_name, progress["tune_year"], progress["tune_month"], progress["tune_day"], 
-                params, avg_p, avg_d, avg_e, progress["time_so_far"], progress["total_days"])
+                params, avg_p, avg_d, avg_e, progress["time_so_far"], progress["total_days"], progress["current_money"], hold_money)
 
             if os.path.isfile(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt"):
                 os.remove(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt")

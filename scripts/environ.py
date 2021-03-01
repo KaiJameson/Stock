@@ -22,7 +22,8 @@ directory_dict = {
 error_file = "../error_file.txt"
 
 test_var = "close"
-test_money = 10000
+time_zone = "US/EASTERN"
+test_money = 10000.0
 money_per_stock = 100
 stocks_traded = 20
 random_seed = 314
