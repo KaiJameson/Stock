@@ -4,6 +4,7 @@ api_key.py
 .vscode/
 logs/
 results/
+backtest/
 plots/
 information/
 old/
