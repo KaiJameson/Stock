@@ -1,3 +1,3 @@
 mode 200, 2000
-"C:\Users\Spencer Howlett\AppData\Local\Programs\Python\Python38\python.exe" "C:\Users\Spencer Howlett\Desktop\machine_learning\Stock\scripts\load_run.py"
+"C:\Program Files\Python38\python.exe" "C:\Users\spencer\Desktop\machine_learning\Stock\scripts\load_run.py"
 pause

@@ -24,7 +24,7 @@ import ast
 check_directories()
 
 master_params = {
-    "N_STEPS": [100],
+    "N_STEPS": [300],
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 2,
@@ -39,7 +39,7 @@ master_params = {
     "PATIENCE": [200],
     "SAVELOAD": True,
     "LIMIT": [4000],
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"],
     "SAVE_FOLDER": "tuning1"
 }
 

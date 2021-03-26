@@ -1,4 +1,4 @@
-from functions import delete_files_in_folder, check_model_subfolders, silence_tensorflow, get_test_name
+from functions import delete_files_in_folder, check_model_folders, silence_tensorflow, get_test_name
 silence_tensorflow()
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -13,6 +13,7 @@ get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
 from datetime import datetime
 import numpy as np
 import pandas as pd
+import socket
 import random
 import sys
 import time
@@ -50,8 +51,7 @@ def saveload_neural_net(symbol, end_date=None, params=defaults):
 
 def make_neural_net(symbol, end_date, params):
     #description of all the parameters used is located inside environment.py
-    os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
- 
+
     gpus = tf.config.experimental.list_physical_devices("GPU")
 
     if gpus:
@@ -61,18 +61,16 @@ def make_neural_net(symbol, end_date, params):
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
    
-    tf.config.optimizer.set_jit(True)
-
-    
-    # policy = mixed_precision.Policy("mixed_float16")
-    # mixed_precision.set_policy(policy)
+    if socket.gethostname() != "Orion":
+        os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
+        tf.config.optimizer.set_jit(True)
 
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(random_seed)
     tf.random.set_seed(random_seed)
     random.seed(random_seed)
     
-    check_model_subfolders(params["SAVE_FOLDER"])
+    check_model_folders(params["SAVE_FOLDER"], symbol)
     
     # model name to save, making it as unique as possible based on parameters
     model_name = (symbol + "-" + get_test_name(params))

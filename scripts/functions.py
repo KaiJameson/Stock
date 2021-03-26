@@ -11,9 +11,11 @@ def check_directories():
         if not os.path.isdir(directory_dict[directory]):
             os.mkdir(directory_dict[directory])
 
-def check_model_subfolders(save_folder):
+def check_model_folders(save_folder, symbol):
     if not os.path.isdir(directory_dict["model_directory"] + "/" + save_folder):
         os.mkdir(directory_dict["model_directory"] + "/" + save_folder)
+    if not os.path.isdir(directory_dict["reports_directory"] + "/" + symbol):
+        os.mkdir(directory_dict["reports_directory"] + "/" + symbol)
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):

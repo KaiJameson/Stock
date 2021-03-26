@@ -1,8 +1,8 @@
-from functions import (check_directories, delete_files, delete_files_in_folder, 
+from functions import (check_directories, delete_files, delete_files_in_folder, get_test_name,
 get_correct_direction, silence_tensorflow)
 silence_tensorflow()
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
-from io_functs import backtest_excel, get_test_name, read_saved_contents, save_to_dictionary, print_backtest_results
+from io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results
 from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_current_price
 from error_functs import error_handler
 from paca_model_functs import (get_api, create_model, get_all_accuracies, predict, 
@@ -24,7 +24,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
     symbol = real_test_symbols[0]
     api = get_api()
     
-    model_name = get_test_name(params)
+    test_name = get_test_name(params)
 
     progress = {
         "total_days": test_days,
@@ -38,16 +38,17 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         "epochs_list": []
     }
 
-    print(model_name)
+    print(test_name)
 
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + model_name + ".txt"):
-        print("A fully completed file with the name " + model_name + " already exists.")
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + test_name + ".txt"):
+        print("A fully completed file with the name " + test_name + " already exists.")
         print("Exiting the_real_test now: ")
         return
 
     # check if we already have a save file, if we do, extract the info and run it
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt"):
-        progress = read_saved_contents(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt", progress)
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
+        print("A save file was found, opening now: ")
+        progress = read_saved_contents(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         
     current_date = get_short_end_date(test_year, test_month, test_day)
@@ -102,7 +103,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
             progress["test_year"], progress["test_month"], progress["test_day"] = get_year_month_day(current_date)
 
-            save_to_dictionary(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt", progress)
+            save_to_dictionary(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         except KeyboardInterrupt:
                 print("I acknowledge that you want this to stop.")
@@ -122,11 +123,12 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
     print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
                 progress["test_day"], progress["time_so_far"], None, None)
-    backtest_excel(directory_dict["backtest_directory"], model_name, test_year, test_month, test_day, params, avg_p, avg_d, 
+    backtest_excel(directory_dict["backtest_directory"], test_name, progress["test_year"], progress["test_month"], 
+                progress["test_day"], params, avg_p, avg_d, 
         avg_e, progress["time_so_far"], progress["total_days"], None, None)
 
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt"):
-        os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + model_name + ".txt")
+    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
+        os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt")
 
     delete_files_in_folder(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"])
 
