@@ -156,8 +156,7 @@ def get_alpaca_data(symbol, end_date, api, timeframe='day', limit=1000):
 
 
     if limit > 0:	
-        if end_date is not None:	
-            print(end_date)
+        if end_date is not None:
             barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
             items = barset.items()
             new_df = get_values(items)

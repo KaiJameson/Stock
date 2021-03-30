@@ -51,7 +51,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         progress = read_saved_contents(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         
-    current_date = get_short_end_date(test_year, test_month, test_day)
+    current_date = get_short_end_date(progress["test_year"], progress["test_month"], progress["test_day"])
 
     while progress["days_done"] <= progress["total_days"]:
         try:
