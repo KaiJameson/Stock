@@ -72,7 +72,7 @@ defaults = {
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
-    "BATCH_SIZE": 64,
+    "BATCH_SIZE": 1024,
     "EPOCHS": 800,
     "PATIENCE": 200,
     "SAVELOAD": True,

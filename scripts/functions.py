@@ -43,9 +43,9 @@ def delete_files_in_folder(directory):
 
 
 def get_test_name(params):
-    return (str(params["FEATURE_COLUMNS"]) + "-limit-" + str(params["LIMIT"]) + "-n_step-" 
-        + str(params["N_STEPS"]) + "-layers-" + str(params["N_LAYERS"]) + "-units-" 
-        + str(params["UNITS"]) + "-epochs-" + str(params["EPOCHS"]))
+    return (str(params["FEATURE_COLUMNS"]) + "-limit" + str(params["LIMIT"]) + "-step" 
+        + str(params["N_STEPS"]) + "-layer" + str(params["N_LAYERS"]) + "-unit" 
+        + str(params["UNITS"]) + "-epoch" + str(params["EPOCHS"])) + "-batch" + str(params["BATCH_SIZE"])
 
 def get_correct_direction(predicted_price, current_price, actual_price):
     if ((predicted_price > current_price and actual_price > current_price) or 
