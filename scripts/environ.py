@@ -73,7 +73,7 @@ defaults = {
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
     "BATCH_SIZE": 1024,
-    "EPOCHS": 800,
+    "EPOCHS": 2000,
     "PATIENCE": 200,
     "SAVELOAD": True,
     "LIMIT": 4000,

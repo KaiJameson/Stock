@@ -1,9 +1,6 @@
 from environ import *
 from error_functs import error_handler
-import traceback
-import time
 import os
-import sys
 
 
 def check_directories():
@@ -50,13 +47,13 @@ def get_test_name(params):
 def get_correct_direction(predicted_price, current_price, actual_price):
     if ((predicted_price > current_price and actual_price > current_price) or 
     (predicted_price < current_price and actual_price < current_price)): 
-        correct_dir = 1.0
+        return 1.0
+    elif predicted_price == current_price == actual_price:
+        return 1.0
     elif predicted_price == current_price or actual_price == current_price: 
-        correct_dir = 0.5
+        return 0.5
     else:
-        correct_dir = 0.0
-
-    return correct_dir
+        return 0.0
 
 def silence_tensorflow():
     import os

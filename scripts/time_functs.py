@@ -136,7 +136,7 @@ def make_Timestamp(old_date):
 
     return new_date
 
-def get_current_price(current_date, api, symbol):
+def get_actual_price(current_date, api, symbol):
     no_price = True
     while no_price:
         try:

@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 import socket
 import random
-import sys
 import time
 import os
 
@@ -98,7 +97,7 @@ def make_neural_net(symbol, end_date, params):
     history = model.fit(train,
         batch_size=params["BATCH_SIZE"],
         epochs=params["EPOCHS"],
-        verbose=2,
+        verbose=0,
         use_multiprocessing=True,
         workers=10,
         validation_data=valid,

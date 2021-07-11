@@ -18,7 +18,7 @@ def net_error_handler(symbol, exception):
     write_exc_info(err_file)
     err_file.close()
     print("EXCEPTION HANDLED", flush=True)
-    time.sleep(5)
+    time.sleep(3)
     
 def write_exc_info(err_file):
     exit_info = sys.exc_info()

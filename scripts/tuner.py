@@ -6,7 +6,7 @@ from paca_model_functs import (get_api, create_model, get_all_accuracies, predic
 return_real_predict, load_model_with_data)
 from symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results
-from time_functs import increment_calendar, get_current_price
+from time_functs import increment_calendar, get_actual_price
 from error_functs import error_handler
 from tuner_functs import grab_index, change_params, get_user_input, update_money
 from environ import back_test_days, test_var, directory_dict, test_money
@@ -15,11 +15,7 @@ from statistics import mean
 import time
 import sys
 import os
-import traceback
 import datetime
-import pandas as pd
-import ast
-
 
 check_directories()
 
@@ -88,8 +84,10 @@ for symbol in tune_symbols:
         }
 
         print(model_name)
-        starting_day_price = get_current_price(get_short_end_date(tune_year, tune_month, tune_day) - datetime.timedelta(1), 
+        print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
+        starting_day_price = get_actual_price((get_short_end_date(tune_year, tune_month, tune_day) - datetime.timedelta(1)), 
             api, symbol)
+        print(starting_day_price)
 
         if os.path.isfile(directory_dict["tuning_directory"] + "/" + model_name + ".txt"):
             print("A fully completed file with the name " + model_name + " already exists.")
@@ -126,7 +124,7 @@ for symbol in tune_symbols:
                 predicted_price = predict(model, data, params["N_STEPS"])
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
-                actual_price = get_current_price(current_date, api, symbol)
+                actual_price = get_actual_price(current_date, api, symbol)
 
                 # get the percent difference between prediction and actual
                 print("predicted, actual, current " + str(predicted_price) + "," + str(actual_price) + "," + str(current_price))

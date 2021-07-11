@@ -20,7 +20,7 @@ if len(sys.argv) > 1:
     elif sys.argv[1] == "batch5":
         pass
     else:
-        print("You must give this program an argument in the style of \"batcht#\"")
+        print("You must give this program an argument in the style of \"batch#\"")
         print("So that it knows what folder to save your models into.")
         print("Please try again")
         sys.exit(-1)
