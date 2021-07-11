@@ -1,4 +1,4 @@
-from functions import check_directories, silence_tensorflow
+from functions import check_directories, silence_tensorflow, get_test_name
 silence_tensorflow()
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 from paca_model_functs import (load_data, predict, getOwnedStocks, return_real_predict, 
@@ -23,8 +23,7 @@ def load_trade(symbols):
         try:
             start_time = time.time()
 
-            model_name = (symbol + "-" + str(defaults["FEATURE_COLUMNS"]) + "-limit-" + str(defaults["LIMIT"]) +"-n_step-" + str(defaults["N_STEPS"]) 
-            + "-layers-" + str(defaults["N_LAYERS"]) + "-units-" + str(defaults["UNITS"]) + "-epochs-" + str(defaults["EPOCHS"]))
+            model_name = (symbol + "-" + get_test_name(defaults))
 
             print("\n~~~Now Starting " + symbol + "~~~")
             

@@ -1,4 +1,4 @@
-from functions import silence_tensorflow
+from functions import silence_tensorflow, get_correct_direction
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
@@ -22,6 +22,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
 from intrinio_sdk.rest import ApiException
+from statistics import mean
 import alpaca_trade_api as tradeapi
 import tensorflow as tf
 import numpy as np
@@ -196,8 +197,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         df2 = get_alpaca_data("VIXY", end_date, api, limit=limit)
         df["VIX"] = df2.close
 
-    if "7_moving_avg" in feature_columns:
-        df["7_moving_avg"] = df.close.rolling(window=7).mean()
+    if "7MA" in feature_columns:
+        df["7MA"] = df.close.rolling(window=7).mean()
     
     if ("upper_band" or "lower_band") in feature_columns:
         upperband, middleband, lowerband = ta.BBANDS(df.close, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
@@ -228,8 +229,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "money_flow_ind" in feature_columns:
         df["money_flow_ind"] = ta.MFI(df.high, df.low, df.close, df.volume, timeperiod=14)
 
-    if "williams_r" in feature_columns:
-        df["williams_r"] = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
+    if "wills_r" in feature_columns:
+        df["wills_r"] = ta.WILLR(df.high, df.low, df.close, timeperiod=14)
 
     if "std_dev" in feature_columns:
         df["std_dev"] = ta.STDDEV(df.close, timeperiod=5, nbdev=1)
@@ -390,8 +391,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "beta" in feature_columns:
         df["beta"] = ta.BETA(df.high, df.low, timeperiod=5)
 
-    if "time_series_forecast" in feature_columns:
-        df["time_series_forecast"] = ta.TSF(df.close, timeperiod=14)
+    if "time_series_for" in feature_columns:
+        df["time_series_for"] = ta.TSF(df.close, timeperiod=14)
 
     # if "day_of_week" in feature_columns:
     #     df = convert_date_values(df)
@@ -404,7 +405,7 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         pd.set_option("display.max_columns", None)
         # pd.set_option("display.max_rows", None)
         print(df.head(1))
-        print(df.tail(3))
+        print(df.tail(1))
         # print(df)
     return df
 
@@ -425,25 +426,19 @@ def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
 
     if to_print:
         print("Included features: " + str(feature_columns))
-        no_connection = True
-        while no_connection:
-            try:
-                if end_date is not None:
-                    df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
-                else:
-                    df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
+    no_connection = True
+    while no_connection:
+        try:
+            if end_date is not None:
+                df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
+            else:
+                df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
 
-                no_connection = False
+            no_connection = False
 
-            except Exception:
-                net_error_handler(symbol, Exception)
+        except Exception:
+            net_error_handler(symbol, Exception)
 
-
-    else:
-        if end_date is not None:
-            df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
-        else:
-            df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
 
     # this will contain all the elements we want to return from this function
     result = {}
@@ -954,18 +949,46 @@ def perfect_money(money, data):
         money += stonks_owned * data[len(data) - 1]
     return money
 
+def linear_regression_comparator(df, timeperiod, run_days):
+    df = df["df"]
+    df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=timeperiod)
+
+    current_money = 10000
+    percent_away_list = []
+    correct_direction_list = []
+
+    for i in range(len(df) - 1, len(df) - run_days + 1, -1):
+        actual_price = df.close[i]
+        current_price = df.close[i - 1]
+        predicted_price = df.lin_regres[i - 1]
+
+        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+
+        percent_away_list.append(p_diff)
+        correct_direction_list.append(correct_dir)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+
+    print(current_money)
+
+    avg_p = str(round(mean(percent_away_list), 2))
+    avg_d = str(round(mean(correct_direction_list) * 100, 2))
+    print(correct_direction_list)
+
+    return avg_p, avg_d
+
+
+
 if __name__ == "__main__":
 
     from tuner_functs import update_money
 
-    current_money = 100
+    df, train, valid, test = load_data("AGYS", limit=500, shuffle=False, scale=False)
 
-    current_money = update_money(100, 30, 20, 24)
-    current_money = update_money(100, 30, 24, 20.4)
-    current_money = update_money(100, 30, 20.4, 24.48)
-    current_money = update_money(100, 30, 24.48, 24)
+    avg_p, avg_d = linear_regression_comparator(df, 15, 250)
 
-
+    print(avg_p, avg_d)
+    
 
 
     # symbols = ["FARM", "FOLD", "DISCA", "EGHT", "UNFI", "KTOS", "INTC", "PESI", "SIG",

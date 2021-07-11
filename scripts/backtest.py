@@ -3,7 +3,7 @@ get_correct_direction, silence_tensorflow)
 silence_tensorflow()
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results
-from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_current_price
+from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_actual_price
 from error_functs import error_handler
 from paca_model_functs import (get_api, create_model, get_all_accuracies, predict, 
 load_model_with_data, return_real_predict)
@@ -80,7 +80,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 predicted_price = predict(model, data, params["N_STEPS"])
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
-                actual_price = get_current_price(current_date, api, symbol)
+                actual_price = get_actual_price(current_date, api, symbol)
 
                 # get the percent difference between prediction and actual
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)

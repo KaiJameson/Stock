@@ -95,7 +95,7 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     if current_money != None:
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
-    print("Testing all of the days took " + str(time_so_far // 3600) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
+    print("Testing all of the days took " + str(time_so_far / 3600) + " hours or " + str(int(time_so_far // 3600)) + ":" + str(round((time_so_far % 60), 0)) + " minutes.")
 
 def read_saved_contents(file_path, return_dict):
     f = open(file_path, "r")
