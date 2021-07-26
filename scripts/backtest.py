@@ -1,21 +1,18 @@
-from functions import (check_directories, delete_files, delete_files_in_folder, get_test_name,
+from scripts.io_functs import graph_epochs_relationship
+from functions import (check_directories,  delete_files_in_folder, get_test_name,
 get_correct_direction, silence_tensorflow)
 silence_tensorflow()
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results
 from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_actual_price
 from error_functs import error_handler
-from paca_model_functs import (get_api, create_model, get_all_accuracies, predict, 
-load_model_with_data, return_real_predict)
+from paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
 from paca_model import saveload_neural_net
 from environ import directory_dict, test_var, back_test_days
 from statistics import mean
 from tensorflow.keras.layers import LSTM
-import pandas as pd
-import datetime
 import sys
 import time
-import ast
 import os
 
 
@@ -63,7 +60,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 epochs_run = saveload_neural_net(symbol, current_date, params)
                 progress["epochs_list"].append(epochs_run)
                 
-            print("Model result progress[", end='')
+            print("Model result progress[", end="")
             for symbol in real_test_symbols:
                 # get model name for future reference
                 model_name = (symbol + "-" + get_test_name(params))
@@ -90,7 +87,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 progress["percent_away_list"].append(p_diff)
                 progress["correct_direction_list"].append(correct_dir)
 
-                print("*", end='', flush=True)
+                print("*", end="", flush=True)
                 
             print("]", flush=True)
             
@@ -126,6 +123,8 @@ def back_testing(test_year, test_month, test_day, test_days, params):
     backtest_excel(directory_dict["backtest_directory"], test_name, progress["test_year"], progress["test_month"], 
                 progress["test_day"], params, avg_p, avg_d, 
         avg_e, progress["time_so_far"], progress["total_days"], None, None)
+
+    graph_epochs_relationship(progress, test_name)
 
     if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
         os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt")

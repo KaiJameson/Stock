@@ -1,10 +1,9 @@
 from api_key import paper_api_key_id, paper_api_secret_key
-from error_functs import error_handler, net_error_handler
+from error_functs import  net_error_handler
 from environ import time_zone
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import platform
-import random
 import time
 import datetime
 

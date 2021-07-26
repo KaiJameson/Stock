@@ -1,21 +1,26 @@
 from functions import check_directories, silence_tensorflow, get_test_name
 silence_tensorflow()
-from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-from paca_model_functs import (load_data, predict, getOwnedStocks, return_real_predict, 
+from paca_model_functs import (load_data, getOwnedStocks, return_real_predict, 
 get_all_accuracies, nn_report,  percent_from_real, buy_all_at_once, create_model)
 from symbols import load_save_symbols, do_the_trades
 from environ import directory_dict, defaults, test_var
 from error_functs import error_handler
 from io_functs import  make_excel_file, make_load_run_excel
-from tensorflow.keras.models import load_model
+import tensorflow as tf
+import psutil
 import time
-import os
 import sys
 
 check_directories()
 
 def load_trade(symbols):
     
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+
+    if gpus:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+
     owned = getOwnedStocks()
 
     price_prediction_list = {}
@@ -69,6 +74,33 @@ def load_trade(symbols):
         print("Performing all the trades took " + str(time.time() - time_s) + " seconds")
     else:
         print("Why are you running this if you don't want to do the trades?")
+
+def pause_running_training():
+        processes = {p.pid: p.info for p in psutil.process_iter(["name"])}
+        
+        python_processes_pids = []
+        pause_list = []
+
+        for process in processes:
+            if processes[process]["name"] == "python.exe":
+                python_processes_pids.append(process)
+
+        for pid in python_processes_pids:
+            if any("batch" in string for string in psutil.Process(pid).cmdline()):
+                pause_list.append(pid)
+            elif any("tuning" in string for string in psutil.Process(pid).cmdline()):
+                pause_list.append(pid)
+
+        print(pause_list)
+
+        for pid in pause_list:
+            psutil.Process(pid).suspend()
+
+        return pause_list
+
+def resume_running_training(pause_list):
+        for pid in pause_list:
+            psutil.Process(pid).resume()
 
 s = time.time()
 load_trade(load_save_symbols)
