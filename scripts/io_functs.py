@@ -79,9 +79,9 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     f.write("while using an average of " + avg_e + " epochs.\n")
     if current_money != None:
         f.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
-    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n")
     f.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
+    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n")
     f.close()
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
@@ -98,9 +98,9 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("while using an average of " + avg_e + " epochs.")
     if current_money != None:
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
-    print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
     print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
+    print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
 
 def read_saved_contents(file_path, return_dict):
     f = open(file_path, "r")
@@ -135,8 +135,8 @@ def save_to_dictionary(file_path, dictionary):
     f.close()
 
 def graph_epochs_relationship(progress, test_name):
-        percent_away_list = ["percent_away_list"]
-        correct_direction_list = ["correct_direction_list"]
+        percent_away_list = progress["percent_away_list"]
+        correct_direction_list = progress["correct_direction_list"]
         epochs_list = progress["epochs_list"]
 
         plot_name = directory_dict["graph_directory"] + "/" + test_name + "-dir.png"
@@ -162,7 +162,7 @@ def graph_epochs_relationship(progress, test_name):
         plt.savefig(plot_name)
         plt.close()
 
-        plot_name = directory_dict["graph_directory"] + "/" + test_name + "-%/off.png"
+        plot_name = directory_dict["graph_directory"] + "/" + test_name + "-away.png"
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
 

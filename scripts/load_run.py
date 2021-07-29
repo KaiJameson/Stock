@@ -91,8 +91,6 @@ def pause_running_training():
             elif any("tuning" in string for string in psutil.Process(pid).cmdline()):
                 pause_list.append(pid)
 
-        print(pause_list)
-
         for pid in pause_list:
             psutil.Process(pid).suspend()
 
@@ -103,7 +101,9 @@ def resume_running_training(pause_list):
             psutil.Process(pid).resume()
 
 s = time.time()
+pause_list = pause_running_training()
 load_trade(load_save_symbols)
+resume_running_training(pause_list)
 time_s = time.time()
 make_excel_file()
 print("Making the excel file took " + str(time.time() - time_s) + " seconds\n")

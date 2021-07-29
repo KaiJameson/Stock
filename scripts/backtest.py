@@ -1,9 +1,9 @@
-from scripts.io_functs import graph_epochs_relationship
+
 from functions import (check_directories,  delete_files_in_folder, get_test_name,
 get_correct_direction, silence_tensorflow)
 silence_tensorflow()
 from symbols import real_test_symbols, test_year, test_month, test_day, test_days
-from io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results
+from io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
 from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_actual_price
 from error_functs import error_handler
 from paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
