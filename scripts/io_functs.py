@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from environ import directory_dict
 from time_functs import get_date_string
+from tuner_functs import moving_average_comparator, linear_regression_comparator
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -80,8 +81,8 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     if current_money != None:
         f.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
     f.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
-    str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
-    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n")
+    str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.\n")
+    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".")
     f.close()
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
@@ -101,6 +102,20 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
+
+def comparator_results_excel(df, run_days, directory, stock):
+    lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 10, run_days)
+    MA_avg_p, MA_avg_d, MA_current_money = moving_average_comparator(df, 7, run_days)
+
+    directory_string = f"{directory}/{stock}-comparison.txt"
+    if not os.path.isfile(directory_string):
+        f = open(directory_string, "a")
+    else:
+        return
+    
+    f.write("Linear percent away was " + str(lin_avg_p) + " with " + str(lin_avg_d) + " percent prediction making " + str(lin_current_money) + " dollars.\n")
+    f.write("Moving average percent away was " + str(MA_avg_p) + " with " + str(MA_avg_d) + " percent prediction making " + str(MA_current_money) + " dollars.")
+    f.close()
 
 def read_saved_contents(file_path, return_dict):
     f = open(file_path, "r")

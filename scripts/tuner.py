@@ -5,7 +5,7 @@ from paca_model import saveload_neural_net
 from paca_model_functs import (get_api, create_model, get_all_accuracies, predict,  
 return_real_predict, load_model_with_data)
 from symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
-from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results
+from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from time_functs import increment_calendar, get_actual_price
 from error_functs import error_handler
 from tuner_functs import grab_index, change_params, get_user_input, update_money
@@ -20,7 +20,7 @@ import datetime
 check_directories()
 
 master_params = {
-    "N_STEPS": [300],
+    "N_STEPS": [100],
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
     "N_LAYERS": 2,
@@ -30,12 +30,12 @@ master_params = {
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
-    "BATCH_SIZE": 256,
-    "EPOCHS": [800],
+    "BATCH_SIZE": 1024,
+    "EPOCHS": [2000],
     "PATIENCE": [200],
     "SAVELOAD": True,
     "LIMIT": [4000],
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume", "7_moving_avg"],
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
     "SAVE_FOLDER": "tuning1"
 }
 
@@ -155,6 +155,8 @@ for symbol in tune_symbols:
             avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
             avg_e = str(round(mean(progress["epochs_list"]), 2))
             hold_money = round(test_money * (current_price / starting_day_price), 2)
+
+            comparator_results_excel(data, tune_days, directory_dict["tuning_directory"], symbol)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
                 progress["tune_day"], progress["time_so_far"], progress["current_money"], hold_money)

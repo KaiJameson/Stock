@@ -26,5 +26,5 @@ def write_exc_info(err_file):
 
 def write_exception_details(err_file, symbol, exception):
     err_file.write("Problem encountered with stock: " + symbol + "\n")
-    err_file.write("Error is of type: " + str(type(exception)) + "\n")
+    err_file.write("Error is of type: " + str(type(exception).__name__) + "\n")
     err_file.write("Error happened at: " + str(datetime.datetime.now()) + "\n")
