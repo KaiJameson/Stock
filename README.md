@@ -4,8 +4,8 @@
 1. To start you will need to visit [Alpaca](http://alpaca.markets/) and make an account
 2. After having your account set up you will find a key id and a secret key on the [overview page](https://app.alpaca.markets/brokerage/dashboard/overview)
 3. Inside of the scripts directory make an api_key.py file and include the following lines inside of it
- * real_api_key_id = '_your key id_'
- * real_api_secret_key = '_your secret key_'
+ * real_api_key_id = "_your key id_"
+ * real_api_secret_key = "_your secret key_"
 4. Install ta-lib with a whrl file from https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib
 
 ### List of Dependancies You Need to Install
@@ -43,7 +43,7 @@ alpaca paper or real account
 * In order to run specific stocks and generate their reports, edit load_trade_symbols=[] inside of 
 symbols.py to include the stocks you want. You will then first run the train_save.py to generate and save the models 
 and then later you can run that model with load_run.py
-* In order to tune a stock, edit ticker='' inside of exhaustive_tuning.py and run python exhaustive_tuning.py
+* In order to tune a stock, edit ticker="" inside of exhaustive_tuning.py and run python exhaustive_tuning.py
 
 
 ### Owned Stocks

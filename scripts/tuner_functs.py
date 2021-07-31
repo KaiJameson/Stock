@@ -1,3 +1,6 @@
+from functions import get_correct_direction
+from statistics import mean
+import talib as ta
 import sys
 import copy
 
@@ -80,3 +83,54 @@ def update_money(current_money, predicted_price, current_price, actual_price):
             current_money += stocks * current_price * p_change
 
     return round(current_money, 2)
+
+def linear_regression_comparator(df, timeperiod, run_days):
+    df = df["df"]
+    df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=timeperiod)
+
+    current_money = 10000
+    percent_away_list = []
+    correct_direction_list = []
+
+    for i in range(len(df) - 1, len(df) - run_days + 1, -1):
+        actual_price = df.close[i]
+        current_price = df.close[i - 1]
+        predicted_price = df.lin_regres[i - 1]
+
+        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+
+        percent_away_list.append(p_diff)
+        correct_direction_list.append(correct_dir)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+
+    avg_p = str(round(mean(percent_away_list), 2))
+    avg_d = str(round(mean(correct_direction_list) * 100, 2))
+
+    return avg_p, avg_d, current_money
+
+
+def moving_average_comparator(df, timeperiod, run_days):
+    df = df["df"]
+    df["7MA"] = df.close.rolling(window=timeperiod).mean()
+
+    current_money = 10000
+    percent_away_list = []
+    correct_direction_list = []
+
+    for i in range(len(df) - 1, len(df) - run_days + 1, -1):
+        actual_price = df.close[i]
+        current_price = df.close[i - 1]
+        predicted_price = df["7MA"][i - 1]
+
+        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+
+        percent_away_list.append(p_diff)
+        correct_direction_list.append(correct_dir)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+
+    avg_p = str(round(mean(percent_away_list), 2))
+    avg_d = str(round(mean(correct_direction_list) * 100, 2))
+
+    return avg_p, avg_d, current_money

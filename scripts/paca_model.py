@@ -1,18 +1,13 @@
 from functions import delete_files_in_folder, check_model_folders, silence_tensorflow, get_test_name
 silence_tensorflow()
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from environ import (test_var, directory_dict, random_seed,  back_test_days, save_logs,
+from environ import (directory_dict, random_seed, save_logs,
 defaults)
 from time_functs import get_time_string
-from paca_model_functs import (load_data, create_model, predict, accuracy_score, plot_graph, 
-get_accuracy, nn_report, return_real_predict, get_all_accuracies, get_all_maes)
-from datetime import datetime
+from paca_model_functs import (load_data, create_model, nn_report, get_all_accuracies, get_all_maes)
 import numpy as np
-import pandas as pd
 import socket
 import random
 import time
@@ -88,18 +83,16 @@ def make_neural_net(symbol, end_date, params):
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
-        tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch="1000, 1200") 
+        tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch="200, 1200") 
     else:
         tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch=0)
 
-        early_stop = EarlyStopping(patience=params["PATIENCE"])
+    early_stop = EarlyStopping(patience=params["PATIENCE"])
     
     history = model.fit(train,
         batch_size=params["BATCH_SIZE"],
         epochs=params["EPOCHS"],
-        verbose=0,
-        use_multiprocessing=True,
-        workers=10,
+        verbose=2,
         validation_data=valid,
         callbacks = [tboard_callback, checkpointer, early_stop]   
     )

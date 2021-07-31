@@ -1,8 +1,7 @@
-from functions import silence_tensorflow, get_correct_direction
+from functions import silence_tensorflow
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
-from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing
@@ -13,8 +12,7 @@ from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, pap
 intrinio_sandbox_key, intrinio_production_key)
 from environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
 using_all_accuracies, directory_dict)
-from time_functs import (get_time_string, get_date_string, zero_pad_date_string, 
-get_short_end_date, get_trade_day_back, get_full_end_date, make_Timestamp)
+from time_functs import get_time_string,  get_trade_day_back, get_full_end_date, make_Timestamp
 from io_functs import excel_output, make_current_price
 from error_functs import error_handler, net_error_handler
 from symbols import trading_real_money
@@ -22,9 +20,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
 from intrinio_sdk.rest import ApiException
-from statistics import mean
 import alpaca_trade_api as tradeapi
-import tensorflow as tf
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -32,10 +28,7 @@ import talib as ta
 import xgboost as xgb
 import intrinio_sdk as intrinio
 import time
-import sys
-import random
 import datetime
-import math 
 import os
 
 
@@ -107,7 +100,6 @@ def get_values(items):
         close_values = []
         low_values = []
         high_values = []
-        mid_values = []
         volume = []
         times = []
         for day in bar:
@@ -115,27 +107,24 @@ def get_values(items):
             close_price = day.c
             low_price = day.l
             high_price = day.h
-            mid_price = (low_price + high_price) / 2
             vol = day.v
             time = day.t
             open_values.append(open_price)
             close_values.append(close_price)
             low_values.append(low_price)
             high_values.append(high_price)
-            mid_values.append(mid_price)
             volume.append(vol)
             times.append(time)
-        data['open'] = open_values
-        data['low'] = low_values
-        data['high'] = high_values
-        data['close'] = close_values
-        data['mid'] = mid_values
-        data['volume'] = volume
+        data["open"] = open_values
+        data["low"] = low_values
+        data["high"] = high_values
+        data["close"] = close_values
+        data["volume"] = volume
         data["time"] = times
     df = pd.DataFrame(data=data)
     return df
 
-def get_alpaca_data(symbol, end_date, api, timeframe='day', limit=1000):
+def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
     frames = []	    
 
     if end_date is not None:
@@ -180,6 +169,9 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     
     if "mid" in feature_columns:
         df["mid"] = (df.low + df.high) / 2
+
+    if "volume" not in feature_columns:
+        df = df.drop(columns=["volume"])
 
     if "S&P" in feature_columns:
         df2 = get_alpaca_data("SPY", end_date, api, limit=limit)
@@ -394,8 +386,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "time_series_for" in feature_columns:
         df["time_series_for"] = ta.TSF(df.close, timeperiod=14)
 
-    # if "day_of_week" in feature_columns:
-    #     df = convert_date_values(df)
+    if "day_of_week" in feature_columns:
+        df = convert_date_values(df)
 
     # get_feature_importance(df)
 
@@ -540,7 +532,7 @@ def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
         # add dropout after each layer
         model.add(Dropout(dropout))
     model.add(Dense(1, activation="linear"))
-    model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer)
+    model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer, steps_per_execution=1)
     return model
 
 def load_model_with_data(symbol, current_date, params, directory, model_name):
@@ -949,62 +941,13 @@ def perfect_money(money, data):
         money += stonks_owned * data[len(data) - 1]
     return money
 
-def linear_regression_comparator(df, timeperiod, run_days):
-    df = df["df"]
-    df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=timeperiod)
-
-    current_money = 10000
-    percent_away_list = []
-    correct_direction_list = []
-
-    for i in range(len(df) - 1, len(df) - run_days + 1, -1):
-        actual_price = df.close[i]
-        current_price = df.close[i - 1]
-        predicted_price = df.lin_regres[i - 1]
-
-        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
-        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
-
-        percent_away_list.append(p_diff)
-        correct_direction_list.append(correct_dir)
-        current_money = update_money(current_money, predicted_price, current_price, actual_price)
-
-    print(current_money)
-
-    avg_p = str(round(mean(percent_away_list), 2))
-    avg_d = str(round(mean(correct_direction_list) * 100, 2))
-    print(correct_direction_list)
-
-    return avg_p, avg_d
-
-
 
 if __name__ == "__main__":
 
-    from tuner_functs import update_money
-
-    df, train, valid, test = load_data("AGYS", limit=500, shuffle=False, scale=False)
-
-    avg_p, avg_d = linear_regression_comparator(df, 15, 250)
-
-    print(avg_p, avg_d)
     
 
-
-    # symbols = ["FARM", "FOLD", "DISCA", "EGHT", "UNFI", "KTOS", "INTC", "PESI", "SIG",
-    # "PENN", "MOS", "BBBY", "DDD", "DVN", "PRTS", "FORM", "PAAS", "GOLD", "ACIW", "TXT", "GOOGL",
-    # "WEN", "TSN", "F", "HUN", "NFLX", "AMD", "TSN", "UPS", "QCOM", "BA", "TSLA", "SJM", "SBUX",
-    # "GT", "VTR", "BWA", "ABR", "AES", "ZIXI", "ZION", "XRX", "WERN", "WCC", "NWL", "KSS", "LUV",
-    # "IIVI", "AGYS", "AMKR", "AXL", "BG", "BGS", "CAKE", "CCJ", "DFS", "ELY", "FCX", "FLEX", "GLUU",
-    # "JBLU", "LLNW", "RDN", "RICK", "SCSC", "SHO", "SMED", "STLD"]
-
-
-    
-    # # for symbol in symbols:
-    # time_s = time.time()
-    # result, train, valid, test = load_data("AGYS", limit=5000, feature_columns=["DOW", "NASDAQ", "S&P"])
-    # print("took " + str(time.time() - time_s))
     
 
-
+    pass
     
+

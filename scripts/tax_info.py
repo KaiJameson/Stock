@@ -1,6 +1,5 @@
 from api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
 import alpaca_trade_api as tradeapi
-import datetime 
 from BuyOrder import BuyOrder
 api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
 activities = api.get_activities()

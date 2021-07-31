@@ -1,5 +1,9 @@
+from matplotlib import pyplot as plt
 from environ import directory_dict
 from time_functs import get_date_string
+from tuner_functs import moving_average_comparator, linear_regression_comparator
+import matplotlib.pyplot as plt
+import numpy as np
 import os
 import ast
 
@@ -76,8 +80,9 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     f.write("while using an average of " + avg_e + " epochs.\n")
     if current_money != None:
         f.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
-    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n")
-    f.write("Testing all of the days took " + str((time_so_far // 3600)) + " hours and " + str(round((time_so_far % 60), 2)) + " minutes.")
+    f.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
+    str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.\n")
+    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".")
     f.close()
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
@@ -94,8 +99,23 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("while using an average of " + avg_e + " epochs.")
     if current_money != None:
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
+    print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
+    str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
-    print("Testing all of the days took " + str(time_so_far / 3600) + " hours or " + str(int(time_so_far // 3600)) + ":" + str(round((time_so_far % 60), 0)) + " minutes.")
+
+def comparator_results_excel(df, run_days, directory, stock):
+    lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 10, run_days)
+    MA_avg_p, MA_avg_d, MA_current_money = moving_average_comparator(df, 7, run_days)
+
+    directory_string = f"{directory}/{stock}-comparison.txt"
+    if not os.path.isfile(directory_string):
+        f = open(directory_string, "a")
+    else:
+        return
+    
+    f.write("Linear percent away was " + str(lin_avg_p) + " with " + str(lin_avg_d) + " percent prediction making " + str(lin_current_money) + " dollars.\n")
+    f.write("Moving average percent away was " + str(MA_avg_p) + " with " + str(MA_avg_d) + " percent prediction making " + str(MA_current_money) + " dollars.")
+    f.close()
 
 def read_saved_contents(file_path, return_dict):
     f = open(file_path, "r")
@@ -128,4 +148,54 @@ def save_to_dictionary(file_path, dictionary):
         f.write(str(key) + ":" + str(dictionary[key]) + "\n")
 
     f.close()
+
+def graph_epochs_relationship(progress, test_name):
+        percent_away_list = progress["percent_away_list"]
+        correct_direction_list = progress["correct_direction_list"]
+        epochs_list = progress["epochs_list"]
+
+        plot_name = directory_dict["graph_directory"] + "/" + test_name + "-dir.png"
+        fig = plt.figure(figsize=(12,12))
+        ax = fig.add_subplot(projection='3d')
+
+        hist, xedges, yedges = np.histogram2d(epochs_list, correct_direction_list, bins=[8, 3], range=[[0, 2000], [0, 1]])
+
+        xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1], indexing="ij")
+        xpos = xpos.ravel()
+        ypos = ypos.ravel()
+        zpos = 0
+
+        dz = hist.ravel()
+        c = ["red", "yellow", "green"] * 8
+    
+        ax.bar3d(xpos, ypos, zpos, 100, .1, dz, color=c, zsort='average')
+        ax.set_xlabel("EPOCHS")
+        ax.set_ylabel("CORRECT DIR")
+        ax.set_zlabel("TIMES IN BUCKET")
+        ax.view_init(-2.4, 135)
+        
+        plt.savefig(plot_name)
+        plt.close()
+
+        plot_name = directory_dict["graph_directory"] + "/" + test_name + "-away.png"
+        fig = plt.figure(figsize=(12,12))
+        ax = fig.add_subplot(projection='3d')
+
+        hist, xedges, yedges = np.histogram2d(epochs_list, percent_away_list, bins=[8, 5], range=[[0, 2000], [0, 10]])
+
+        xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1], indexing="ij")
+        xpos = xpos.ravel()
+        ypos = ypos.ravel()
+        zpos = 0
+
+        dz = hist.ravel()
+    
+        ax.bar3d(xpos, ypos, zpos, 100, 1, dz, zsort='average')
+        ax.set_xlabel("EPOCHS")
+        ax.set_ylabel("% AWAY")
+        ax.set_zlabel("TIMES IN BUCKET")
+        ax.view_init(20, 135)
+        
+        plt.savefig(plot_name)
+        plt.close()
 

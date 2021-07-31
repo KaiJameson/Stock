@@ -3,7 +3,6 @@ from symbols import load_save_symbols
 from functions import check_directories
 from error_functs import error_handler
 from environ import defaults
-import os
 import sys
 import time
 
@@ -12,6 +11,7 @@ check_directories()
 def save_models(symbols):
     for symbol in symbols:
         try:
+            print(f"\n~~~ Now Training {symbol} ~~~")
             epochs = saveload_neural_net(symbol, end_date=None, params=defaults)
 
         except KeyboardInterrupt:
