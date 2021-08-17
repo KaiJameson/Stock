@@ -1,7 +1,7 @@
-from functions import silence_tensorflow
+from functions import silence_tensorflow, layer_name_converter
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing
@@ -13,7 +13,7 @@ intrinio_sandbox_key, intrinio_production_key)
 from environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
 using_all_accuracies, directory_dict)
 from time_functs import get_time_string,  get_trade_day_back, get_full_end_date, make_Timestamp
-from io_functs import excel_output, make_current_price
+from io_functs import make_current_price, plot_graph, excel_output, write_nn_report
 from error_functs import error_handler, net_error_handler
 from symbols import trading_real_money
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
 from intrinio_sdk.rest import ApiException
 import alpaca_trade_api as tradeapi
+import tensorflow as tf
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -30,15 +31,15 @@ import intrinio_sdk as intrinio
 import time
 import datetime
 import os
+import sys
 
 
-
-def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS):
+def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS, classification):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
     
-    y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+    y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var], classification)
 
     report_dir = directory_dict["reports_directory"] + "/" + symbol + "/" + time_string + ".txt"
     
@@ -51,47 +52,13 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
     predicted_y_values = y_pred[-back_test_days:]
 
     curr_price = real_y_values[-1]
-
-    spencer_money = test_money * (curr_price/real_y_values[0])
-    f = open(report_dir, "a")
-    f.write("~~~~~~~" + symbol + "~~~~~~~\n")
-    f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
-    money_made = model_money(test_money, real_y_values, predicted_y_values)
-    f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
-    per_mon = perfect_money(test_money, real_y_values)
-    f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
-    f.write("The test var was " + test_var + "\n")
-    f.write("Total run time was: " + str(round(total_minutes, 2)) + " minutes.\n")
-    f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
-    f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
-    
     percent = future_price / curr_price
-    if curr_price < future_price:
-        f.write("That would mean a growth of: " + str(round((percent - 1) * 100, 2)) + "%\n")
-        f.write("I would buy this stock.\n")
-    elif curr_price > future_price:
-        f.write("That would mean a loss of: " + str(abs(round((percent - 1) * 100, 2))) + "%\n")
-        f.write("I would sell this stock.\n")
-    
-    f.write("The average away from the real is: " + str(percent_from_real(y_real, y_pred)) + "%\n")
-    f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + "%\n")
-    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + "%\n")
-    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
-    f.close()
 
+    write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
+        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred)
     excel_output(symbol, curr_price, future_price)
 
     return percent, future_price
-
-
-def percent_from_real(y_real, y_predict):
-    the_diffs = []
-    for i in range(len(y_real) - 1):
-        per_diff = (abs(y_real[i] - y_predict[i])/y_real[i]) * 100
-        the_diffs.append(per_diff)
-    pddf = pd.DataFrame(data=the_diffs)
-    pddf = pddf.values
-    return round(pddf.mean(), 2)
 
 def get_values(items):
     data = {}
@@ -412,55 +379,66 @@ def convert_date_values(df):
 
     return df
 
-def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
-        feature_columns=["open", "low", "high", "close", "mid", "volume"],
-        shuffle=True, scale=True, lookup_step=1, test_size=0.2, to_print=True):
+def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
 
     if to_print:
-        print("Included features: " + str(feature_columns))
+        print("Included features: " + str(params["FEATURE_COLUMNS"]))
     no_connection = True
     while no_connection:
         try:
             if end_date is not None:
-                df = make_dataframe(symbol, feature_columns, limit, end_date, to_print)
+                df = make_dataframe(symbol, params["FEATURE_COLUMNS"], params["LIMIT"], end_date, to_print)
             else:
-                df = make_dataframe(symbol, feature_columns, limit, to_print=to_print)
+                df = make_dataframe(symbol, params["FEATURE_COLUMNS"], params["LIMIT"], to_print=to_print)
 
             no_connection = False
 
         except Exception:
             net_error_handler(symbol, Exception)
 
-
-    # this will contain all the elements we want to return from this function
     result = {}
-    # we will also return the original dataframe itself
     result["df"] = df.copy()
-    # make sure that the passed feature_columns exist in the dataframe
-    for col in feature_columns:
+
+    for col in params["FEATURE_COLUMNS"]:
         assert col in df.columns, f"'{col}' does not exist in the dataframe."
+
+    
+    # print("future: " + str(df["future"]))
+    # print("future: " + str(df["future"][0]))
+    # print("future: " + str(df["future"].values))
+    # if params["LOSS"] == "huber_loss":
+    #             print(df["future"].values)
+    #             df[column] = scaler.fit_transform(np.expand_dims(df[column].values, axis=1), df["future"])
+
     if scale:
         column_scaler = {}
         # scale the data (prices) from 0 to 1
-        for column in feature_columns:
+        for column in params["FEATURE_COLUMNS"]:
             scaler = preprocessing.MinMaxScaler()
             df[column] = scaler.fit_transform(np.expand_dims(df[column].values, axis=1))
             column_scaler[column] = scaler
 
-        # add the MinMaxScaler instances to the result returned
         result["column_scaler"] = column_scaler
-    # add the target column (label) by shifting by `lookup_step`
-    df["future"] = df[test_var].shift(-lookup_step)
+
+    if params["LOSS"] == "huber_loss":
+        df["future"] = df[test_var].shift(-params["LOOKUP_STEP"])
+    else:
+        df["future"] = df[test_var].shift(-params["LOOKUP_STEP"])
+        df["future"] = list(map(lambda current, future: int(float(future) > float(current)), df.close, df.future))
+
+
+    # add the target column (label) by shifting by `lookup_step`\
+    
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
-    last_sequence = np.array(df[feature_columns].tail(lookup_step))
+    last_sequence = np.array(df[params["FEATURE_COLUMNS"]].tail(params["LOOKUP_STEP"]))
     # drop NaNs
     df.dropna(inplace=True)
     sequence_data = []
-    sequences = deque(maxlen=n_steps)
-    for entry, target in zip(df[feature_columns].values, df["future"].values):
+    sequences = deque(maxlen=params["N_STEPS"])
+    for entry, target in zip(df[params["FEATURE_COLUMNS"]].values, df["future"].values):
         sequences.append(entry)
-        if len(sequences) == n_steps:
+        if len(sequences) == params["N_STEPS"]:
             sequence_data.append([np.array(sequences), target])
     # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
     # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
@@ -472,27 +450,31 @@ def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
     result["last_sequence"] = last_sequence
     # construct the X"s and y"s
     X, y = [], []
-
+    
     for seq, target in sequence_data:
         X.append(seq)
         y.append(target)
-    # convert to numpy arrays
+
     X = np.array(X)
     y = np.array(y)
     # reshape X to fit the neural network
+    # print(X)
+    # print(y)
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     
     # split the dataset
-    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=test_size, shuffle=shuffle)
+    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
+
+    # print("in the load thingy " + str(result["X_valid"]))
 
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
     test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
     
-    train = train.batch(batch_size)
-    valid = valid.batch(batch_size)
-    test = test.batch(batch_size)
+    train = train.batch(params["BATCH_SIZE"])
+    valid = valid.batch(params["BATCH_SIZE"])
+    test = test.batch(params["BATCH_SIZE"])
     
     train = train.cache()
     valid = valid.cache()
@@ -505,41 +487,73 @@ def load_data(symbol, end_date=None, n_steps=50, batch_size=64, limit=4000,
     # return the result
     return result, train, valid, test
 
-def create_model(sequence_length, units=256, cell=LSTM, n_layers=2, dropout=0.3,
-                loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
-    
-    # with strat.scope():
+def create_model(params):
     model = Sequential()
-    for i in range(n_layers):
-        if i == 0:
-            # first layer
-            if bidirectional:
-                model.add(Bidirectional(cell(units, return_sequences=True), input_shape=(None, sequence_length)))
-            else:
-                model.add(cell(units, return_sequences=True, input_shape=(None, sequence_length)))
-        elif i == n_layers - 1:
-            # last layer
-            if bidirectional:
-                model.add(Bidirectional(cell(units, return_sequences=False)))
-            else:
-                model.add(cell(units, return_sequences=False))
+    bi_string = "Bidirectional" if params["BIDIRECTIONAL"] else ""
+    print(bi_string)
+    for layer in range(len(params["LAYERS"])):
+        if layer == 0:
+            model_first_layer(model, params["LAYERS"], layer, params["N_STEPS"])
+
+        elif layer == len(params["LAYERS"]) - 1:
+            model_last_layer(model, params["LAYERS"], layer)
+
         else:
-            # hidden layers
-            if bidirectional:
-                model.add(Bidirectional(cell(units, return_sequences=True)))
-            else:
-                model.add(cell(units, return_sequences=True))
-        # add dropout after each layer
-        model.add(Dropout(dropout))
+            model_hidden_layers(model, params["LAYERS"], layer)
+    
+        model.add(Dropout(params["DROPOUT"]))
     model.add(Dense(1, activation="linear"))
-    model.compile(loss=loss, metrics=["mean_absolute_error"], optimizer=optimizer, steps_per_execution=1)
+    if params["LOSS"] == "huber_loss":
+        model.compile(loss=params["LOSS"], metrics=["mean_absolute_error"], optimizer=params["OPTIMIZER"])
+    else:
+        model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=params["OPTIMIZER"])
+    # print(model.summary())
+    return model
+
+def model_first_layer(model, layers, ind, n_steps):
+    layer_name = layer_name_converter(layers[ind])
+    next_layer_name = layer_name_converter(layers[ind + 1])
+
+    if layer_name != ("LSTM" or "SRNN" or "GRU"):
+        print("You need to have a recurrent layer leading your model")
+        print("otherwise everything breaks, limitation of the loading code.")
+        print("Sorry buddy")
+        sys.exit(-1)
+
+    if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
+        model.add(layers[ind][1](layers[ind][0], return_sequences=True, input_shape=(None, n_steps)))
+    else:
+        model.add(layers[ind][1](layers[ind][0], return_sequences=False, input_shape=(None, n_steps)))
+
+    return model
+
+def model_hidden_layers(model, layers, ind):
+    layer_name = layer_name_converter(layers[ind])
+    next_layer_name = layer_name_converter(layers[ind + 1])
+
+    if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
+        model.add(layers[ind][1](layers[ind][0]))
+    else:
+        if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
+            model.add(layers[ind][1](layers[ind][0], return_sequences=True))
+        else:
+            model.add(layers[ind][1](layers[ind][0], return_sequences=False))
+
+    return model
+
+def model_last_layer(model, layers, ind):
+    layer_name = layer_name_converter(layers[ind])
+
+    if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
+        model.add(layers[ind][1](layers[ind][0]))
+    else:
+        model.add(layers[ind][1](layers[ind][0], return_sequences=False))
+    
     return model
 
 def load_model_with_data(symbol, current_date, params, directory, model_name):
-    data, train, valid, test = load_data(symbol, current_date, params["N_STEPS"], params["BATCH_SIZE"], 
-    params["LIMIT"], params["FEATURE_COLUMNS"], False, to_print=False)
-    model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
-    params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
+    data, train, valid, test = load_data(symbol, params, current_date, shuffle=False, to_print=False)
+    model = create_model(params)
     model.load_weights(directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")
 
     return data, model
@@ -556,7 +570,10 @@ def predict(model, data, n_steps, classification=False):
     # get the prediction (scaled from 0 to 1)
     prediction = model.predict(last_sequence)
     # get the price (by inverting the scaling)
-    predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
+    if not classification:
+        predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
+    else:
+        predicted_val = prediction[0][0]
     return predicted_val
 
 def getOwnedStocks():
@@ -846,35 +863,22 @@ def get_feature_importance(df):
         print(feature_names[i], end="")
         print(": "+ str(feature))
         i += 1
-
-
-def plot_graph(y_real, y_pred, symbol, back_test_days, time_string):
-    real_y_values = y_real[-back_test_days:]
-    predicted_y_values = y_pred[-back_test_days:]
     
-    plot_dir = directory_dict["graph_directory"] + "/" + symbol
-    if not os.path.isdir(plot_dir):
-        os.mkdir(plot_dir)
-    plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
-    plt.plot(real_y_values, c="b")
-    plt.plot(predicted_y_values, c="r")
-    plt.xlabel("Days")
-    plt.ylabel("Price")
-    plt.title(symbol)
-    plt.legend(["Actual Price", "Predicted Price"])
-    plt.savefig(plot_name)
-    plt.close()
-    
-def get_all_accuracies(model, data, lookup_step):
+def get_all_accuracies(model, data, lookup_step, classification=False):
     if using_all_accuracies:
-        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], data["column_scaler"][test_var])
+        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], 
+        data["column_scaler"][test_var], classification)
         train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
-        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
+        data["column_scaler"][test_var], classification)
         valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
-        y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+        y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"],
+         data["column_scaler"][test_var], classification)
         test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
     else:
-        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+        # print("data X_valid" + str(data["X_valid"]))
+        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
+        data["column_scaler"][test_var], classification)
         valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
         train_acc = test_acc = 0
 
@@ -899,55 +903,70 @@ def get_mae(model, tensorslice, data):
 
     return mae
 
-def return_real_predict(model, X_data, y_data, column_scaler):
+def return_real_predict(model, X_data, y_data, column_scaler, classification=False):
     y_pred = model.predict(X_data)
     y_real = np.squeeze(column_scaler.inverse_transform(np.expand_dims(y_data, axis=0)))
-    y_pred = np.squeeze(column_scaler.inverse_transform(y_pred))
+    if not classification:
+        y_pred = np.squeeze(column_scaler.inverse_transform(y_pred))
 
     return y_real, y_pred
 
-
-def model_money(money, data1, data2):
-    stocks_owned = 0
-    for i in range(0 , len(data1) - 1):
-        now_price = data1[i]
-        predict_price = data2[i + 1]
-        if predict_price > now_price:
-            stocks_can_buy = money // now_price
-            if stocks_can_buy > 0:
-                money -= stocks_can_buy * now_price
-                stocks_owned += stocks_can_buy
-        elif predict_price < now_price:
-            money += now_price * stocks_owned
-            stocks_owned = 0
-    if stocks_owned != 0:
-        money += stocks_owned * data1[len(data1)-1]
-    return money
-
-def perfect_money(money, data):
-    stonks_owned = 0
-    for i in range(0, len(data) - 1):
-        now_price = data[i]
-        tommorow_price = data[i + 1]
-        if tommorow_price > now_price:
-            stonks_can_buy = money // now_price
-            if stonks_can_buy > 0:
-                money -= stonks_can_buy * now_price
-                stonks_owned += stonks_can_buy
-        elif tommorow_price < now_price:
-            money += now_price * stonks_owned
-            stonks_owned = 0
-    if stonks_owned != 0:
-        money += stonks_owned * data[len(data) - 1]
-    return money
-
-
 if __name__ == "__main__":
+    from functions import get_test_name
+    from paca_model import saveload_neural_net
+
+    defaults = {
+    "N_STEPS": 100,
+    "LOOKUP_STEP": 1,
+    "TEST_SIZE": 0.2,
+    "LAYERS": [(256, LSTM), (256, LSTM)],
+    "UNITS": 256,
+    "DROPOUT": 0.4,
+    "BIDIRECTIONAL": False,
+    "LOSS": "huber_loss",
+    "OPTIMIZER": "adam",
+    "BATCH_SIZE": 1024,
+    "EPOCHS": 200,
+    "PATIENCE": 200,
+    "LIMIT": 4000,
+    "SAVELOAD": True,
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "SAVE_FOLDER": "tuning4"
+    }
 
     
 
+    symbol = "AGYS"
+    saveload_neural_net(symbol, params=defaults)
     
+    start_time = time.time()
+    model_name = (symbol + "-" + get_test_name(defaults))
 
-    pass
+    print("\n~~~Now Starting " + symbol + "~~~")
     
+    time_s = time.time()
+    data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
+    print("Loading the data took " + str(time.time() - time_s) + " seconds")    
+
+    time_s = time.time()
+    model = create_model(defaults)
+    model.load_weights(directory_dict["model_directory"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
+    print("Loading the model took " + str(time.time() - time_s) + " seconds")    
+
+    time_s = time.time()
+    train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"], False)
+    print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
+
+    total_time = time.time() - start_time
+    time_s = time.time()
+    percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, 
+    train_acc, defaults["N_STEPS"], False)
+    y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var], True)
+    print(f"real: {y_real}")
+    print(f"predict: {y_pred}")
+    future_price = predict(model, data, defaults["N_STEPS"], False) 
+    print("NN report took " + str(time.time() - time_s) + " seconds")
+
+    print(f"predicted value: {future_price}")
+
 

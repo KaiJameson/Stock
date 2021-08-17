@@ -64,8 +64,7 @@ defaults = {
     "N_STEPS": 100,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "N_LAYERS": 2,
-    "CELL": LSTM,
+    "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
     "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
@@ -74,8 +73,8 @@ defaults = {
     "BATCH_SIZE": 1024,
     "EPOCHS": 2000,
     "PATIENCE": 200,
-    "SAVELOAD": True,
     "LIMIT": 4000,
+    "SAVELOAD": True,
     "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
     "SAVE_FOLDER": "trading"
 }

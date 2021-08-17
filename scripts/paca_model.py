@@ -6,7 +6,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from environ import (directory_dict, random_seed, save_logs,
 defaults)
 from time_functs import get_time_string
-from paca_model_functs import (load_data, create_model, nn_report, get_all_accuracies, get_all_maes)
+from paca_model_functs import (load_data, create_model, nn_report, get_all_accuracies, get_all_maes) 
 import numpy as np
 import socket
 import random
@@ -22,7 +22,7 @@ def decision_neural_net(symbol, end_date=None, params=defaults):
 
     end_time = time.time()
     total_time = end_time - start_time
-    percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, params["N_STEPS"])
+    percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, params["N_STEPS"], False)
 
     return percent, test_acc
 
@@ -42,6 +42,13 @@ def saveload_neural_net(symbol, end_date=None, params=defaults):
     )
 
     return epochs_used
+
+def google_cloud_nn(symbol, end_date=None, params=defaults):
+    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
+        symbol, end_date, params    
+    )
+
+    return model
 
 def make_neural_net(symbol, end_date, params):
     #description of all the parameters used is located inside environment.py
@@ -69,11 +76,9 @@ def make_neural_net(symbol, end_date, params):
     # model name to save, making it as unique as possible based on parameters
     model_name = (symbol + "-" + get_test_name(params))
 
-    data, train, valid, test = load_data(symbol, end_date, params["N_STEPS"], params["BATCH_SIZE"], 
-    params["LIMIT"], params["FEATURE_COLUMNS"])
+    data, train, valid, test = load_data(symbol, params, end_date)
 
-    model = create_model(params["N_STEPS"], params["UNITS"], params["CELL"], params["N_LAYERS"], 
-    params["DROPOUT"], params["LOSS"], params["OPTIMIZER"], params["BIDIRECTIONAL"])
+    model = create_model(params)
 
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
@@ -103,19 +108,21 @@ def make_neural_net(symbol, end_date, params):
     if params["SAVELOAD"]:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
-        data, train, valid, test = load_data(symbol, end_date, params["N_STEPS"], params["BATCH_SIZE"], 
-            params["LIMIT"], params["FEATURE_COLUMNS"], False
-        )
+        data, train, valid, test = load_data(symbol, params, end_date, False)
 
         model_path = os.path.join("results", model_name + ".h5")
         model.load_weights(model_path)
 
-        test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
+        if params["LOSS"] == "categorical_hinge":
+            test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
+        else:
+            test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
+            train_acc, valid_acc, test_acc = get_all_accuracies(model, data, params["LOOKUP_STEP"])
+
 
         delete_files_in_folder(directory_dict["results_directory"])
         os.rmdir(directory_dict["results_directory"])
         
-        train_acc, valid_acc, test_acc = get_all_accuracies(model, data, params["LOOKUP_STEP"])
 
     if not save_logs:
         delete_files_in_folder(logs_dir)

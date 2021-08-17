@@ -1,11 +1,76 @@
 from matplotlib import pyplot as plt
-from environ import directory_dict
-from time_functs import get_date_string
+from environ import test_var, test_money, directory_dict
+from functions import percent_from_real, layers_string
+from time_functs import get_date_string, get_time_string
 from tuner_functs import moving_average_comparator, linear_regression_comparator
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import ast
+
+def write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
+        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred):
+    spencer_money = test_money * (curr_price/real_y_values[0])
+    f = open(report_dir, "a")
+    f.write("~~~~~~~" + symbol + "~~~~~~~\n")
+    f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
+    money_made = model_money(test_money, real_y_values, predicted_y_values)
+    f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
+    per_mon = perfect_money(test_money, real_y_values)
+    f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
+    f.write("The test var was " + test_var + "\n")
+    f.write("Total run time was: " + str(round(total_minutes, 2)) + " minutes.\n")
+    f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
+    f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
+    
+    percent = future_price / curr_price
+    if curr_price < future_price:
+        f.write("That would mean a growth of: " + str(round((percent - 1) * 100, 2)) + "%\n")
+        f.write("I would buy this stock.\n")
+    elif curr_price > future_price:
+        f.write("That would mean a loss of: " + str(abs(round((percent - 1) * 100, 2))) + "%\n")
+        f.write("I would sell this stock.\n")
+    
+    f.write("The average away from the real is: " + str(percent_from_real(y_real, y_pred)) + "%\n")
+    f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + "%\n")
+    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + "%\n")
+    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
+    f.close()
+
+
+def model_money(money, data1, data2):
+    stocks_owned = 0
+    for i in range(0 , len(data1) - 1):
+        now_price = data1[i]
+        predict_price = data2[i + 1]
+        if predict_price > now_price:
+            stocks_can_buy = money // now_price
+            if stocks_can_buy > 0:
+                money -= stocks_can_buy * now_price
+                stocks_owned += stocks_can_buy
+        elif predict_price < now_price:
+            money += now_price * stocks_owned
+            stocks_owned = 0
+    if stocks_owned != 0:
+        money += stocks_owned * data1[len(data1)-1]
+    return money
+
+def perfect_money(money, data):
+    stonks_owned = 0
+    for i in range(0, len(data) - 1):
+        now_price = data[i]
+        tommorow_price = data[i + 1]
+        if tommorow_price > now_price:
+            stonks_can_buy = money // now_price
+            if stonks_can_buy > 0:
+                money -= stonks_can_buy * now_price
+                stonks_owned += stonks_can_buy
+        elif tommorow_price < now_price:
+            money += now_price * stonks_owned
+            stonks_owned = 0
+    if stonks_owned != 0:
+        money += stonks_owned * data[len(data) - 1]
+    return money
 
 def make_current_price(curr_price):
     date_string = get_date_string()
@@ -69,8 +134,8 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     f = open(directory + "/" + test_name + ".txt", "a")
 
     f.write("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
-    f.write("N_layers: " + str(params["N_LAYERS"]) + ", Cell: " + str(params["CELL"]) + ",\n")
-    f.write("Units: " + str(params["UNITS"]) + "," + " Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
+    f.write("Layers: " + layers_string(params["LAYERS"]) + "\n") 
+    f.write("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
     f.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
     f.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
     f.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n\n")
@@ -87,8 +152,8 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
     print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("N_layers: " + str(params["N_LAYERS"]) + ", Cell: " + str(params["CELL"]) + ",")
-    print("Units: " + str(params["UNITS"]) + "," + " Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
+    print("Layers: " + layers_string(params["LAYERS"]) + ",")
+    print("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
     print("Loss: " + params["LOSS"] + ", Optimizer: " + 
     params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
     print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
@@ -102,6 +167,8 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
+
+
 
 def comparator_results_excel(df, run_days, directory, stock):
     lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 10, run_days)
@@ -148,6 +215,23 @@ def save_to_dictionary(file_path, dictionary):
         f.write(str(key) + ":" + str(dictionary[key]) + "\n")
 
     f.close()
+
+def plot_graph(y_real, y_pred, symbol, back_test_days):
+    real_y_values = y_real[-back_test_days:]
+    predicted_y_values = y_pred[-back_test_days:]
+    
+    plot_dir = directory_dict["graph_directory"] + "/" + symbol
+    if not os.path.isdir(plot_dir):
+        os.mkdir(plot_dir)
+    plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
+    plt.plot(real_y_values, c="b")
+    plt.plot(predicted_y_values, c="r")
+    plt.xlabel("Days")
+    plt.ylabel("Price")
+    plt.title(symbol)
+    plt.legend(["Actual Price", "Predicted Price"])
+    plt.savefig(plot_name)
+    plt.close()
 
 def graph_epochs_relationship(progress, test_name):
         percent_away_list = progress["percent_away_list"]

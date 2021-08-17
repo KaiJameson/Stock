@@ -69,7 +69,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_directory"], model_name)
 
                 # first grab the current price by getting the latest value from the og data frame
-                y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
+                y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
                 real_y_values = y_real[-back_test_days:]
                 current_price = real_y_values[-1]
 
@@ -78,7 +78,6 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
                 actual_price = get_actual_price(current_date, api, symbol)
-
                 # get the percent difference between prediction and actual
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
 
