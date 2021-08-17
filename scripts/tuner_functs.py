@@ -109,7 +109,6 @@ def linear_regression_comparator(df, timeperiod, run_days):
 
     return avg_p, avg_d, current_money
 
-
 def moving_average_comparator(df, timeperiod, run_days):
     df = df["df"]
     df["7MA"] = df.close.rolling(window=timeperiod).mean()

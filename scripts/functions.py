@@ -1,5 +1,6 @@
 from environ import *
 from error_functs import error_handler
+import pandas as pd
 import os
 
 
@@ -40,10 +41,33 @@ def delete_files_in_folder(directory):
 
 
 def get_test_name(params):
-    return (str(params["FEATURE_COLUMNS"]) + "-limit" + str(params["LIMIT"]) + "-step" 
-        + str(params["N_STEPS"]) + "-layer" + str(params["N_LAYERS"]) + "-unit" 
-        + str(params["UNITS"]) + "-epoch" + str(params["EPOCHS"]) + "-pat" + str(params["PATIENCE"]) 
-        + "-batch" + str(params["BATCH_SIZE"]) + "-drop" + str(params["DROPOUT"]))
+    return (str(params["FEATURE_COLUMNS"]) + "-layers" + layers_string(params["LAYERS"]) + "-step" 
+        + str(params["N_STEPS"]) + "-limit" + str(params["LIMIT"]) + "-epoch" + str(params["EPOCHS"]) 
+        + "-pat" + str(params["PATIENCE"]) + "-batch" + str(params["BATCH_SIZE"]) 
+        + "-drop" + str(params["DROPOUT"]))
+
+def layers_string(layers):
+    string = "["
+    for layer in layers:
+        string += "(" + str(layer[0]) + "-" + layer_name_converter(layer) + ")"
+    string += "]"
+
+    return string
+
+def layer_name_converter(layer):
+    string = ""
+    if str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent_v2.LSTM'>":
+        string += "LSTM"
+    elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent.SimpleRNN'>":
+        string += "SRNN"
+    elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent_v2.GRU'>":
+        string += "GRU"
+    elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.core.Dense'>":
+        string += "Dense"
+    else:
+        string += str(layer[1])
+
+    return string
 
 def get_correct_direction(predicted_price, current_price, actual_price):
     if ((predicted_price > current_price and actual_price > current_price) or 
@@ -56,10 +80,18 @@ def get_correct_direction(predicted_price, current_price, actual_price):
     else:
         return 0.0
 
+def percent_from_real(y_real, y_predict):
+    the_diffs = []
+    for i in range(len(y_real) - 1):
+        per_diff = (abs(y_real[i] - y_predict[i])/y_real[i]) * 100
+        the_diffs.append(per_diff)
+    pddf = pd.DataFrame(data=the_diffs)
+    pddf = pddf.values
+    return round(pddf.mean(), 2)
+
 def silence_tensorflow():
     import os
     import logging
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
     logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-    # pass

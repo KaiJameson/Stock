@@ -13,7 +13,7 @@ def error_handler(symbol, exception):
 
 def net_error_handler(symbol, exception):
     err_file = open(error_file, "a")
-    err_file.write("\n\n EXCEPTION HANDLED \n\n")
+    err_file.write("\n EXCEPTION HANDLED \n")
     write_exception_details(err_file, symbol, exception)
     err_file.close()
     print("EXCEPTION HANDLED", flush=True)
@@ -26,5 +26,4 @@ def write_exc_info(err_file):
 
 def write_exception_details(err_file, symbol, exception):
     err_file.write("Problem encountered with stock: " + symbol + "\n")
-    err_file.write("Error is of type: " + str(type(exception).__name__) + "\n")
     err_file.write("Error happened at: " + str(datetime.datetime.now()) + "\n")

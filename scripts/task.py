@@ -1,5 +1,5 @@
 from tensorflow.python.client import device_lib
-from paca_model import saveload_neural_net
+from paca_model import google_cloud_nn
 from environ import defaults
 import tensorflow as tf
 import argparse
@@ -43,6 +43,7 @@ print('num_replicas_in_sync = {}'.format(strategy.num_replicas_in_sync))
 MODEL_DIR = os.getenv("AIP_MODEL_DIR")
 
 with strategy.scope():
-    saveload_neural_net("AGYS", params=defaults)
+    model = google_cloud_nn("AGYS", params=defaults)
 
+tf.saved_model.save(model, os.environ["AIP_MODEL_DIR"])
 

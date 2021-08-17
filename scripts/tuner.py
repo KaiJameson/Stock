@@ -1,6 +1,6 @@
 from functions import check_directories, delete_files_in_folder, get_correct_direction, silence_tensorflow, get_test_name
 silence_tensorflow()
-from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
 from paca_model import saveload_neural_net
 from paca_model_functs import (get_api, create_model, get_all_accuracies, predict,  
 return_real_predict, load_model_with_data)
@@ -23,8 +23,7 @@ master_params = {
     "N_STEPS": [100],
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "N_LAYERS": 2,
-    "CELL": LSTM,
+    "LAYERS": [(256, LSTM), (128, LSTM), (64, LSTM)],
     "UNITS": [256],
     "DROPOUT": [.4],
     "BIDIRECTIONAL": False,
@@ -127,7 +126,6 @@ for symbol in tune_symbols:
                 actual_price = get_actual_price(current_date, api, symbol)
 
                 # get the percent difference between prediction and actual
-                print("predicted, actual, current " + str(predicted_price) + "," + str(actual_price) + "," + str(current_price))
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
 
                 correct_dir = get_correct_direction(predicted_price, current_price, actual_price)

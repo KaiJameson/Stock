@@ -1,7 +1,8 @@
 from functions import check_directories, silence_tensorflow, get_test_name
 silence_tensorflow()
 from paca_model_functs import (load_data, getOwnedStocks, return_real_predict, 
-get_all_accuracies, nn_report,  percent_from_real, buy_all_at_once, create_model)
+get_all_accuracies, nn_report,  buy_all_at_once, create_model)
+from functions import percent_from_real
 from symbols import load_save_symbols, do_the_trades
 from environ import directory_dict, defaults, test_var
 from error_functs import error_handler
@@ -33,14 +34,11 @@ def load_trade(symbols):
             print("\n~~~Now Starting " + symbol + "~~~")
             
             time_s = time.time()
-            data, train, valid, test = load_data(symbol, n_steps=defaults["N_STEPS"], batch_size=defaults["BATCH_SIZE"],
-            limit=defaults["LIMIT"], feature_columns=defaults["FEATURE_COLUMNS"], shuffle=False, to_print=False)
+            data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
             print("Loading the data took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
-            model = create_model(defaults["N_STEPS"], defaults["UNITS"], defaults["CELL"], defaults["N_LAYERS"], 
-                defaults["DROPOUT"],  defaults["LOSS"], defaults["OPTIMIZER"], defaults["BIDIRECTIONAL"]
-            )
+            model = create_model(defaults)
             model.load_weights(directory_dict["model_directory"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
             print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
@@ -50,7 +48,10 @@ def load_trade(symbols):
 
             total_time = time.time() - start_time
             time_s = time.time()
-            percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"])
+            if defaults["LOSS"] == "huber_loss":
+                percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"], False)
+            else:
+                percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"], True)
             price_prediction_list[symbol] = future_price
             print("NN report took " + str(time.time() - time_s) + " seconds")
 
