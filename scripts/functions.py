@@ -44,7 +44,7 @@ def get_test_name(params):
     return (str(params["FEATURE_COLUMNS"]) + "-layers" + layers_string(params["LAYERS"]) + "-step" 
         + str(params["N_STEPS"]) + "-limit" + str(params["LIMIT"]) + "-epoch" + str(params["EPOCHS"]) 
         + "-pat" + str(params["PATIENCE"]) + "-batch" + str(params["BATCH_SIZE"]) 
-        + "-drop" + str(params["DROPOUT"]))
+        + "-drop" + str(params["DROPOUT"]) + "-ts" + str(params["TEST_SIZE"]))
 
 def layers_string(layers):
     string = "["

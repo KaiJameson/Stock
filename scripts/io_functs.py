@@ -134,7 +134,7 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     f = open(directory + "/" + test_name + ".txt", "a")
 
     f.write("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
-    f.write("Layers: " + layers_string(params["LAYERS"]) + "\n") 
+    f.write("Layers: " + layers_string(params["LAYERS"]) + "Test Size: " + str(params["TEST_SIZE"]) + ",\n") 
     f.write("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
     f.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
     f.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
@@ -152,8 +152,8 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
     print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("Layers: " + layers_string(params["LAYERS"]) + ",")
-    print("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
+    print("Layers: " + layers_string(params["LAYERS"]) + "," + "Test Size: " + str(params["TEST_SIZE"]) + ",")
+    print("Dropout: " + str(params["DROPOUT"])  + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
     print("Loss: " + params["LOSS"] + ", Optimizer: " + 
     params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
     print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
