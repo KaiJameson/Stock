@@ -60,7 +60,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 epochs_run = saveload_neural_net(symbol, current_date, params)
                 progress["epochs_list"].append(epochs_run)
                 
-            print("Model result progress[", end="")
+            print("Model result progress: [", end="")
             for symbol in real_test_symbols:
                 # get model name for future reference
                 model_name = (symbol + "-" + get_test_name(params))

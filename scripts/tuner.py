@@ -22,9 +22,9 @@ check_directories()
 master_params = {
     "N_STEPS": [100],
     "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "LAYERS": [(256, LSTM), (128, LSTM), (64, LSTM)],
-    "UNITS": [256],
+    "TEST_SIZE": 0.15,
+    "LAYERS": [(128, LSTM), (128, LSTM)],
+    "UNITS": [128],
     "DROPOUT": [.4],
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",

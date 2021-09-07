@@ -490,14 +490,12 @@ def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=
 def create_model(params):
     model = Sequential()
     bi_string = "Bidirectional" if params["BIDIRECTIONAL"] else ""
-    print(bi_string)
+    # print(bi_string)
     for layer in range(len(params["LAYERS"])):
         if layer == 0:
             model_first_layer(model, params["LAYERS"], layer, params["N_STEPS"])
-
         elif layer == len(params["LAYERS"]) - 1:
             model_last_layer(model, params["LAYERS"], layer)
-
         else:
             model_hidden_layers(model, params["LAYERS"], layer)
     
@@ -514,7 +512,7 @@ def model_first_layer(model, layers, ind, n_steps):
     layer_name = layer_name_converter(layers[ind])
     next_layer_name = layer_name_converter(layers[ind + 1])
 
-    if layer_name != ("LSTM" or "SRNN" or "GRU"):
+    if layer_name == "Dense":
         print("You need to have a recurrent layer leading your model")
         print("otherwise everything breaks, limitation of the loading code.")
         print("Sorry buddy")
