@@ -2,15 +2,15 @@ from functions import check_directories, delete_files_in_folder, get_correct_dir
 silence_tensorflow()
 from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
 from paca_model import saveload_neural_net
-from paca_model_functs import (get_api, create_model, get_all_accuracies, predict,  
+from functions.paca_model_functs import (get_api, create_model, get_all_accuracies, predict,  
 return_real_predict, load_model_with_data)
-from symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
+from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
-from time_functs import increment_calendar, get_actual_price
-from error_functs import error_handler
-from tuner_functs import grab_index, change_params, get_user_input, update_money
-from environ import back_test_days, test_var, directory_dict, test_money
-from time_functs import get_short_end_date, get_year_month_day
+from functions.time_functs import increment_calendar, get_actual_price
+from functions.error_functs import error_handler
+from functions.tuner_functs import grab_index, change_params, get_user_input, update_money
+from config.environ import back_test_days, test_var, directory_dict, test_money
+from functions.time_functs import get_short_end_date, get_year_month_day
 from statistics import mean
 import time
 import sys
@@ -22,10 +22,10 @@ check_directories()
 master_params = {
     "N_STEPS": [100],
     "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.15,
-    "LAYERS": [(128, LSTM), (128, LSTM)],
-    "UNITS": [128],
-    "DROPOUT": [.4],
+    "TEST_SIZE": 0.2,
+    "LAYERS": [(256, LSTM), (256, LSTM)],
+    "UNITS": [256],
+    "DROPOUT": [.8],
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -57,11 +57,11 @@ for symbol in tune_symbols:
 
     still_running = True
 
-    if os.path.isfile(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt"):
+    if os.path.isfile(directory_dict["tuning_dir"] + "/" + symbol + "-status.txt"):
         print("A tuning was in process")
         print("pulling info now")
 
-        index_dict  = read_saved_contents(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt", index_dict)
+        index_dict  = read_saved_contents(directory_dict["tuning_dir"] + "/" + symbol + "-status.txt", index_dict)
 
     
     while still_running:
@@ -88,7 +88,7 @@ for symbol in tune_symbols:
             api, symbol)
         print(starting_day_price)
 
-        if os.path.isfile(directory_dict["tuning_directory"] + "/" + model_name + ".txt"):
+        if os.path.isfile(directory_dict["tuning_dir"] + "/" + model_name + ".txt"):
             print("A fully completed file with the name " + model_name + " already exists.")
             print("Exiting this instance of exhaustive tune now: ")
             index_dict = grab_index(index_dict, master_params)
@@ -99,8 +99,8 @@ for symbol in tune_symbols:
                 continue
     
         # check if we already have a save file, if we do, extract the info and run it
-        if os.path.isfile(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt"):
-            progress = read_saved_contents(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt", progress)
+        if os.path.isfile(directory_dict["tuning_dir"] + "/" + "SAVE-" + model_name + ".txt"):
+            progress = read_saved_contents(directory_dict["tuning_dir"] + "/" + "SAVE-" + model_name + ".txt", progress)
        
         current_date = get_short_end_date(progress["tune_year"], progress["tune_month"], progress["tune_day"])
         try:
@@ -112,7 +112,7 @@ for symbol in tune_symbols:
                 progress["epochs_list"].append(epochs_run)
                 
                 # setup to allow the rest of the values to be calculated
-                data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_directory"], model_name)
+                data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name)
 
                 # first grab the current price by getting the latest value from the og data frame
                 y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
@@ -144,7 +144,7 @@ for symbol in tune_symbols:
 
                 progress["tune_year"], progress["tune_month"], progress["tune_day"] = get_year_month_day(current_date)
 
-                save_to_dictionary(directory_dict["tuning_directory"] + "/" + "SAVE-" + 
+                save_to_dictionary(directory_dict["tuning_dir"] + "/" + "SAVE-" + 
                     model_name + ".txt", progress)
 
             print("Percent away: " + str(progress["percent_away_list"]))
@@ -154,27 +154,27 @@ for symbol in tune_symbols:
             avg_e = str(round(mean(progress["epochs_list"]), 2))
             hold_money = round(test_money * (current_price / starting_day_price), 2)
 
-            comparator_results_excel(data, tune_days, directory_dict["tuning_directory"], symbol)
+            comparator_results_excel(data, tune_days, directory_dict["tuning_dir"], symbol)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
                 progress["tune_day"], progress["time_so_far"], progress["current_money"], hold_money)
-            backtest_excel(directory_dict["tuning_directory"], model_name, progress["tune_year"], progress["tune_month"], progress["tune_day"], 
+            backtest_excel(directory_dict["tuning_dir"], model_name, progress["tune_year"], progress["tune_month"], progress["tune_day"], 
                 params, avg_p, avg_d, avg_e, progress["time_so_far"], progress["total_days"], progress["current_money"], hold_money)
 
-            if os.path.isfile(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt"):
-                os.remove(directory_dict["tuning_directory"] + "/" + "SAVE-" + model_name + ".txt")
+            if os.path.isfile(directory_dict["tuning_dir"] + "/" + "SAVE-" + model_name + ".txt"):
+                os.remove(directory_dict["tuning_dir"] + "/" + "SAVE-" + model_name + ".txt")
 
-            delete_files_in_folder(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"])
+            delete_files_in_folder(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"])
 
             index_dict = grab_index(index_dict, master_params)
 
             if index_dict["n_step_in"] == len(master_params["N_STEPS"]):
                 still_running = False
                 print("Ending running the stuff for " + symbol)
-                if os.path.isfile(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt"):
-                    os.remove(directory_dict["tuning_directory"] + "/" + symbol + "-status.txt")
+                if os.path.isfile(directory_dict["tuning_dir"] + "/" + symbol + "-status.txt"):
+                    os.remove(directory_dict["tuning_dir"] + "/" + symbol + "-status.txt")
             else:
-                save_to_dictionary(directory_dict["tuning_directory"] + "/" + symbol + "-status", index_dict)
+                save_to_dictionary(directory_dict["tuning_dir"] + "/" + symbol + "-status", index_dict)
 
 
         except KeyboardInterrupt:

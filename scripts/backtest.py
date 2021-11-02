@@ -1,14 +1,14 @@
 
-from functions import (check_directories,  delete_files_in_folder, get_test_name,
+from functions.functions import (check_directories,  delete_files_in_folder, get_test_name,
 get_correct_direction, silence_tensorflow)
 silence_tensorflow()
-from symbols import real_test_symbols, test_year, test_month, test_day, test_days
-from io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
-from time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_actual_price
-from error_functs import error_handler
-from paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
+from config.symbols import real_test_symbols, test_year, test_month, test_day, test_days
+from config.environ import directory_dict, test_var, back_test_days
+from functions.io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
+from functions.time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_actual_price
+from functions.error_functs import error_handler
+from functions.paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
 from paca_model import saveload_neural_net
-from environ import directory_dict, test_var, back_test_days
 from statistics import mean
 from tensorflow.keras.layers import LSTM
 import sys
@@ -37,15 +37,15 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
     print(test_name)
 
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + test_name + ".txt"):
+    if os.path.isfile(directory_dict["backtest_dir"] + "/" + test_name + ".txt"):
         print("A fully completed file with the name " + test_name + " already exists.")
         print("Exiting the_real_test now: ")
         return
 
     # check if we already have a save file, if we do, extract the info and run it
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
+    if os.path.isfile(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt"):
         print("A save file was found, opening now: ")
-        progress = read_saved_contents(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", progress)
+        progress = read_saved_contents(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         
     current_date = get_short_end_date(progress["test_year"], progress["test_month"], progress["test_day"])
@@ -66,7 +66,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 model_name = (symbol + "-" + get_test_name(params))
 
                 # setup to allow the rest of the values to be calculated
-                data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_directory"], model_name)
+                data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name)
 
                 # first grab the current price by getting the latest value from the og data frame
                 y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
@@ -99,7 +99,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
             progress["test_year"], progress["test_month"], progress["test_day"] = get_year_month_day(current_date)
 
-            save_to_dictionary(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt", progress)
+            save_to_dictionary(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         except KeyboardInterrupt:
                 print("I acknowledge that you want this to stop.")
@@ -119,16 +119,16 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
     print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
                 progress["test_day"], progress["time_so_far"], None, None)
-    backtest_excel(directory_dict["backtest_directory"], test_name, progress["test_year"], progress["test_month"], 
+    backtest_excel(directory_dict["backtest_dir"], test_name, progress["test_year"], progress["test_month"], 
                 progress["test_day"], params, avg_p, avg_d, 
         avg_e, progress["time_so_far"], progress["total_days"], None, None)
 
     graph_epochs_relationship(progress, test_name)
 
-    if os.path.isfile(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt"):
-        os.remove(directory_dict["backtest_directory"] + "/" + "SAVE-" + test_name + ".txt")
+    if os.path.isfile(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt"):
+        os.remove(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt")
 
-    delete_files_in_folder(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"])
+    delete_files_in_folder(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"])
 
 
 if __name__ == "__main__":
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
-        "BATCH_SIZE": 256,
+        "BATCH_SIZE": 1024,
         "EPOCHS": 800,
         "PATIENCE": 200,
         "SAVELOAD": True,

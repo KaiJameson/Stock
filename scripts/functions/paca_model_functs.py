@@ -1,4 +1,5 @@
-from functions import silence_tensorflow, layer_name_converter
+from numpy.lib.function_base import average
+from functions.functions import silence_tensorflow, layer_name_converter
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
@@ -8,14 +9,14 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from collections import deque
-from api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
+from config.api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
 intrinio_sandbox_key, intrinio_production_key)
-from environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
+from config.environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
 using_all_accuracies, directory_dict)
-from time_functs import get_time_string,  get_trade_day_back, get_full_end_date, make_Timestamp
-from io_functs import make_current_price, plot_graph, excel_output, write_nn_report
-from error_functs import error_handler, net_error_handler
-from symbols import trading_real_money
+from config.symbols import trading_real_money
+from functions.time_functs import get_time_string,  get_trade_day_back, get_full_end_date, make_Timestamp
+from functions.io_functs import make_runtime_price, plot_graph, excel_output, write_nn_report
+from functions.error_functs import error_handler, net_error_handler
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
@@ -41,7 +42,7 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
     
     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var], classification)
 
-    report_dir = directory_dict["reports_directory"] + "/" + symbol + "/" + time_string + ".txt"
+    report_dir = directory_dict["reports_dir"] + "/" + symbol + "/" + time_string + ".txt"
     
     if to_plot:
         plot_graph(y_real, y_pred, symbol, back_test_days, time_string)
@@ -58,7 +59,7 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
         curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred)
     excel_output(symbol, curr_price, future_price)
 
-    return percent, future_price
+    return percent
 
 def get_values(items):
     data = {}
@@ -139,6 +140,18 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
 
     if "volume" not in feature_columns:
         df = df.drop(columns=["volume"])
+
+    if "open" not in feature_columns:
+        df = df.drop(columns=["open"])
+
+    if "close" not in feature_columns:
+        df = df.drop(columns=["close"])
+
+    if "low" not in feature_columns:
+        df = df.drop(columns=["low"])
+
+    if "high" not in feature_columns:
+        df = df.drop(columns=["high"])
 
     if "S&P" in feature_columns:
         df2 = get_alpaca_data("SPY", end_date, api, limit=limit)
@@ -620,7 +633,7 @@ def buy_all_at_once(symbols, owned, price_list):
                     print("Time in force: "  + sell.time_in_force + "\n")
 
             print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
-            make_current_price(current_price)
+            make_runtime_price(current_price)
 
         except Exception:
             error_handler(symbol, Exception)
@@ -910,61 +923,5 @@ def return_real_predict(model, X_data, y_data, column_scaler, classification=Fal
     return y_real, y_pred
 
 if __name__ == "__main__":
-    from functions import get_test_name
-    from paca_model import saveload_neural_net
-
-    defaults = {
-    "N_STEPS": 100,
-    "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "LAYERS": [(256, LSTM), (256, LSTM)],
-    "UNITS": 256,
-    "DROPOUT": 0.4,
-    "BIDIRECTIONAL": False,
-    "LOSS": "huber_loss",
-    "OPTIMIZER": "adam",
-    "BATCH_SIZE": 1024,
-    "EPOCHS": 200,
-    "PATIENCE": 200,
-    "LIMIT": 4000,
-    "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
-    "SAVE_FOLDER": "tuning4"
-    }
-
-    
-
-    symbol = "AGYS"
-    saveload_neural_net(symbol, params=defaults)
-    
-    start_time = time.time()
-    model_name = (symbol + "-" + get_test_name(defaults))
-
-    print("\n~~~Now Starting " + symbol + "~~~")
-    
-    time_s = time.time()
-    data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
-    print("Loading the data took " + str(time.time() - time_s) + " seconds")    
-
-    time_s = time.time()
-    model = create_model(defaults)
-    model.load_weights(directory_dict["model_directory"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
-    print("Loading the model took " + str(time.time() - time_s) + " seconds")    
-
-    time_s = time.time()
-    train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"], False)
-    print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
-
-    total_time = time.time() - start_time
-    time_s = time.time()
-    percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, 
-    train_acc, defaults["N_STEPS"], False)
-    y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var], True)
-    print(f"real: {y_real}")
-    print(f"predict: {y_pred}")
-    future_price = predict(model, data, defaults["N_STEPS"], False) 
-    print("NN report took " + str(time.time() - time_s) + " seconds")
-
-    print(f"predicted value: {future_price}")
-
+    print("Go test in test.py duummas")
 

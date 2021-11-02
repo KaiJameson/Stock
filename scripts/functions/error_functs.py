@@ -1,4 +1,4 @@
-from environ import error_file
+from config.environ import error_file
 import sys
 import traceback
 import time

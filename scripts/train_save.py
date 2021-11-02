@@ -1,8 +1,8 @@
 from paca_model import saveload_neural_net
-from symbols import load_save_symbols
-from functions import check_directories
-from error_functs import error_handler
-from environ import defaults
+from config.symbols import load_save_symbols
+from config.environ import defaults
+from functions.functions import check_directories
+from functions.error_functs import error_handler
 import sys
 import time
 

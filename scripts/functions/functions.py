@@ -1,5 +1,5 @@
-from environ import *
-from error_functs import error_handler
+from config.environ import *
+from functions.error_functs import error_handler
 import pandas as pd
 import os
 
@@ -10,10 +10,10 @@ def check_directories():
             os.mkdir(directory_dict[directory])
 
 def check_model_folders(save_folder, symbol):
-    if not os.path.isdir(directory_dict["model_directory"] + "/" + save_folder):
-        os.mkdir(directory_dict["model_directory"] + "/" + save_folder)
-    if not os.path.isdir(directory_dict["reports_directory"] + "/" + symbol):
-        os.mkdir(directory_dict["reports_directory"] + "/" + symbol)
+    if not os.path.isdir(directory_dict["model_dir"] + "/" + save_folder):
+        os.mkdir(directory_dict["model_dir"] + "/" + save_folder)
+    if not os.path.isdir(directory_dict["reports_dir"] + "/" + symbol):
+        os.mkdir(directory_dict["reports_dir"] + "/" + symbol)
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):

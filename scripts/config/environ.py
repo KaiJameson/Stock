@@ -7,18 +7,20 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 from tensorflow.keras.layers import LSTM
 
 directory_dict = {
-    "reports_directory":        "../reports",
-    "config_directory":         "../config",
-    "graph_directory":          "../plots",
-    "model_directory":          "../models",
-    "tuning_directory":         "../tuning_info",
-    "excel_directory":          "../excel",
-    "load_run_results":         "../load_run_results",
-    "current_price_directory":  "../curr_price",
-    "backtest_directory":       "../backtest",
-    "results_directory":        "results",
-    "tax_directory":            "../tax"
+    "reports_dir":         "../reports",
+    "config_dir":          "../config",
+    "graph_dir":           "../plots",
+    "model_dir":           "../models",
+    "tuning_dir":          "../tuning_info",
+    "excel_dir":           "../excel",
+    "predict_actual_dir":  "../excel/predict_actual",
+    "load_run_results":    "../excel/load_run_results",
+    "runtime_price_dir":   "../excel/curr_price",
+    "backtest_dir":        "../backtest",
+    "results_dir":         "results",
+    "tax_dir":             "../tax"
 }
+
 error_file = "../error_file.txt"
 
 test_var = "close"
