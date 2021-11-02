@@ -1,6 +1,6 @@
 from backtest import back_testing
-from functions import check_directories
-from symbols import test_year, test_month, test_day, test_days, batch_run_list
+from functions.functions import check_directories
+from config.symbols import test_year, test_month, test_day, test_days, batch_run_list
 import sys
 
 check_directories()

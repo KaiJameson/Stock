@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
-from environ import test_var, test_money, directory_dict
-from functions import percent_from_real, layers_string
-from time_functs import get_date_string, get_time_string
-from tuner_functs import moving_average_comparator, linear_regression_comparator
+from config.environ import test_var, test_money, directory_dict
+from functions.functions import percent_from_real, layers_string
+from functions.time_functs import get_date_string, get_time_string
+from functions.tuner_functs import moving_average_comparator, linear_regression_comparator
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -72,51 +72,51 @@ def perfect_money(money, data):
         money += stonks_owned * data[len(data) - 1]
     return money
 
-def make_current_price(curr_price):
+def make_runtime_price(curr_price):
     date_string = get_date_string()
 
-    f = open(directory_dict["current_price_directory"] + "/" + date_string + ".txt", "a")
+    f = open(directory_dict["runtime_price_dir"] + "/" + date_string + ".txt", "a")
     f.write(str(round(curr_price, 2)) + "\t")
     f.close()
 
 def make_excel_file():
     date_string = get_date_string()
 
-    fsym = open(directory_dict["excel_directory"] + "/" + date_string + "symbol" + ".txt", "r")
+    fsym = open(directory_dict["predict_actual_dir"] + "/" + date_string + "symbol" + ".txt", "r")
     sym_vals = fsym.read()
     fsym.close()
 
-    freal = open(directory_dict["excel_directory"] + "/" + date_string + "real" + ".txt", "r")
+    freal = open(directory_dict["predict_actual_dir"] + "/" + date_string + "real" + ".txt", "r")
     real_vals = freal.read()
     freal.close()
 
-    fpred = open(directory_dict["excel_directory"] + "/" + date_string + "predict" + ".txt", "r")
+    fpred = open(directory_dict["predict_actual_dir"] + "/" + date_string + "predict" + ".txt", "r")
     pred_vals = fpred.read()
     fpred.close()
 
-    f = open(directory_dict["excel_directory"] + "/" + date_string + ".txt", "a+")
+    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + ".txt", "a+")
     
     f.write(sym_vals + "\n")
     f.write(str(real_vals) + "\n")
     f.write(str(pred_vals))
     f.close()
 
-    os.remove(directory_dict["excel_directory"] + "/" + date_string + "symbol" + ".txt")
-    os.remove(directory_dict["excel_directory"] + "/" + date_string + "real" + ".txt")
-    os.remove(directory_dict["excel_directory"] + "/" + date_string + "predict" + ".txt")
+    os.remove(directory_dict["predict_actual_dir"] + "/" + date_string + "symbol" + ".txt")
+    os.remove(directory_dict["predict_actual_dir"] + "/" + date_string + "real" + ".txt")
+    os.remove(directory_dict["predict_actual_dir"] + "/" + date_string + "predict" + ".txt")
 
 def excel_output(symbol, real_price, predicted_price):
     date_string = get_date_string()
 
-    f = open(directory_dict["excel_directory"] + "/" + date_string + "symbol" + ".txt", "a")
+    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + "symbol" + ".txt", "a")
     f.write(symbol + ":" + "\t")
     f.close()
 
-    f = open(directory_dict["excel_directory"] + "/" + date_string + "real" + ".txt", "a")
+    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + "real" + ".txt", "a")
     f.write(str(round(real_price, 2)) + "\t")
     f.close()
 
-    f = open(directory_dict["excel_directory"] + "/" + date_string + "predict" + ".txt", "a")
+    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + "predict" + ".txt", "a")
     f.write(str(round(predicted_price, 2)) + "\t")
     f.close()
 
@@ -169,9 +169,8 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
 
 
-
 def comparator_results_excel(df, run_days, directory, stock):
-    lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 10, run_days)
+    lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 14, run_days)
     MA_avg_p, MA_avg_d, MA_current_money = moving_average_comparator(df, 7, run_days)
 
     directory_string = f"{directory}/{stock}-comparison.txt"
@@ -220,7 +219,7 @@ def plot_graph(y_real, y_pred, symbol, back_test_days):
     real_y_values = y_real[-back_test_days:]
     predicted_y_values = y_pred[-back_test_days:]
     
-    plot_dir = directory_dict["graph_directory"] + "/" + symbol
+    plot_dir = directory_dict["graph_dir"] + "/" + symbol
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
     plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
@@ -238,7 +237,7 @@ def graph_epochs_relationship(progress, test_name):
         correct_direction_list = progress["correct_direction_list"]
         epochs_list = progress["epochs_list"]
 
-        plot_name = directory_dict["graph_directory"] + "/" + test_name + "-dir.png"
+        plot_name = directory_dict["graph_dir"] + "/" + test_name + "-dir.png"
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
 
@@ -261,7 +260,7 @@ def graph_epochs_relationship(progress, test_name):
         plt.savefig(plot_name)
         plt.close()
 
-        plot_name = directory_dict["graph_directory"] + "/" + test_name + "-away.png"
+        plot_name = directory_dict["graph_dir"] + "/" + test_name + "-away.png"
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
 

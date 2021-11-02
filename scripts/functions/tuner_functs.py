@@ -1,4 +1,4 @@
-from functions import get_correct_direction
+from functions.functions import get_correct_direction
 from statistics import mean
 import talib as ta
 import sys

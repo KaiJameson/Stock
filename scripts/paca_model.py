@@ -1,12 +1,12 @@
-from functions import delete_files_in_folder, check_model_folders, silence_tensorflow, get_test_name
+from functions.functions import delete_files_in_folder, check_model_folders, silence_tensorflow, get_test_name
 silence_tensorflow()
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from environ import (directory_dict, random_seed, save_logs,
+from config.environ import (directory_dict, random_seed, save_logs,
 defaults)
-from time_functs import get_time_string
-from paca_model_functs import (load_data, create_model, nn_report, get_all_accuracies, get_all_maes) 
+from functions.time_functs import get_time_string
+from functions.paca_model_functs import (load_data, create_model, nn_report, get_all_accuracies, get_all_maes) 
 import numpy as np
 import socket
 import random
@@ -83,7 +83,7 @@ def make_neural_net(symbol, end_date, params):
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
     if params["SAVELOAD"]:
-        checkpointer = ModelCheckpoint(directory_dict["model_directory"] + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
@@ -120,8 +120,8 @@ def make_neural_net(symbol, end_date, params):
             train_acc, valid_acc, test_acc = get_all_accuracies(model, data, params["LOOKUP_STEP"])
 
 
-        delete_files_in_folder(directory_dict["results_directory"])
-        os.rmdir(directory_dict["results_directory"])
+        delete_files_in_folder(directory_dict["results_dir"])
+        os.rmdir(directory_dict["results_dir"])
         
 
     if not save_logs:

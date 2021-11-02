@@ -2,7 +2,7 @@ from alpaca_nn_functions import getOwnedStocks, decide_trades
 from alpaca_neural_net import decision_neural_net
 from symbols import decision_symbols, do_the_trades
 from functions import check_directories
-from environment import stock_decisions_directory, error_file, config_directory
+from environment import stock_decisions_dir, error_file, config_dir
 from time_functions import get_time_string
 import alpaca_trade_api as tradeapi
 import pandas as pd
@@ -33,7 +33,7 @@ def find_percents_and_accs(symbols):
     percents = {}
     accuracy = {}
     for symbol in symbols:
-        config_name = config_directory + "/" + symbol + ".csv"
+        config_name = config_dir + "/" + symbol + ".csv"
         if os.path.isfile(config_name):
             f = open(config_name, "r")
             values = {}
@@ -104,9 +104,9 @@ check_directories()
 
 symbols = decision_symbols
 
-file_name = stock_decisions_directory + "/" + get_time_string() + ".txt"
-if not os.path.isdir(stock_decisions_directory):
-    os.mkdir(stock_decisions_directory)
+file_name = stock_decisions_dir + "/" + get_time_string() + ".txt"
+if not os.path.isdir(stock_decisions_dir):
+    os.mkdir(stock_decisions_dir)
 percents, accuracy = find_percents_and_accs(symbols)
 f = open(file_name, "w")
 for key in percents:

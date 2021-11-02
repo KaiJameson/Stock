@@ -1,12 +1,11 @@
-from functions import check_directories, silence_tensorflow, get_test_name
+from functions.functions import check_directories, silence_tensorflow, get_test_name, percent_from_real
 silence_tensorflow()
-from paca_model_functs import (load_data, getOwnedStocks, return_real_predict, 
-get_all_accuracies, nn_report,  buy_all_at_once, create_model)
-from functions import percent_from_real
-from symbols import load_save_symbols, do_the_trades
-from environ import directory_dict, defaults, test_var
-from error_functs import error_handler
-from io_functs import  make_excel_file, make_load_run_excel
+from config.symbols import load_save_symbols, do_the_trades
+from config.environ import directory_dict, defaults, test_var
+from functions.paca_model_functs import (load_data, getOwnedStocks, return_real_predict, 
+get_all_accuracies, nn_report,  buy_all_at_once, create_model, predict)
+from functions.error_functs import error_handler
+from functions.io_functs import  make_excel_file, make_load_run_excel
 import tensorflow as tf
 import psutil
 import time
@@ -39,7 +38,7 @@ def load_trade(symbols):
 
             time_s = time.time()
             model = create_model(defaults)
-            model.load_weights(directory_dict["model_directory"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
+            model.load_weights(directory_dict["model_dir"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
             print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
             time_s = time.time()
@@ -49,10 +48,12 @@ def load_trade(symbols):
             total_time = time.time() - start_time
             time_s = time.time()
             if defaults["LOSS"] == "huber_loss":
-                percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"], False)
+                percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"], False)
             else:
-                percent, future_price = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"], True)
-            price_prediction_list[symbol] = future_price
+                percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, defaults["N_STEPS"], True)
+            predicted_price = predict(model, data, defaults["N_STEPS"])
+            price_prediction_list[symbol] = predicted_price
+
             print("NN report took " + str(time.time() - time_s) + " seconds")
 
             y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
