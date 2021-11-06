@@ -1,16 +1,15 @@
-from functions import check_directories, delete_files_in_folder, get_correct_direction, silence_tensorflow, get_test_name
+from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, silence_tensorflow, get_test_name
 silence_tensorflow()
 from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
 from paca_model import saveload_neural_net
-from functions.paca_model_functs import (get_api, create_model, get_all_accuracies, predict,  
-return_real_predict, load_model_with_data)
+from functions.paca_model_functs import get_api, predict,  return_real_predict, load_model_with_data
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
-from io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
+from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price
 from functions.error_functs import error_handler
 from functions.tuner_functs import grab_index, change_params, get_user_input, update_money
 from config.environ import back_test_days, test_var, directory_dict, test_money
-from functions.time_functs import get_short_end_date, get_year_month_day
+from functions.time_functs import get_past_datetime, get_year_month_day
 from statistics import mean
 import time
 import sys
@@ -84,7 +83,7 @@ for symbol in tune_symbols:
 
         print(model_name)
         print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
-        starting_day_price = get_actual_price((get_short_end_date(tune_year, tune_month, tune_day) - datetime.timedelta(1)), 
+        starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) - datetime.timedelta(1)), 
             api, symbol)
         print(starting_day_price)
 
@@ -102,7 +101,7 @@ for symbol in tune_symbols:
         if os.path.isfile(directory_dict["tuning_dir"] + "/" + "SAVE-" + model_name + ".txt"):
             progress = read_saved_contents(directory_dict["tuning_dir"] + "/" + "SAVE-" + model_name + ".txt", progress)
        
-        current_date = get_short_end_date(progress["tune_year"], progress["tune_month"], progress["tune_day"])
+        current_date = get_past_datetime(progress["tune_year"], progress["tune_month"], progress["tune_day"])
         try:
             while progress["days_done"] <= progress["total_days"]:
                 time_s = time.time()

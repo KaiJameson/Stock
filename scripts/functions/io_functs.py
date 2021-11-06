@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 from config.environ import test_var, test_money, directory_dict
 from functions.functions import percent_from_real, layers_string
-from functions.time_functs import get_date_string, get_time_string
+from functions.time_functs import get_current_date_string, get_time_string
 from functions.tuner_functs import moving_average_comparator, linear_regression_comparator
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,55 +73,55 @@ def perfect_money(money, data):
     return money
 
 def make_runtime_price(curr_price):
-    date_string = get_date_string()
+    date_string = get_current_date_string()
 
     f = open(directory_dict["runtime_price_dir"] + "/" + date_string + ".txt", "a")
     f.write(str(round(curr_price, 2)) + "\t")
     f.close()
 
 def make_excel_file():
-    date_string = get_date_string()
+    date_string = get_current_date_string()
 
-    fsym = open(directory_dict["predict_actual_dir"] + "/" + date_string + "symbol" + ".txt", "r")
+    fsym = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "symbol" + ".txt", "r")
     sym_vals = fsym.read()
     fsym.close()
 
-    freal = open(directory_dict["predict_actual_dir"] + "/" + date_string + "real" + ".txt", "r")
+    freal = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "real" + ".txt", "r")
     real_vals = freal.read()
     freal.close()
 
-    fpred = open(directory_dict["predict_actual_dir"] + "/" + date_string + "predict" + ".txt", "r")
+    fpred = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "predict" + ".txt", "r")
     pred_vals = fpred.read()
     fpred.close()
 
-    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + ".txt", "a+")
+    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + ".txt", "a+")
     
     f.write(sym_vals + "\n")
     f.write(str(real_vals) + "\n")
     f.write(str(pred_vals))
     f.close()
 
-    os.remove(directory_dict["predict_actual_dir"] + "/" + date_string + "symbol" + ".txt")
-    os.remove(directory_dict["predict_actual_dir"] + "/" + date_string + "real" + ".txt")
-    os.remove(directory_dict["predict_actual_dir"] + "/" + date_string + "predict" + ".txt")
+    os.remove(directory_dict["runtime_predict_dir"] + "/" + date_string + "symbol" + ".txt")
+    os.remove(directory_dict["runtime_predict_dir"] + "/" + date_string + "real" + ".txt")
+    os.remove(directory_dict["runtime_predict_dir"] + "/" + date_string + "predict" + ".txt")
 
 def excel_output(symbol, real_price, predicted_price):
-    date_string = get_date_string()
+    date_string = get_current_date_string()
 
-    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + "symbol" + ".txt", "a")
+    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "symbol" + ".txt", "a")
     f.write(symbol + ":" + "\t")
     f.close()
 
-    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + "real" + ".txt", "a")
+    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "real" + ".txt", "a")
     f.write(str(round(real_price, 2)) + "\t")
     f.close()
 
-    f = open(directory_dict["predict_actual_dir"] + "/" + date_string + "predict" + ".txt", "a")
+    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "predict" + ".txt", "a")
     f.write(str(round(predicted_price, 2)) + "\t")
     f.close()
 
 def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, percent_away):
-    date_string = get_date_string()
+    date_string = get_current_date_string()
     f = open(directory_dict["load_run_results"] + "/" + date_string + ".txt", "a")
     f.write(symbol + "\t" + str(round(train_acc * 100, 2)) + "\t" + str(round(valid_acc * 100, 2)) + "\t" 
     + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 

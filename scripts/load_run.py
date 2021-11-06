@@ -32,6 +32,7 @@ def load_trade(symbols):
 
             print("\n~~~Now Starting " + symbol + "~~~")
             
+            # TODO make below section use load_model_with_data
             time_s = time.time()
             data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
             print("Loading the data took " + str(time.time() - time_s) + " seconds")    
@@ -78,29 +79,29 @@ def load_trade(symbols):
         print("Why are you running this if you don't want to do the trades?")
 
 def pause_running_training():
-        processes = {p.pid: p.info for p in psutil.process_iter(["name"])}
-        
-        python_processes_pids = []
-        pause_list = []
+    processes = {p.pid: p.info for p in psutil.process_iter(["name"])}
+    
+    python_processes_pids = []
+    pause_list = []
 
-        for process in processes:
-            if processes[process]["name"] == "python.exe":
-                python_processes_pids.append(process)
+    for process in processes:
+        if processes[process]["name"] == "python.exe":
+            python_processes_pids.append(process)
 
-        for pid in python_processes_pids:
-            if any("batch" in string for string in psutil.Process(pid).cmdline()):
-                pause_list.append(pid)
-            elif any("tuning" in string for string in psutil.Process(pid).cmdline()):
-                pause_list.append(pid)
+    for pid in python_processes_pids:
+        if any("batch" in string for string in psutil.Process(pid).cmdline()):
+            pause_list.append(pid)
+        elif any("tuning" in string for string in psutil.Process(pid).cmdline()):
+            pause_list.append(pid)
 
-        for pid in pause_list:
-            psutil.Process(pid).suspend()
+    for pid in pause_list:
+        psutil.Process(pid).suspend()
 
-        return pause_list
+    return pause_list
 
 def resume_running_training(pause_list):
-        for pid in pause_list:
-            psutil.Process(pid).resume()
+    for pid in pause_list:
+        psutil.Process(pid).resume()
 
 s = time.time()
 pause_list = pause_running_training()
@@ -111,3 +112,4 @@ make_excel_file()
 print("Making the excel file took " + str(time.time() - time_s) + " seconds\n")
 tt = (time.time() - s) / 60
 print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
+

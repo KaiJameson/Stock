@@ -1,4 +1,3 @@
-from numpy.lib.function_base import average
 from functions.functions import silence_tensorflow, layer_name_converter
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
@@ -137,21 +136,6 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     
     if "mid" in feature_columns:
         df["mid"] = (df.low + df.high) / 2
-
-    if "volume" not in feature_columns:
-        df = df.drop(columns=["volume"])
-
-    if "open" not in feature_columns:
-        df = df.drop(columns=["open"])
-
-    if "close" not in feature_columns:
-        df = df.drop(columns=["close"])
-
-    if "low" not in feature_columns:
-        df = df.drop(columns=["low"])
-
-    if "high" not in feature_columns:
-        df = df.drop(columns=["high"])
 
     if "S&P" in feature_columns:
         df2 = get_alpaca_data("SPY", end_date, api, limit=limit)
@@ -369,6 +353,21 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "day_of_week" in feature_columns:
         df = convert_date_values(df)
 
+    if "volume" not in feature_columns:
+        df = df.drop(columns=["volume"])
+
+    if "open" not in feature_columns:
+        df = df.drop(columns=["open"])
+
+    if "close" not in feature_columns:
+        df = df.drop(columns=["close"])
+
+    if "low" not in feature_columns:
+        df = df.drop(columns=["low"])
+
+    if "high" not in feature_columns:
+        df = df.drop(columns=["high"])
+
     # get_feature_importance(df)
 
     # sentiment_data(df)
@@ -562,10 +561,16 @@ def model_last_layer(model, layers, ind):
     
     return model
 
-def load_model_with_data(symbol, current_date, params, directory, model_name):
-    data, train, valid, test = load_data(symbol, params, current_date, shuffle=False, to_print=False)
+def load_model_with_data(symbol, current_date, params, directory, model_name, to_print=False):
+    s = time.time()
+    data, train, valid, test = load_data(symbol, params, current_date, shuffle=False, to_print=to_print)
+    if to_print:
+        print("Loading the data took " + str(time.time() - s) + " seconds")    
+    s = time.time()
     model = create_model(params)
     model.load_weights(directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")
+    if to_print:
+        print("Loading the model took " + str(time.time() - s) + " seconds")    
 
     return data, model
 

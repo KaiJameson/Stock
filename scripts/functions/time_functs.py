@@ -45,7 +45,7 @@ def get_time_string():
     s = f"{year}-{month}-{day}-{hour}-{minute}"
     return s
 
-def get_date_string():
+def get_current_date_string():
     operating_sys = platform.system()
     on_linux = operating_sys == 'LINUX'
     now = time.time()
@@ -56,24 +56,24 @@ def get_date_string():
     year = n.year
     month = n.month
     day = n.day
-    hour = n.hour
-    minute = n.minute
     s = f"{year}-{month}-{day}"
     return s
 
-def zero_pad_date_string():
-    operating_sys = platform.system()
-    on_linux = operating_sys == 'LINUX'
+def get_past_date_string(datetime):
+    year = datetime.year
+    month = datetime.month
+    day = datetime.day
+    
+    return f"{year}-{month}-{day}"
+
+
+def get_current_datetime():
     now = time.time()
     now = datetime.datetime.fromtimestamp(now)
-    if on_linux:
-        td = datetime.timedelta(hours=4)
-        now -= td
+    
+    return now.date()
 
-    padded = datetime.date(now.year, now.month, now.day) + datetime.timedelta(1)
-    return str(padded)
-
-def get_short_end_date(year, month, day):
+def get_past_datetime(year, month, day):
     end_date = datetime.datetime(year, month, day)
     
     return end_date.date()
@@ -152,4 +152,8 @@ def get_actual_price(current_date, api, symbol):
 
     return actual_price
 
+def read_date_string(date):
+    new_date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+    return new_date.date()
 

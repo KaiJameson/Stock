@@ -4,8 +4,7 @@ from config.environ import *
 from functions.tuner_functs import moving_average_comparator, linear_regression_comparator
 from functions.paca_model_functs import *
 from functions.functions import get_test_name
-
-
+from functions.time_functs import read_date_string, get_current_datetime
 
 def backtest_comparators():
     load_save_symbols = ["AGYS", "AMKR", "BG","BGS", "CAKE", "CCJ", "DFS", "ELY", "FLEX", 
@@ -47,7 +46,8 @@ def backtest_comparators():
         print()
 
 
-if __name__ == "main":
+if __name__ == "__main__":
+    
 
     defaults = {
     "N_STEPS": 100,
@@ -68,40 +68,53 @@ if __name__ == "main":
     "SAVE_FOLDER": "tuning4"
     }
 
+
+    # Testing for geting scaling/classification to work
     symbol = "AGYS"
-    saveload_neural_net(symbol, params=defaults)
+    # saveload_neural_net(symbol, params=defaults)
     
-    start_time = time.time()
-    model_name = (symbol + "-" + get_test_name(defaults))
+    # start_time = time.time()
+    # model_name = (symbol + "-" + get_test_name(defaults))
 
-    print("\n~~~Now Starting " + symbol + "~~~")
+    # print("\n~~~Now Starting " + symbol + "~~~")
     
-    time_s = time.time()
-    data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
-    print("Loading the data took " + str(time.time() - time_s) + " seconds")    
-    print(f" this is the data: {data}")
-    time_s = time.time()
-    model = create_model(defaults)
-    model.load_weights(directory_dict["model_dir"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
-    print("Loading the model took " + str(time.time() - time_s) + " seconds")    
+    # time_s = time.time()
+    # data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
+    # print("Loading the data took " + str(time.time() - time_s) + " seconds")    
+    # print(f" this is the data: {data}")
+    # time_s = time.time()
+    # model = create_model(defaults)
+    # model.load_weights(directory_dict["model_dir"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
+    # print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
-    time_s = time.time()
-    train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"], False)
-    print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
+    # time_s = time.time()
+    # train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"], False)
+    # print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
 
-    total_time = time.time() - start_time
-    time_s = time.time()
-    percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, 
-    train_acc, defaults["N_STEPS"], False)
-    y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var], True)
-    print(f"real: {y_real}")
-    print(f"predict: {y_pred}")
-    predicted_price = predict(model, data, defaults["N_STEPS"], False) 
-    print("NN report took " + str(time.time() - time_s) + " seconds")
+    # total_time = time.time() - start_time
+    # time_s = time.time()
+    # percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, 
+    # train_acc, defaults["N_STEPS"], False)
+    # y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var], True)
+    # print(f"real: {y_real}")
+    # print(f"predict: {y_pred}")
+    # predicted_price = predict(model, data, defaults["N_STEPS"], False) 
+    # print("NN report took " + str(time.time() - time_s) + " seconds")
 
-    print(f"predicted value: {predicted_price}")
+    # print(f"predicted value: {predicted_price}")
 
+    # def load_nn_and_predict(symbol, current_date, params, model_dir, model_name):
+    #     data, model = load_model_with_data(symbol, current_date, params, model_dir, model_name)
 
+    #     # first grab the current price by getting the latest value from the og data frame
+    #     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+    #     real_y_values = y_real[-back_test_days:]
+    #     current_price = real_y_values[-1]
+
+    #     # then use predict fuction to get predicted price
+    #     predicted_price = predict(model, data, params["N_STEPS"])
+
+    # Testing for ensemble prediction
     # def ensemble_predictor(params, df, model_predict_prices):
     #     ensemb_count = 0
     #     ensemb_predict_list = np.array(model_predict_prices)
