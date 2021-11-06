@@ -5,7 +5,7 @@ silence_tensorflow()
 from config.symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from config.environ import directory_dict, test_var, back_test_days
 from functions.io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
-from functions.time_functs import get_short_end_date, get_year_month_day, increment_calendar, get_actual_price
+from functions.time_functs import get_past_datetime, get_year_month_day, increment_calendar, get_actual_price
 from functions.error_functs import error_handler
 from functions.paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
 from paca_model import saveload_neural_net
@@ -48,10 +48,10 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         progress = read_saved_contents(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         
-    current_date = get_short_end_date(progress["test_year"], progress["test_month"], progress["test_day"])
+    current_date = get_past_datetime(progress["test_year"], progress["test_month"], progress["test_day"])
 
-    while progress["days_done"] <= progress["total_days"]:
-        try:
+    try:
+        while progress["days_done"] <= progress["total_days"]:
             time_s = time.time()
             current_date = increment_calendar(current_date, api, symbol)
 
@@ -101,34 +101,33 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
             save_to_dictionary(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
-        except KeyboardInterrupt:
-                print("I acknowledge that you want this to stop.")
-                print("Thy will be done.")
-                sys.exit(-1)
-
-        except Exception:
-            error_handler(symbol, Exception)
+        print("Percent away: " + str(progress["percent_away_list"]))
+        print("Correct direction %: " + str(progress["correct_direction_list"]))
+        avg_p = str(round(mean(progress["percent_away_list"]), 2))
+        avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
+        avg_e = str(round(mean(progress["epochs_list"]), 2))
 
 
-    print("Percent away: " + str(progress["percent_away_list"]))
-    print("Correct direction %: " + str(progress["correct_direction_list"]))
-    avg_p = str(round(mean(progress["percent_away_list"]), 2))
-    avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
-    avg_e = str(round(mean(progress["epochs_list"]), 2))
+        print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
+                    progress["test_day"], progress["time_so_far"], None, None)
+        backtest_excel(directory_dict["backtest_dir"], test_name, progress["test_year"], progress["test_month"], 
+                    progress["test_day"], params, avg_p, avg_d, 
+            avg_e, progress["time_so_far"], progress["total_days"], None, None)
 
+        graph_epochs_relationship(progress, test_name)
 
-    print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
-                progress["test_day"], progress["time_so_far"], None, None)
-    backtest_excel(directory_dict["backtest_dir"], test_name, progress["test_year"], progress["test_month"], 
-                progress["test_day"], params, avg_p, avg_d, 
-        avg_e, progress["time_so_far"], progress["total_days"], None, None)
+        if os.path.isfile(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt"):
+            os.remove(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt")
 
-    graph_epochs_relationship(progress, test_name)
+        delete_files_in_folder(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"])
 
-    if os.path.isfile(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt"):
-        os.remove(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt")
+    except KeyboardInterrupt:
+            print("I acknowledge that you want this to stop.")
+            print("Thy will be done.")
+            sys.exit(-1)
 
-    delete_files_in_folder(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"])
+    except Exception:
+        error_handler(symbol, Exception)
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.5,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -57,7 +57,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["close", "ht_trendmode"],
     "SAVE_FOLDER": "batch1"
     },    
 
@@ -67,7 +67,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.55,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -76,7 +76,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["close"],
     "SAVE_FOLDER": "batch1"
     },
 
@@ -86,7 +86,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.6,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -95,7 +95,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["low", "high", "close", "mid", "volume"],
     "SAVE_FOLDER": "batch1"
     },
 
@@ -105,7 +105,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.65,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -114,7 +114,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["open", "high", "close", "mid", "volume"],
     "SAVE_FOLDER": "batch2"
     },
 
@@ -124,7 +124,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.7,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -133,7 +133,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["open", "low", "close", "mid", "volume"],
     "SAVE_FOLDER": "batch2"
     },
 
@@ -143,7 +143,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.75,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -152,7 +152,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["close", "7MA"],
     "SAVE_FOLDER": "batch2"
     },
 
@@ -162,7 +162,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.8,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -171,7 +171,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "volume"],
     "SAVE_FOLDER": "batch3"
     },
 
@@ -181,7 +181,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.85,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -190,7 +190,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["close", "weighted_moving_avg"],
     "SAVE_FOLDER": "batch3"
     },
 
@@ -200,7 +200,7 @@ batch_run_list = [
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": 256,
-    "DROPOUT": 0.9,
+    "DROPOUT": 0.4,
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -209,7 +209,7 @@ batch_run_list = [
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["close", "chaikin_line"],
     "SAVE_FOLDER": "batch3"
     }
     ]

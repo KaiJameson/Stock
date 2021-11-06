@@ -30,7 +30,6 @@ else:
     sys.exit(-1)
 
 for dictionary in batch_run_list:
-    # print(dictionary["SAVE_FOLDER"])
     if dictionary["SAVE_FOLDER"] == sys.argv[1]:
         back_testing(test_year, test_month, test_day, test_days, dictionary)
     
