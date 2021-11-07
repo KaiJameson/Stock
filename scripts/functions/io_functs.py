@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from config.environ import test_var, test_money, directory_dict
-from functions.functions import percent_from_real, layers_string
+from functions.functions import percent_from_real, layers_string, get_model_name
 from functions.time_functs import get_current_date_string, get_time_string
 from functions.tuner_functs import moving_average_comparator, linear_regression_comparator
 import matplotlib.pyplot as plt
@@ -131,43 +131,68 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
 def backtest_excel(directory, test_name, test_year, test_month, test_day, params, avg_p, 
     avg_d, avg_e, time_so_far, total_days, current_money, hold_money):
 
-    f = open(directory + "/" + test_name + ".txt", "a")
+    file = open(directory + "/" + test_name + ".txt", "a")
 
-    f.write("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
-    f.write("Layers: " + layers_string(params["LAYERS"]) + "Test Size: " + str(params["TEST_SIZE"]) + ",\n") 
-    f.write("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
-    f.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
-    f.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
-    f.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n\n")
-
-    f.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
-    f.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
-    f.write("while using an average of " + avg_e + " epochs.\n")
+    file.write("Testing finished for ensemble: " + str(params["ENSEMBLE"]) + "\n")
+    file.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
+    file.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
+    
     if current_money != None:
-        f.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
-    f.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
+        file.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
+    file.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.\n")
-    f.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".")
-    f.close()
+    file.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".")
+    file.write("The neural net models used were :\n")
+
+    nn_tested = False
+    for predictor in params["ENSEMBLE"]:
+        if "nn_model" in predictor:
+            write_model_params(file, params[predictor], test_name, avg_e[predictor])
+        nn_tested = True
+    if not nn_tested:
+        file.write("NONE\n")
+
+    file.close()
+
+def write_model_params(file, params, predictor, avg_e):
+    file.write("Model " + predictor + get_model_name(params))
+    file.write("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
+    file.write("Layers: " + layers_string(params["LAYERS"]) + "Test Size: " + str(params["TEST_SIZE"]) + ",\n") 
+    file.write("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
+    file.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
+    file.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
+    file.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n")
+    file.write("The model used an average of " + avg_e + " epochs.\n\n")
+    
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
-    print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("Layers: " + layers_string(params["LAYERS"]) + "," + "Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("Dropout: " + str(params["DROPOUT"])  + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
-    print("Loss: " + params["LOSS"] + ", Optimizer: " + 
-    params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
-    print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
-    print("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n\n")
-
+    print("Testing finished for ensemble: " + str(params["ENSEMBLE"]))
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
-    print("while using an average of " + avg_e + " epochs.")
+
     if current_money != None:
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
     print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
     print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
 
+    nn_tested = False
+    for predictor in params["ENSEMBLE"]:
+        if "nn_model" in predictor:
+            print_model_params(params[predictor], predictor, avg_e[predictor])
+        nn_tested = True
+    if not nn_tested:
+        print("NONE\n")
+
+def print_model_params(params, predictor, avg_e):
+    print("Model " + predictor + get_model_name(params))
+    print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
+    print("Layers: " + layers_string(params["LAYERS"]) + "," + "Test Size: " + str(params["TEST_SIZE"]) + ",")
+    print("Dropout: " + str(params["DROPOUT"])  + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
+    print("Loss: " + params["LOSS"] + ", Optimizer: " +  params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
+    print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
+    print("Feature Columns: " + str(params["FEATURE_COLUMNS"]))
+    print("The model used an average of " + avg_e + " epochs.\n")
 
 def comparator_results_excel(df, run_days, directory, stock):
     lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 14, run_days)

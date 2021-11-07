@@ -1,14 +1,14 @@
 
-from functions.functions import (check_directories,  delete_files_in_folder, get_test_name,
-get_correct_direction, silence_tensorflow)
+from config.silen_ten import silence_tensorflow
 silence_tensorflow()
+from functions.functions import check_directories,  delete_files_in_folder, get_model_name, get_correct_direction
 from config.symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from config.environ import directory_dict, test_var, back_test_days
 from functions.io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
 from functions.time_functs import get_past_datetime, get_year_month_day, increment_calendar, get_actual_price
 from functions.error_functs import error_handler
 from functions.paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
-from paca_model import saveload_neural_net
+from paca_model import nn_train_save, configure_gpu
 from statistics import mean
 from tensorflow.keras.layers import LSTM
 import sys
@@ -17,11 +17,12 @@ import os
 
 
 def back_testing(test_year, test_month, test_day, test_days, params):
+    configure_gpu()
 
     symbol = real_test_symbols[0]
     api = get_api()
     
-    test_name = get_test_name(params)
+    test_name = get_model_name(params)
 
     progress = {
         "total_days": test_days,
@@ -57,13 +58,13 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
             for symbol in real_test_symbols:
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
-                epochs_run = saveload_neural_net(symbol, current_date, params)
+                epochs_run = nn_train_save(symbol, current_date, params)
                 progress["epochs_list"].append(epochs_run)
                 
             print("Model result progress: [", end="")
             for symbol in real_test_symbols:
                 # get model name for future reference
-                model_name = (symbol + "-" + get_test_name(params))
+                model_name = (symbol + "-" + get_model_name(params))
 
                 # setup to allow the rest of the values to be calculated
                 data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name)
@@ -135,22 +136,21 @@ if __name__ == "__main__":
     check_directories()
 
     params = {
-        "N_STEPS": 300,
+        "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
-        "N_LAYERS": 2,
-        "CELL": LSTM,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
         "UNITS": 256,
         "DROPOUT": 0.4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
-        "EPOCHS": 800,
+        "EPOCHS": 2000,
         "PATIENCE": 200,
-        "SAVELOAD": True,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+        "SAVELOAD": True,
+        "FEATURE_COLUMNS": ["close", "ht_trendmode"],
         "SAVE_FOLDER": "batch1"
     }
 

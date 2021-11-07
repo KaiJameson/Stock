@@ -1,8 +1,5 @@
-import os
-import logging
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
-logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+from config.silen_ten import silence_tensorflow
+silence_tensorflow()
 
 from tensorflow.keras.layers import LSTM
 

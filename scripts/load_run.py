@@ -1,9 +1,12 @@
-from functions.functions import check_directories, silence_tensorflow, get_test_name, percent_from_real
+from config.silen_ten import silence_tensorflow
 silence_tensorflow()
+from paca_model import configure_gpu
+from functions.functions import check_directories, get_model_name, percent_from_real
 from config.symbols import load_save_symbols, do_the_trades
 from config.environ import directory_dict, defaults, test_var
-from functions.paca_model_functs import (load_data, getOwnedStocks, return_real_predict, 
+from functions.paca_model_functs import (getOwnedStocks, return_real_predict, 
 get_all_accuracies, nn_report,  buy_all_at_once, create_model, predict)
+from functions.data_load_functs import load_data
 from functions.error_functs import error_handler
 from functions.io_functs import  make_excel_file, make_load_run_excel
 import tensorflow as tf
@@ -14,12 +17,7 @@ import sys
 check_directories()
 
 def load_trade(symbols):
-    
-    gpus = tf.config.experimental.list_physical_devices("GPU")
-
-    if gpus:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
+    configure_gpu()
 
     owned = getOwnedStocks()
 
@@ -28,7 +26,7 @@ def load_trade(symbols):
         try:
             start_time = time.time()
 
-            model_name = (symbol + "-" + get_test_name(defaults))
+            model_name = (symbol + "-" + get_model_name(defaults))
 
             print("\n~~~Now Starting " + symbol + "~~~")
             

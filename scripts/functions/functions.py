@@ -40,7 +40,7 @@ def delete_files_in_folder(directory):
         error_handler("Deleting files ", Exception)
 
 
-def get_test_name(params):
+def get_model_name(params):
     return (str(params["FEATURE_COLUMNS"]) + "-layers" + layers_string(params["LAYERS"]) + "-step" 
         + str(params["N_STEPS"]) + "-limit" + str(params["LIMIT"]) + "-epoch" + str(params["EPOCHS"]) 
         + "-pat" + str(params["PATIENCE"]) + "-batch" + str(params["BATCH_SIZE"]) 
@@ -55,8 +55,10 @@ def layers_string(layers):
     return string
 
 def layer_name_converter(layer):
+    # print(layer, flush=True)
     string = ""
-    if str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent_v2.LSTM'>":
+    
+    if str(layer[1]) == "<class 'keras.layers.recurrent_v2.LSTM'>":
         string += "LSTM"
     elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent.SimpleRNN'>":
         string += "SRNN"
@@ -89,9 +91,4 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
-def silence_tensorflow():
-    import os
-    import logging
-    logging.getLogger("tensorflow").setLevel(logging.ERROR)
-    logging.getLogger("tensorflow").addHandler(logging.NullHandler(logging.ERROR))
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+

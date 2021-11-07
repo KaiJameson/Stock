@@ -1,66 +1,27 @@
-from functions.functions import delete_files_in_folder, check_model_folders, silence_tensorflow, get_test_name
+from config.silen_ten import silence_tensorflow
 silence_tensorflow()
+from functions.functions import delete_files_in_folder, check_model_folders, get_model_name
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import (directory_dict, random_seed, save_logs,
 defaults)
-from functions.time_functs import get_time_string
-from functions.paca_model_functs import (load_data, create_model, nn_report, get_all_accuracies, get_all_maes) 
+from tensorflow.keras.layers import LSTM
+from functions.time_functs import get_time_string, get_past_datetime
+from functions.functions import get_model_name
+from functions.paca_model_functs import create_model, nn_report, get_all_accuracies, get_all_maes, get_current_price, load_model_with_data, predict
+from functions.data_load_functs import load_data
 import numpy as np
 import socket
 import random
-import time
 import os
 
 
-def decision_neural_net(symbol, end_date=None, params=defaults):
-    start_time = time.time()
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        symbol, end_date, params
-    )
-
-    end_time = time.time()
-    total_time = end_time - start_time
-    percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, params["N_STEPS"], False)
-
-    return percent, test_acc
-
-
-def tuning_neural_net(symbol, end_date=None, params=defaults):
-    
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        symbol, end_date, params
-    )
-    
-    return test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
-
-def saveload_neural_net(symbol, end_date=None, params=defaults):
-
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        symbol, end_date, params    
-    )
-
-    return epochs_used
-
-def google_cloud_nn(symbol, end_date=None, params=defaults):
-    data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used = make_neural_net(
-        symbol, end_date, params    
-    )
-
-    return model
-
-def make_neural_net(symbol, end_date, params):
+def nn_train_save(symbol, end_date=None, params=defaults):
     #description of all the parameters used is located inside environment.py
-
-    gpus = tf.config.experimental.list_physical_devices("GPU")
-
-    if gpus:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
+
    
     if socket.gethostname() != "Orion":
         os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
@@ -74,7 +35,7 @@ def make_neural_net(symbol, end_date, params):
     check_model_folders(params["SAVE_FOLDER"], symbol)
     
     # model name to save, making it as unique as possible based on parameters
-    model_name = (symbol + "-" + get_test_name(params))
+    model_name = (symbol + "-" + get_model_name(params))
 
     data, train, valid, test = load_data(symbol, params, end_date)
 
@@ -103,7 +64,6 @@ def make_neural_net(symbol, end_date, params):
     )
 
     epochs_used = len(history.history["loss"])
-
     #before testing, no shuffle
     if params["SAVELOAD"]:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
@@ -128,4 +88,14 @@ def make_neural_net(symbol, end_date, params):
         delete_files_in_folder(logs_dir)
         os.rmdir(logs_dir)
 
-    return data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, epochs_used
+    # data, model, test_acc, valid_acc, train_acc, test_mae, valid_mae, train_mae, 
+
+    return epochs_used
+
+def configure_gpu():
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+
+    if gpus:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+
