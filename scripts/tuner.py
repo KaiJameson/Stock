@@ -1,7 +1,9 @@
-from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, silence_tensorflow, get_test_name
+from config.silen_ten import silence_tensorflow
+from scripts.paca_model import configure_gpu
 silence_tensorflow()
+from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_model_name
 from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
-from paca_model import saveload_neural_net
+from paca_model import nn_train_save, configure_gpu
 from functions.paca_model_functs import get_api, predict,  return_real_predict, load_model_with_data
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
@@ -24,7 +26,7 @@ master_params = {
     "TEST_SIZE": 0.2,
     "LAYERS": [(256, LSTM), (256, LSTM)],
     "UNITS": [256],
-    "DROPOUT": [.8],
+    "DROPOUT": [.4],
     "BIDIRECTIONAL": False,
     "LOSS": "huber_loss",
     "OPTIMIZER": "adam",
@@ -33,12 +35,13 @@ master_params = {
     "PATIENCE": [200],
     "SAVELOAD": True,
     "LIMIT": [4000],
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["close"],
     "SAVE_FOLDER": "tuning1"
 }
 
 
 api = get_api()
+configure_gpu()
     
 tune_symbols = get_user_input(tune_sym_dict, master_params)
 
@@ -66,7 +69,7 @@ for symbol in tune_symbols:
     while still_running:
         params = change_params(index_dict, master_params)
 
-        model_name = (symbol + "-" + get_test_name(params))
+        model_name = (symbol + "-" + get_model_name(params))
 
         progress = {
             "total_days": tune_days,
@@ -107,7 +110,7 @@ for symbol in tune_symbols:
                 time_s = time.time()
                 current_date = increment_calendar(current_date, api, symbol)
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
-                epochs_run = saveload_neural_net(symbol, current_date, params)
+                epochs_run = nn_train_save(symbol, current_date, params)
                 progress["epochs_list"].append(epochs_run)
                 
                 # setup to allow the rest of the values to be calculated
