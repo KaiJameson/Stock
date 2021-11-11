@@ -47,7 +47,7 @@ def change_params(index_dict, params):
 
     return new_params
 
-def get_user_input(tune_sym_dict, master_params):
+def get_user_input(tune_sym_dict, params):
     if len(sys.argv) > 1:
         if sys.argv[1] == "tuning1":
             tune_symbols = tune_sym_dict[sys.argv[1]]
@@ -65,8 +65,8 @@ def get_user_input(tune_sym_dict, master_params):
             print("Please try again")
             sys.exit(-1)
 
-        master_params["SAVE_FOLDER"] = sys.argv[1]
-        return tune_symbols
+        params["SAVE_FOLDER"] = sys.argv[1]
+        return tune_symbols, params
 
     else:
         print("You need to provide a second argument that says which tuning file ")
@@ -86,7 +86,7 @@ def update_money(current_money, predicted_price, current_price, actual_price):
 
 def linear_regression_comparator(df, timeperiod, run_days):
     df = df["df"]
-    df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=timeperiod)
+    df["lin_reg"] = ta.LINEARREG(df.close, timeperiod=timeperiod)
 
     current_money = 10000
     percent_away_list = []
@@ -95,7 +95,7 @@ def linear_regression_comparator(df, timeperiod, run_days):
     for i in range(len(df) - 1, len(df) - run_days + 1, -1):
         actual_price = df.close[i]
         current_price = df.close[i - 1]
-        predicted_price = df.lin_regres[i - 1]
+        predicted_price = df.lin_reg[i - 1]
 
         p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)

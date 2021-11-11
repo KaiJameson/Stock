@@ -46,6 +46,18 @@ def get_model_name(params):
         + "-pat" + str(params["PATIENCE"]) + "-batch" + str(params["BATCH_SIZE"]) 
         + "-drop" + str(params["DROPOUT"]) + "-ts" + str(params["TEST_SIZE"]))
 
+def get_test_name(params):
+    test_name = str(params["ENSEMBLE"])
+    for predictor in params["ENSEMBLE"]:
+        if "nn" in predictor:
+            model_params = params[predictor]
+            test_name += (predictor + str(model_params["FEATURE_COLUMNS"]) 
+                + layers_string(model_params["LAYERS"]) + "s" + str(model_params["N_STEPS"]) 
+                + "l" + str(model_params["LIMIT"]) + "e" + str(model_params["EPOCHS"]) 
+                + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
+                + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"]))
+    return test_name
+
 def layers_string(layers):
     string = "["
     for layer in layers:
