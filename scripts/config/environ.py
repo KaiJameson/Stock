@@ -20,6 +20,16 @@ directory_dict = {
     "tuning_dir":          "../tuning_info"
 }
 
+load_params = {
+    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "LIMIT": 200,
+    "N_STEPS": 100,
+    "BATCH_SIZE": 1024,
+    "LOOKUP_STEP": 1,
+    "TEST_SIZE": 0.2,
+    "LOSS": "huber_loss"
+}
+
 error_file = "../error_file.txt"
 
 test_var = "close"

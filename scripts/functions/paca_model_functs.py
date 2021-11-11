@@ -118,14 +118,14 @@ def model_last_layer(model, layers, ind):
     
     return model
 
-def load_model_with_data(symbol, current_date, params, directory, model_name, to_print=False):
+def load_model_with_data(symbol, current_date, params, directory, model_name, to_print=False, save_folder="trading"):
     s = time.time()
     data, train, valid, test = load_data(symbol, params, current_date, shuffle=False, to_print=to_print)
     if to_print:
         print("Loading the data took " + str(time.time() - s) + " seconds")    
     s = time.time()
     model = create_model(params)
-    model.load_weights(directory + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5")
+    model.load_weights(directory + "/" + save_folder + "/" + model_name + ".h5")
     if to_print:
         print("Loading the model took " + str(time.time() - s) + " seconds")    
 

@@ -5,19 +5,21 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import (directory_dict, random_seed, save_logs,
-defaults)
+defaults, load_params)
 from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_datetime
 from functions.functions import get_model_name
 from functions.paca_model_functs import create_model, nn_report, get_all_accuracies, get_all_maes, get_current_price, load_model_with_data, predict
 from functions.data_load_functs import load_data
+from statistics import mean
+import talib as ta
 import numpy as np
 import socket
 import random
 import os
 
 
-def nn_train_save(symbol, end_date=None, params=defaults):
+def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading"):
     #description of all the parameters used is located inside environment.py
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
@@ -32,7 +34,7 @@ def nn_train_save(symbol, end_date=None, params=defaults):
     tf.random.set_seed(random_seed)
     random.seed(random_seed)
     
-    check_model_folders(params["SAVE_FOLDER"], symbol)
+    check_model_folders(save_folder, symbol)
     
     # model name to save, making it as unique as possible based on parameters
     model_name = (symbol + "-" + get_model_name(params))
@@ -41,10 +43,10 @@ def nn_train_save(symbol, end_date=None, params=defaults):
 
     model = create_model(params)
 
-    logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
+    logs_dir = "logs/" + get_time_string() + "-" + save_folder
 
     if params["SAVELOAD"]:
-        checkpointer = ModelCheckpoint(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+        checkpointer = ModelCheckpoint(directory_dict["model_dir"] + "/" + save_folder + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     else:    
         checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
@@ -98,4 +100,50 @@ def configure_gpu():
     if gpus:
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
+
+def nn_load_predict(symbol, current_date, params, model_name, save_folder):
+    data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name, save_folder=save_folder)
+    predicted_price = predict(model, data, params["N_STEPS"])
+
+    return predicted_price
+
+def ensemble_predictor(symbol, params, current_date):
+    ensemb_count = 0
+    ensemb_predict_list = []
+
+    epochs_dict = {}
+    df, train, valid, test = load_data(symbol, load_params, current_date, shuffle=False, to_print=False)
+    df = df["df"]
+
+    for predictor in params["ENSEMBLE"]:
+        if "nn" in predictor:
+            epochs_dict[predictor] = 0
+
+    for predictor in params["ENSEMBLE"]:
+        if predictor == "7MA":
+            df["7MA"] = df.close.rolling(window=7).mean()
+            predicted_price = np.float32(df["7MA"][len(df.close) - 1])
+            ensemb_predict_list.append(predicted_price)
+            
+        elif predictor == "lin_reg":
+            df["lin_reg"] = ta.LINEARREG(df.close, timeperiod=7)
+            predicted_price = np.float32(df.lin_reg[len(df.close) - 1])
+            ensemb_predict_list.append(predicted_price)
+
+        elif "nn" in predictor:
+            model_name = symbol + "-" + get_model_name(params[predictor])
+            if params["TRADING"]:
+                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name)
+            else:
+                epochs_run = nn_train_save(symbol, current_date, params[predictor], params["SAVE_FOLDER"])
+                epochs_dict[predictor] = epochs_run
+                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name, params["SAVE_FOLDER"])
+            ensemb_predict_list.append(predicted_price)
+        ensemb_count += 1
+
+    final_prediction = mean(ensemb_predict_list)
+    current_price = get_current_price(df)
+
+    return final_prediction, current_price, epochs_dict
+
 

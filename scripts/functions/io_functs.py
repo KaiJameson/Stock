@@ -141,13 +141,13 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
         file.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
     file.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.\n")
-    file.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".")
+    file.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n\n")
     file.write("The neural net models used were :\n")
 
     nn_tested = False
     for predictor in params["ENSEMBLE"]:
-        if "nn_model" in predictor:
-            write_model_params(file, params[predictor], test_name, avg_e[predictor])
+        if "nn" in predictor:
+            write_model_params(file, params[predictor], predictor, avg_e[predictor])
         nn_tested = True
     if not nn_tested:
         file.write("NONE\n")
@@ -162,11 +162,11 @@ def write_model_params(file, params, predictor, avg_e):
     file.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
     file.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
     file.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n")
-    file.write("The model used an average of " + avg_e + " epochs.\n\n")
+    file.write("The model used an average of " + str(avg_e) + " epochs.\n\n")
     
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
-    print("Testing finished for ensemble: " + str(params["ENSEMBLE"]))
+    print("\nTesting finished for ensemble: " + str(params["ENSEMBLE"]))
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
 
@@ -174,11 +174,11 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
     print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
-    print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year))
+    print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year) + "\n")
 
     nn_tested = False
     for predictor in params["ENSEMBLE"]:
-        if "nn_model" in predictor:
+        if "nn" in predictor:
             print_model_params(params[predictor], predictor, avg_e[predictor])
         nn_tested = True
     if not nn_tested:
@@ -192,7 +192,7 @@ def print_model_params(params, predictor, avg_e):
     print("Loss: " + params["LOSS"] + ", Optimizer: " +  params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
     print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
     print("Feature Columns: " + str(params["FEATURE_COLUMNS"]))
-    print("The model used an average of " + avg_e + " epochs.\n")
+    print("The model used an average of " + str(avg_e) + " epochs.\n")
 
 def comparator_results_excel(df, run_days, directory, stock):
     lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 14, run_days)
@@ -213,7 +213,7 @@ def read_saved_contents(file_path, return_dict):
 
     file_contents = {}
     for line in f:
-        parts = line.strip().split(":")
+        parts = line.strip().split("|")
         file_contents[parts[0]] = parts[1]
     f.close()
 
@@ -227,16 +227,19 @@ def read_saved_contents(file_path, return_dict):
             return_dict[key] = float(file_contents[key])
         elif type(return_dict[key]) == type([]):
             return_dict[key] = ast.literal_eval(file_contents[key])
+        elif type(return_dict[key]) == type({}):
+            return_dict[key] = ast.literal_eval(file_contents[key])
         else:
             print("Unexpected type found in this file")
     
     return return_dict
 
 def save_to_dictionary(file_path, dictionary):
+    print(file_path)
     f = open(file_path, "w")
 
     for key in dictionary:
-        f.write(str(key) + ":" + str(dictionary[key]) + "\n")
+        f.write(str(key) + "|" + str(dictionary[key]) + "\n")
 
     f.close()
 

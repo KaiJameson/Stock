@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import alpaca_trade_api as tradeapi
+import time
 
 def get_api():
     if trading_real_money:
@@ -66,10 +67,14 @@ def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
             limit -= 1000
             end_date = get_trade_day_back(end_date, 1000)
         else:
+            ti = time.time()
             other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
+            print(f"get barset {time.time() - ti}")
             new_df = get_values(other_barset.items()) 
             limit -= 1000
+            ti= time.time()
             end_date = get_trade_day_back(get_full_end_date(), 1000)
+            print(f"trade day back {time.time() - ti}")
 
         frames.insert(0, new_df)
 
@@ -93,9 +98,9 @@ def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
 
 def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=True):
     api = get_api()
-
+    ti = time.time()
     df = get_alpaca_data(symbol, end_date, api, limit=limit)
-    
+    print(f"it took {time.time() - ti}")
     if "mid" in feature_columns:
         df["mid"] = (df.low + df.high) / 2
 
@@ -129,17 +134,17 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "relative_strength_index" in feature_columns:
         df["relative_strength_index"] = ta.RSI(df.close)
     
-    if "lin_regres" in feature_columns:
-        df["lin_regres"] = ta.LINEARREG(df.close, timeperiod=14)
+    if "lin_reg" in feature_columns:
+        df["lin_reg"] = ta.LINEARREG(df.close, timeperiod=14)
 
-    if "lin_regres_angle" in feature_columns:
-        df["lin_regres_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
+    if "lin_reg_angle" in feature_columns:
+        df["lin_reg_angle"] = ta.LINEARREG_ANGLE(df.close, timeperiod=14)
 
-    if "lin_regres_intercept" in feature_columns:
-        df["lin_regres_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
+    if "lin_reg_intercept" in feature_columns:
+        df["lin_reg_intercept"] = ta.LINEARREG_INTERCEPT(df.close, timeperiod=14)
 
-    if "lin_regres_slope" in feature_columns:
-        df["lin_regres_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
+    if "lin_reg_slope" in feature_columns:
+        df["lin_reg_slope"] = ta.LINEARREG_SLOPE(df.close, timeperiod=14)
 
     if "pearsons_correl" in feature_columns:
         df["pearsons_correl"] = ta.CORREL(df.high, df.low, timeperiod=30)
@@ -339,6 +344,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         # pd.set_option("display.max_rows", None)
         print(df.head(1))
         print(df.tail(1))
+        print(symbol)
+        print(len(df), flush=True)
         # print(df)
     return df
 

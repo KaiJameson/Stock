@@ -1,14 +1,15 @@
 
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
-from functions.functions import check_directories,  delete_files_in_folder, get_model_name, get_correct_direction
 from config.symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from config.environ import directory_dict, test_var, back_test_days
+from functions.functions import check_directories,  delete_files_in_folder, get_model_name, get_correct_direction, get_test_name
 from functions.io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
 from functions.time_functs import get_past_datetime, get_year_month_day, increment_calendar, get_actual_price
 from functions.error_functs import error_handler
-from functions.paca_model_functs import get_api, predict, load_model_with_data, return_real_predict
-from paca_model import nn_train_save, configure_gpu
+from functions.paca_model_functs import get_api
+from paca_model import ensemble_predictor
+from paca_model import configure_gpu
 from statistics import mean
 from tensorflow.keras.layers import LSTM
 import sys
@@ -22,7 +23,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
     symbol = real_test_symbols[0]
     api = get_api()
     
-    test_name = get_model_name(params)
+    test_name = get_test_name(params)
 
     progress = {
         "total_days": test_days,
@@ -33,8 +34,12 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         "test_day": test_day,
         "percent_away_list": [],
         "correct_direction_list": [],
-        "epochs_list": []
+        "epochs_dict": {}
     }
+
+    for predictor in params["ENSEMBLE"]:
+        if "nn" in predictor:
+            progress["epochs_dict"][predictor] = []
 
     print(test_name)
 
@@ -58,24 +63,25 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
             for symbol in real_test_symbols:
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
-                epochs_run = nn_train_save(symbol, current_date, params)
-                progress["epochs_list"].append(epochs_run)
                 
-            print("Model result progress: [", end="")
-            for symbol in real_test_symbols:
-                # get model name for future reference
-                model_name = (symbol + "-" + get_model_name(params))
+                # # get model name for future reference
+                # test_name = (symbol + "-" + get_test_name(params))
 
-                # setup to allow the rest of the values to be calculated
-                data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name)
+                # # setup to allow the rest of the values to be calculated
+                # data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], test_name)
 
-                # first grab the current price by getting the latest value from the og data frame
-                y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
-                real_y_values = y_real[-back_test_days:]
-                current_price = real_y_values[-1]
+                # # first grab the current price by getting the latest value from the og data frame
+                # y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
+                # real_y_values = y_real[-back_test_days:]
+                # current_price = real_y_values[-1]
 
-                # then use predict fuction to get predicted price
-                predicted_price = predict(model, data, params["N_STEPS"])
+                # # then use predict fuction to get predicted price
+                # predicted_price = predict(model, data, params["N_STEPS"])
+
+                predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date)
+                if bool(epochs_run):
+                    for predictor in epochs_run:
+                        progress["epochs_dict"][predictor].append(epochs_run[predictor])
 
                 # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
                 actual_price = get_actual_price(current_date, api, symbol)
@@ -86,14 +92,10 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
                 progress["percent_away_list"].append(p_diff)
                 progress["correct_direction_list"].append(correct_dir)
-
-                print("*", end="", flush=True)
-                
-            print("]", flush=True)
             
 
             day_took = (time.time() - time_s)
-            print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " + str(round(day_took / 60, 2)) + " minutes.")
+            print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " + str(round(day_took / 60, 2)) + " minutes.", flush=True)
             progress["time_so_far"] += day_took
 
             progress["days_done"] += 1
