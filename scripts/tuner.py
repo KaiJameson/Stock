@@ -1,10 +1,10 @@
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
-from config.environ import back_test_days, test_var, directory_dict, test_money, load_params
+from config.environ import back_test_days, directory_dict, test_money, load_params
 from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
 from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name
-from functions.paca_model_functs import get_api, predict,  return_real_predict, load_model_with_data
+from functions.paca_model_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price
 from functions.error_functs import error_handler
@@ -17,9 +17,6 @@ import time
 import sys
 import os
 import datetime
-
-check_directories()
-
 
 
 def tuning(tune_year, tune_month, tune_day, tune_days, params):
@@ -54,7 +51,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
         print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
         starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) - datetime.timedelta(1)), 
             api, symbol)
-        print(starting_day_price)
+        # print(starting_day_price)
 
         if os.path.isfile(directory_dict["tuning_dir"] + "/" + test_name + ".txt"):
             print("A fully completed file with the name " + test_name + " already exists.")
@@ -72,19 +69,6 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 time_s = time.time()
                 current_date = increment_calendar(current_date, api, symbol)
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
-                # epochs_run = nn_train_save(symbol, current_date, params)
-                # progress["epochs_list"].append(epochs_run)
-                
-                # # setup to allow the rest of the values to be calculated
-                # data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], test_name)
-
-                # # first grab the current price by getting the latest value from the og data frame
-                # y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var]) 
-                # real_y_values = y_real[-back_test_days:]
-                # current_price = real_y_values[-1]
-
-                # # then use predict fuction to get predicted price
-                # predicted_price = predict(model, data, params["N_STEPS"])
 
                 predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date)
                 if bool(epochs_run):
@@ -150,10 +134,13 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
             error_handler(symbol, Exception)
 
 
-params = {
-    "ENSEMBLE": ["nn1"],
+if __name__ == "__main__":
+    check_directories()
+    params = {
+    "ENSEMBLE": ["nn1", "7MA", "lin_reg"],
     "TRADING": False,
     "SAVE_FOLDER": "tuning4",
+    "TEST_VAR": "c",
     "nn1" : { 
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
@@ -169,10 +156,11 @@ params = {
         "PATIENCE": 100,
         "SAVELOAD": True,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"]
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"]
+        }
     }
-}
 
-tuning(tune_year, tune_month, tune_day, tune_days, params)
+    tuning(tune_year, tune_month, tune_day, tune_days, params)
+
 
 

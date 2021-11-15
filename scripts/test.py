@@ -1,75 +1,59 @@
 import math
 from config.environ import *
-from paca_model import configure_gpu, nn_train_save
-from functions.tuner_functs import moving_average_comparator, linear_regression_comparator
+from config.symbols import *
+from functions.tuner_functs import EMA_comparator, MA_comparator, RSI_comparator, lin_reg_comparator, smooth_c_comparator
 from functions.paca_model_functs import *
 from functions.data_load_functs import *
 from functions.io_functs import *
 from functions.functions import *
 from functions.time_functs import *
+from paca_model import *
+from tuner import tuning
 from statistics import mean
 
-def backtest_comparators():
+
+def backtest_comparator(start_day, end_day, comparator, run_days):
     load_save_symbols = ["AGYS", "AMKR", "BG","BGS", "CAKE", "CCJ", "DFS", "ELY", "FLEX", 
         "INTC", "JBLU", "LLNW", "NWL", "QCOM", "RDN", "SHO", "SMED", "STLD", "WERN", "ZION"]
 
-    over_all_avg = {i:[0.0, 0.0, 0.0]
-    for i in range(2, 21)}
+    over_all = {i:[0.0, 0.0, 0.0]
+    for i in range(start_day, end_day)}
 
-    over_all_lin = {i:[0.0, 0.0, 0.0]
-    for i in range(2, 21)}
     
     for symbol in load_save_symbols:
         print(symbol, flush=True)
-        for i in range(2, 21):
-            data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
-            avg = moving_average_comparator(data, i, 2000)
-            lin = linear_regression_comparator(data, i, 2000)
-            
-            over_all_avg[i][0] += float(avg[0])
-            over_all_avg[i][1] += float(avg[1])
-            over_all_avg[i][2] += float(avg[2])
-            over_all_lin[i][0] += float(lin[0])
-            over_all_lin[i][1] += float(lin[1])
-            over_all_lin[i][2] += float(lin[2])
+        for i in range(start_day, end_day):
+            data, train, valid, test = load_data(symbol, defaults, test_var="c", shuffle=False, to_print=False)
+            if comparator == "7MA":
+                avg = MA_comparator(data, i, run_days)
+            elif comparator == "lin_reg":
+                avg = lin_reg_comparator(data, i, run_days)
+            elif comparator == "EMA":
+                avg = EMA_comparator(data, i, run_days)
+            elif comparator == "smooth_c":
+                if i == 1 or i == 3:
+                    continue
+                elif i % 2 == 0:
+                    continue
+                else:
+                    avg = smooth_c_comparator(data, i, 3, run_days)
 
 
-    print("Average:")
-    for j in range(2, 21):
+            over_all[i][0] += float(avg[0])
+            over_all[i][1] += float(avg[1])
+            over_all[i][2] += float(avg[2])
+
+    print(f"{comparator}")
+    for j in range(start_day, end_day):
         print(f"{j}", end="")
-        for metric in over_all_avg[j]:
-            print(f" {metric / len(load_save_symbols)} ", end="")
+        for metric in over_all[j]:
+            print(f" {round(metric / len(load_save_symbols), 2)} ", end="")
         print()
 
-    print("Linear Regression:")
-    for j in range(2, 21):
-        print(f"{j}", end="")
-        for metric in over_all_lin[j]:
-            print(f" {metric / len(load_save_symbols)} ", end="")
-        print()
 
 
 if __name__ == "__main__":
     from config.symbols import *
-
-    defaults = {
-    "N_STEPS": 100,
-    "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "LAYERS": [(256, LSTM), (256, LSTM)],
-    "UNITS": 256,
-    "DROPOUT": 0.4,
-    "BIDIRECTIONAL": False,
-    "LOSS": "huber_loss",
-    "OPTIMIZER": "adam",
-    "BATCH_SIZE": 1024,
-    "EPOCHS": 200,
-    "PATIENCE": 200,
-    "LIMIT": 4000,
-    "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
-    "SAVE_FOLDER": "tuning4"
-    }
 
     # for symbol in load_save_symbols:
     #     load_data(symbol, defaults, None, False, True, True)
@@ -122,6 +106,40 @@ if __name__ == "__main__":
 
     
     
-    
+    params = {
+        "ENSEMBLE": ["nn1"],
+        "TRADING": False,
+        "SAVE_FOLDER": "tuning4",
+        "TEST_VAR": "c",
+        "nn1" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 100,
+            "SAVELOAD": True,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["c", "RSI", "sc"]
+        }
+    }
+
+    # tuning(tune_year, tune_month, tune_day, tune_days, params)
+    # ensemble_predictor("AGYS", params, get_current_datetime())
+
+    # df, blah, bal, alalal = load_data("AGYS", params["nn1"], test_var="c", to_print=True)
+    # print(f"AGYS: {smooth_c_comparator(df, 51, 3, 100)}", flush=True)
+
+    backtest_comparator(2, 52, "smooth_c", 3000)
+
+    # for symbol in load_save_symbols:
+        # df, blah, bal, alalal = load_data(symbol, params["nn1"], test_var="c", to_print=False)
+        # print(f"{symbol}: {smooth_c_comparator(df, 7, 3, 250)}", flush=True)
 
 

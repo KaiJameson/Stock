@@ -19,6 +19,6 @@ tax/
 env/
 requirements.txt
 error_file.txt
-config/symbols.py
+scripts/config/symbols.py
 */tax_info.csv
 stock-bot-320000-f72915536b05.json

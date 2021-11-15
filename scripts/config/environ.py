@@ -21,7 +21,7 @@ directory_dict = {
 }
 
 load_params = {
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
     "LIMIT": 200,
     "N_STEPS": 100,
     "BATCH_SIZE": 1024,
@@ -32,7 +32,6 @@ load_params = {
 
 error_file = "../error_file.txt"
 
-test_var = "close"
 time_zone = "US/EASTERN"
 test_money = 10000.0
 stocks_traded = 20
@@ -86,7 +85,7 @@ defaults = {
     "PATIENCE": 200,
     "LIMIT": 4000,
     "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["open", "low", "high", "close", "mid", "volume"],
+    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
     "SAVE_FOLDER": "trading"
 }
 

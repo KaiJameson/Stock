@@ -1,15 +1,15 @@
 from matplotlib import pyplot as plt
-from config.environ import test_var, test_money, directory_dict
+from config.environ import test_money, directory_dict
 from functions.functions import percent_from_real, layers_string, get_model_name
 from functions.time_functs import get_current_date_string, get_time_string
-from functions.tuner_functs import moving_average_comparator, linear_regression_comparator
+from functions.tuner_functs import MA_comparator, lin_reg_comparator
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import ast
 
 def write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
-        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred):
+        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred, test_var="c"):
     spencer_money = test_money * (curr_price/real_y_values[0])
     f = open(report_dir, "a")
     f.write("~~~~~~~" + symbol + "~~~~~~~\n")
@@ -156,13 +156,13 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
 
 def write_model_params(file, params, predictor, avg_e):
     file.write("Model " + predictor + get_model_name(params))
-    file.write("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
+    file.write("\nParameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
     file.write("Layers: " + layers_string(params["LAYERS"]) + "Test Size: " + str(params["TEST_SIZE"]) + ",\n") 
     file.write("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
     file.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
     file.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
     file.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n")
-    file.write("The model used an average of " + str(avg_e) + " epochs.\n\n")
+    file.write("The model used an average of " + str(round(avg_e, 2)) + " epochs.\n\n")
     
 
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
@@ -195,8 +195,8 @@ def print_model_params(params, predictor, avg_e):
     print("The model used an average of " + str(avg_e) + " epochs.\n")
 
 def comparator_results_excel(df, run_days, directory, stock):
-    lin_avg_p, lin_avg_d, lin_current_money = linear_regression_comparator(df, 14, run_days)
-    MA_avg_p, MA_avg_d, MA_current_money = moving_average_comparator(df, 7, run_days)
+    lin_avg_p, lin_avg_d, lin_current_money = lin_reg_comparator(df, 14, run_days)
+    MA_avg_p, MA_avg_d, MA_current_money = MA_comparator(df, 7, run_days)
 
     directory_string = f"{directory}/{stock}-comparison.txt"
     if not os.path.isfile(directory_string):
@@ -218,7 +218,6 @@ def read_saved_contents(file_path, return_dict):
     f.close()
 
     for key in file_contents:
-        print(str(key) + " " + str(file_contents[key]))
         if type(return_dict[key]) == type("str"):
             return_dict[key] = file_contents[key]
         elif type(return_dict[key]) == type(0):

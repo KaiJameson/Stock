@@ -6,7 +6,7 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.metrics import accuracy_score
 from config.api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
 intrinio_sandbox_key, intrinio_production_key)
-from config.environ import (test_var, back_test_days, to_plot, test_money, stocks_traded, 
+from config.environ import (back_test_days, to_plot, test_money, stocks_traded, 
 using_all_accuracies, directory_dict)
 from config.symbols import trading_real_money
 from functions.time_functs import get_time_string, get_past_datetime
@@ -30,7 +30,7 @@ import time
 import sys
 
 
-def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS, classification):
+def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS, classification, test_var="c"):
     time_string = get_time_string()
     # predict the future price
     future_price = predict(model, data, N_STEPS)
@@ -51,7 +51,7 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
     percent = future_price / curr_price
 
     write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
-        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred)
+        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred, test_var)
     excel_output(symbol, curr_price, future_price)
 
     return percent
@@ -131,7 +131,7 @@ def load_model_with_data(symbol, current_date, params, directory, model_name, to
 
     return data, model
 
-def predict(model, data, n_steps, classification=False):
+def predict(model, data, n_steps, test_var="c", classification=False):
     # retrieve the last sequence from data
     last_sequence = data["last_sequence"][:n_steps]
     # retrieve the column scalers
@@ -142,6 +142,7 @@ def predict(model, data, n_steps, classification=False):
     last_sequence = np.expand_dims(last_sequence, axis=0)
     # get the prediction (scaled from 0 to 1)
     prediction = model.predict(last_sequence)
+
     # get the price (by inverting the scaling)
     if not classification:
         predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
@@ -407,7 +408,7 @@ def intrinio_news():
 
 def get_feature_importance(df):
     data = df.copy()
-    y = data["close"]
+    y = data["c"]
     X = data
    
     train_samples = int(X.shape[0] * 0.8)
@@ -437,7 +438,7 @@ def get_feature_importance(df):
         print(": "+ str(feature))
         i += 1
     
-def get_all_accuracies(model, data, lookup_step, classification=False):
+def get_all_accuracies(model, data, lookup_step, test_var="c", classification=False):
     if using_all_accuracies:
         y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], 
         data["column_scaler"][test_var], classification)
@@ -449,7 +450,6 @@ def get_all_accuracies(model, data, lookup_step, classification=False):
          data["column_scaler"][test_var], classification)
         test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
     else:
-        # print("data X_valid" + str(data["X_valid"]))
         y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
         data["column_scaler"][test_var], classification)
         valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
@@ -470,7 +470,7 @@ def get_all_maes(model, test_tensorslice, valid_tensorslice, train_tensorslice, 
 
     return test_mae, valid_mae, train_mae
 
-def get_mae(model, tensorslice, data):
+def get_mae(model, tensorslice, data, test_var="close"):
     mse, mae = model.evaluate(tensorslice, verbose=0)
     mae = data["column_scaler"][test_var].inverse_transform([[mae]])[0][0]
 
@@ -485,6 +485,6 @@ def return_real_predict(model, X_data, y_data, column_scaler, classification=Fal
     return y_real, y_pred
 
 def get_current_price(df):
-    return df.close[-1]
+    return df.c[-1]
 
 
