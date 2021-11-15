@@ -10,7 +10,7 @@ from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_datetime
 from functions.functions import get_model_name
 from functions.paca_model_functs import create_model, nn_report, get_all_accuracies, get_all_maes, get_current_price, load_model_with_data, predict
-from functions.data_load_functs import load_data
+from functions.data_load_functs import load_data, make_dataframe
 from statistics import mean
 import talib as ta
 import numpy as np
@@ -19,7 +19,7 @@ import random
 import os
 
 
-def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading"):
+def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading", test_var="c"):
     #description of all the parameters used is located inside environment.py
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
@@ -39,7 +39,7 @@ def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading")
     # model name to save, making it as unique as possible based on parameters
     model_name = (symbol + "-" + get_model_name(params))
 
-    data, train, valid, test = load_data(symbol, params, end_date)
+    data, train, valid, test = load_data(symbol, params, end_date, test_var)
 
     model = create_model(params)
 
@@ -70,7 +70,7 @@ def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading")
     if params["SAVELOAD"]:
         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
     else:    
-        data, train, valid, test = load_data(symbol, params, end_date, False)
+        data, train, valid, test = load_data(symbol, params, end_date, test_var, False)
 
         model_path = os.path.join("results", model_name + ".h5")
         model.load_weights(model_path)
@@ -101,19 +101,17 @@ def configure_gpu():
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
-def nn_load_predict(symbol, current_date, params, model_name, save_folder):
+def nn_load_predict(symbol, current_date, params, model_name, save_folder, test_var="c"):
     data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name, save_folder=save_folder)
-    predicted_price = predict(model, data, params["N_STEPS"])
+    predicted_price = predict(model, data, params["N_STEPS"], test_var)
 
     return predicted_price
 
 def ensemble_predictor(symbol, params, current_date):
-    ensemb_count = 0
     ensemb_predict_list = []
 
     epochs_dict = {}
-    df, train, valid, test = load_data(symbol, load_params, current_date, shuffle=False, to_print=False)
-    df = df["df"]
+    df = make_dataframe(symbol, load_params["FEATURE_COLUMNS"], limit=load_params["LIMIT"], end_date=current_date, to_print=False)
 
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
@@ -121,25 +119,24 @@ def ensemble_predictor(symbol, params, current_date):
 
     for predictor in params["ENSEMBLE"]:
         if predictor == "7MA":
-            df["7MA"] = df.close.rolling(window=7).mean()
-            predicted_price = np.float32(df["7MA"][len(df.close) - 1])
+            df["7MA"] = df.c.rolling(window=7).mean()
+            predicted_price = np.float32(df["7MA"][len(df.c) - 1])
             ensemb_predict_list.append(predicted_price)
             
         elif predictor == "lin_reg":
-            df["lin_reg"] = ta.LINEARREG(df.close, timeperiod=7)
-            predicted_price = np.float32(df.lin_reg[len(df.close) - 1])
+            df["lin_reg"] = ta.LINEARREG(df.c, timeperiod=7)
+            predicted_price = np.float32(df.lin_reg[len(df.c) - 1])
             ensemb_predict_list.append(predicted_price)
 
         elif "nn" in predictor:
             model_name = symbol + "-" + get_model_name(params[predictor])
             if params["TRADING"]:
-                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name)
+                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name, test_var=params["TEST_VAR"])
             else:
-                epochs_run = nn_train_save(symbol, current_date, params[predictor], params["SAVE_FOLDER"])
+                epochs_run = nn_train_save(symbol, current_date, params[predictor], params["SAVE_FOLDER"], params["TEST_VAR"])
                 epochs_dict[predictor] = epochs_run
-                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name, params["SAVE_FOLDER"])
+                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name, params["SAVE_FOLDER"], params["TEST_VAR"])
             ensemb_predict_list.append(predicted_price)
-        ensemb_count += 1
 
     final_prediction = mean(ensemb_predict_list)
     current_price = get_current_price(df)

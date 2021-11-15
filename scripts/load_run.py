@@ -3,7 +3,7 @@ silence_tensorflow()
 from paca_model import configure_gpu
 from functions.functions import check_directories, get_model_name, percent_from_real
 from config.symbols import load_save_symbols, do_the_trades
-from config.environ import directory_dict, defaults, test_var
+from config.environ import directory_dict, defaults
 from functions.paca_model_functs import (getOwnedStocks, return_real_predict, 
 get_all_accuracies, nn_report,  buy_all_at_once, create_model, predict)
 from functions.data_load_functs import load_data
@@ -55,7 +55,7 @@ def load_trade(symbols):
 
             print("NN report took " + str(time.time() - time_s) + " seconds")
 
-            y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var])
+            y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"]["c"])
             make_load_run_excel(symbol, train_acc, valid_acc, test_acc, percent_from_real(y_real, y_pred), abs((percent - 1) * 100))
            
             print("Finished running: " + symbol)
