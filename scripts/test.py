@@ -24,7 +24,7 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
     for symbol in load_save_symbols:
         print(symbol, flush=True)
         for i in range(start_day, end_day):
-            data, train, valid, test = load_data(symbol, defaults["nn1"], shuffle=False, to_print=False)
+            data, train, valid, test = load_data(symbol, params=defaults["nn1"], end_date=get_past_datetime(2021, 5, 13), shuffle=False, to_print=False)
             if comparator == "7MA":
                 avg = MA_comparator(data, i, run_days)
             elif comparator == "lin_reg":
@@ -39,6 +39,7 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
                 elif i % 2 == 0:
                     continue
                 else:
+                    print(i)
                     avg = smooth_c_comparator(data, i, 3, run_days)
 
 
@@ -66,33 +67,33 @@ if __name__ == "__main__":
     # symbol = "AGYS"
     # nn_train_save(symbol, params=defaults)
     
-    # start_time = time.time()
+    # start_time = time.perf_counter()
     # model_name = (symbol + "-" + get_model_name(defaults))
 
     # print("\n~~~Now Starting " + symbol + "~~~")
     
-    # time_s = time.time()
+    # time_s = time.perf_counter()
     # data, train, valid, test = load_data(symbol, defaults, shuffle=False, to_print=False)
-    # print("Loading the data took " + str(time.time() - time_s) + " seconds")    
+    # print("Loading the data took " + str(time.perf_counter() - time_s) + " seconds")    
     # print(f" this is the data: {data}")
-    # time_s = time.time()
+    # time_s = time.perf_counter()
     # model = create_model(defaults)
     # model.load_weights(directory_dict["model"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
-    # print("Loading the model took " + str(time.time() - time_s) + " seconds")    
+    # print("Loading the model took " + str(time.perf_counter() - time_s) + " seconds")    
 
-    # time_s = time.time()
+    # time_s = time.perf_counter()
     # train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"], False)
-    # print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
+    # print("Getting the accuracies took " + str(time.perf_counter() - time_s) + " seconds")   
 
-    # total_time = time.time() - start_time
-    # time_s = time.time()
+    # total_time = time.perf_counter() - start_time
+    # time_s = time.perf_counter()
     # percent = nn_report(symbol, total_time, model, data, test_acc, valid_acc, 
     # train_acc, defaults["N_STEPS"], False)
     # y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"][test_var], True)
     # print(f"real: {y_real}")
     # print(f"predict: {y_pred}")
     # predicted_price = predict(model, data, defaults["N_STEPS"], False) 
-    # print("NN report took " + str(time.time() - time_s) + " seconds")
+    # print("NN report took " + str(time.perf_counter() - time_s) + " seconds")
 
     # print(f"predicted value: {predicted_price}")
 
@@ -113,7 +114,6 @@ if __name__ == "__main__":
         "ENSEMBLE": ["sav_gol"],
         "TRADING": False,
         "SAVE_FOLDER": "tuning4",
-        "TEST_VAR": "c",
         "nn1" : { 
             "N_STEPS": 100,
             "LOOKUP_STEP": 1,
@@ -129,7 +129,8 @@ if __name__ == "__main__":
             "PATIENCE": 100,
             "SAVELOAD": True,
             "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["c"]
+            "FEATURE_COLUMNS": ["c", "l", "m", "h", "v"],
+            "TEST_VAR": "c"
         }
     }
 
@@ -138,20 +139,29 @@ if __name__ == "__main__":
 
     # tuning(tune_year, tune_month, tune_day, tune_days, params)
     # ensemble_predictor("AGYS", params, get_current_datetime())
-    # current_date = get_past_datetime(2020, 6, 1)
 
-    # df, blah, bal, alalal = load_data("AGYS", params["nn1"], current_date, test_var="c", to_print=False)
+    year = 2021
+    month = 5
+    day = 15
+    current_date = get_past_datetime(year, month, day)
+    print(f"year {year} month {month} day {day}")
+
+    df, blah, bal, alalal = load_data("AMKR", params["nn1"], current_date,  to_print=False)
+    # df, blah, bal, alalal = load_data("AMKR", params["nn1"],  to_print=False)
 
     # comparator_results_excel(df, 250, directory_dict["tuning"], "AGYS")
     # plot_graph(df["df"].c, df["df"].sc, "AGYS", 100, "c")
-    # print(f"AGYS: {MA_comparator(df, 7, 3000)}", flush=True)
+    # print(f"AGYS: {smooth_c_comparator(df, 7, 3, 3000)}", flush=True)
     # y_real, y_pred = return_real_predict()
 
-    backtest_comparator(2, 52, "TSF", 3000)
 
-    # for symbol in load_save_symbols:
-    #     df, blah, bal, alalal = load_data(symbol, params["nn1"], test_var="c", to_print=False)
-    #     print(f"{symbol}: {smooth_c_comparator(df, 7, 3, 250)}", flush=True)
+    # backtest_comparator(5, 51, "smooth_c", 3000)
+    # fuck_me_symbols = ["AGYS", "AMKR","BG", "BGS", "CAKE", "CCJ", "DFS", "ELY", "FLEX", 
+    #     "INTC", "JBLU", "LLNW", "NWL", "QCOM", "RDN", "SHO", "SMED", "STLD", "WERN", "ZION"]
+    # for symbol in fuck_me_symbols:
+    #     df, blah, bal, alalal = load_data(symbol, params["nn1"], to_print=False)
+    #     print(symbol)
+    #     print(f"{symbol}: {smooth_c_comparator(df, 7, 3, 3000)}", flush=True)
 
 
 

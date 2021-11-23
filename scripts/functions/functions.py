@@ -108,4 +108,11 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
+def sr1002(string):
+        return str(round(string * 100, 2))
 
+def sr2(string):
+    return str(round(string, 2))
+
+def r1002(f):
+    return round(f * 100, 2)

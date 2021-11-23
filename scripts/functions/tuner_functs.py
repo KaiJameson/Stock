@@ -117,22 +117,20 @@ def TSF_comparator(df, timeperiod, run_days):
 
 def smooth_c_comparator(df, time_period, poly_order, run_days):
     df = df["df"]
-    print(f"in fucntions {df.tail(10)}")
     current_money = 10000
     percent_away_list = []
     correct_direction_list = []
 
     for i in range(len(df) - 1, len(df) - run_days - 1, -1):
-        print(i)
-        df["sc"] = savgol_filter(df.c[:i + 1], 7, 3)
         actual_price = df.c[i]
+        df.drop(labels=df.iloc[i].name, inplace=True)
+        df["sc"] = savgol_filter(df.c[:i], 7, 3)
         current_price = df.c[i - 1]
-        predicted_price = df.sc[-1]
+        predicted_price = df.sc[i - 1]
 
         p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
-        print(f"day {(df.index[i])} df.predict: {predicted_price} current: {current_price} actual: {actual_price} dir: {correct_dir}")
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
         current_money = update_money(current_money, predicted_price, current_price, actual_price)

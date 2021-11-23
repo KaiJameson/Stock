@@ -93,12 +93,21 @@ def get_full_end_date():
 
 def get_trade_day_back(last_day, days_back):
     api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
-    calendar = api.get_calendar(end=last_day)
+    start = modify_timestamp(-(days_back + days_back * .5), last_day)
+    calendar = api.get_calendar(start=start, end=last_day)
+    
     reverse_calendar = calendar[::-1]
     trade_day = reverse_calendar[days_back]
     time_int = time.mktime(trade_day.date.timetuple())
     trade_date = pd.Timestamp(time_int, unit='s', tz=time_zone).isoformat()
     return trade_date
+
+def modify_timestamp(days_changed, stamp):
+    dt = datetime.datetime.fromisoformat(stamp)
+    dt += datetime.timedelta(days_changed)
+
+    new_stamp = make_Timestamp(dt)
+    return new_stamp
 
 def get_year_month_day(datetiObj):
     return datetiObj.year, datetiObj.month, datetiObj.day
@@ -107,13 +116,12 @@ def increment_calendar(current_date, api, symbol):
     date_changed = False
     while not date_changed:    
         try:
-            time_s = time.time()
             calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
             while calendar.date != current_date + datetime.timedelta(1):
                 print("Skipping " + str(current_date + datetime.timedelta(1)) + " because it was not a market day.")
                 current_date = current_date + datetime.timedelta(1)
 
-            # print("\nMoving forward one day in time: \n")
+            print("Moving forward one day in time: ")
             
             current_date = current_date + datetime.timedelta(1)
             date_changed = True

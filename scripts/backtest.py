@@ -58,7 +58,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
     try:
         while progress["days_done"] <= progress["total_days"]:
-            time_s = time.time()
+            time_s = time.perf_counter()
             current_date = increment_calendar(current_date, api, symbol)
 
             for symbol in real_test_symbols:
@@ -80,7 +80,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
                 progress["correct_direction_list"].append(correct_dir)
             
 
-            day_took = (time.time() - time_s)
+            day_took = (time.perf_counter() - time_s)
             print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " + str(round(day_took / 60, 2)) + " minutes.", flush=True)
             progress["time_so_far"] += day_took
 
@@ -94,8 +94,11 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         print("Correct direction %: " + str(progress["correct_direction_list"]))
         avg_p = str(round(mean(progress["percent_away_list"]), 2))
         avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
-        avg_e = str(round(mean(progress["epochs_list"]), 2))
-
+        avg_e = {}
+        for predictor in params["ENSEMBLE"]:
+            if "nn" in predictor:
+                avg_e[predictor] = mean(progress["epochs_dict"][predictor])
+        
 
         print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
                     progress["test_day"], progress["time_so_far"], None, None)
