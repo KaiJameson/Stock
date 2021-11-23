@@ -113,7 +113,7 @@ def increment_calendar(current_date, api, symbol):
                 print("Skipping " + str(current_date + datetime.timedelta(1)) + " because it was not a market day.")
                 current_date = current_date + datetime.timedelta(1)
 
-            print("\nMoving forward one day in time: \n")
+            # print("\nMoving forward one day in time: \n")
             
             current_date = current_date + datetime.timedelta(1)
             date_changed = True

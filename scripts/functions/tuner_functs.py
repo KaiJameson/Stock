@@ -2,6 +2,7 @@ from functions.functions import get_correct_direction
 from statistics import mean
 from scipy.signal import savgol_filter
 import talib as ta
+import datetime
 import sys
 import copy
 
@@ -106,11 +107,38 @@ def EMA_comparator(df, timeperiod, run_days):
 
     return avg_p, avg_d, current_money
 
+def TSF_comparator(df, timeperiod, run_days):
+    df = df["df"]
+    df["TSF"] = ta.TSF(df.c, timeperiod=timeperiod)
+    avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "TSF", run_days)
+
+    return avg_p, avg_d, current_money
+
+
 def smooth_c_comparator(df, time_period, poly_order, run_days):
     df = df["df"]
-    df["sc"] = savgol_filter(df.c, time_period, poly_order)
-    # blah = savgol_filter(df.c, time_period, poly_order)
-    avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "sc", run_days)
+    print(f"in fucntions {df.tail(10)}")
+    current_money = 10000
+    percent_away_list = []
+    correct_direction_list = []
+
+    for i in range(len(df) - 1, len(df) - run_days - 1, -1):
+        print(i)
+        df["sc"] = savgol_filter(df.c[:i + 1], 7, 3)
+        actual_price = df.c[i]
+        current_price = df.c[i - 1]
+        predicted_price = df.sc[-1]
+
+        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+        
+        print(f"day {(df.index[i])} df.predict: {predicted_price} current: {current_price} actual: {actual_price} dir: {correct_dir}")
+        percent_away_list.append(p_diff)
+        correct_direction_list.append(correct_dir)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+
+    avg_p = str(round(mean(percent_away_list), 2))
+    avg_d = str(round(mean(correct_direction_list) * 100, 2))
 
     return avg_p, avg_d, current_money
 
@@ -151,7 +179,8 @@ def simple_one_day_predicting_comparator_guts(df, comp, run_days):
 
         p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
-        # print(f"predict: {predicted_price} actual: {actual_price} current: {current_price}  dir: {correct_dir}")
+        
+        # print(f"day {df.index[i]} df.predict: {predicted_price} current: {current_price} actual: {actual_price} dir: {correct_dir}")
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
         current_money = update_money(current_money, predicted_price, current_price, actual_price)

@@ -1,27 +1,12 @@
 import sys
 from config.environ import directory_dict
 from functions.time_functs import get_past_date_string, increment_calendar, make_Timestamp, read_date_string, get_current_datetime
-from functions.paca_model_functs import get_api
+from functions.trade_functs import get_api
 from functions.time_functs import make_Timestamp
 from functions.functions import check_directories, get_correct_direction
 import datetime
 
 
-# Option 1: make the trading performance sheet
-# will optionally take a day as an arguement to make past combinations 
-# possible or just use the current day
-# first runtime and predict (runtime_predict)
-# then make a script to pull down all close prices for selected day
-# then do calculations for percent away and direction
-#
-# Option 2: make P/L excel
-# will optionally take a day as an arguement to make past combinations 
-# possible or just use the current day
-# will require price at runtime (curr_price)
-# then requires predict actual (runtime_predict)
-# then need to calculate %P/L for stocks that 
-# were bought and general P/L
-#
 # Option 3: read in multiple tuning files or backtest files
 # 
 #
@@ -86,9 +71,9 @@ def make_trade_perform_sheet(date, api):
         sys.exit(-1)
     file_name_ending = f"/{get_past_date_string(date)}.txt"
 
-    trade_perform_file = open(directory_dict["trade_perform_dir"] + file_name_ending, "a")
+    trade_perform_file = open(directory_dict["trade_perform"] + file_name_ending, "a")
 
-    runtime_predict_file = open(directory_dict["runtime_predict_dir"] + file_name_ending, "r")
+    runtime_predict_file = open(directory_dict["runtime_predict"] + file_name_ending, "r")
     symbols = runtime_predict_file.readline()
     runtime = runtime_predict_file.readline()
     predict = runtime_predict_file.readline()
@@ -145,16 +130,16 @@ def make_PL_sheet(date, api):
         sys.exit(-1)
     file_name_ending = f"/{get_past_date_string(date)}.txt"
 
-    pl_file = open(directory_dict["PL_dir"] + file_name_ending, "a")
+    pl_file = open(directory_dict["PL"] + file_name_ending, "a")
 
-    runtime_predict_file = open(directory_dict["runtime_predict_dir"] + file_name_ending, "r")
+    runtime_predict_file = open(directory_dict["runtime_predict"] + file_name_ending, "r")
     symbols = runtime_predict_file.readline()
     runtime = runtime_predict_file.readline()
     predict = runtime_predict_file.readline()
     pl_text = symbols
     runtime_predict_file.close()
 
-    runtime_price_file = open(directory_dict["runtime_price_dir"] + file_name_ending, "r")
+    runtime_price_file = open(directory_dict["runtime_price"] + file_name_ending, "r")
     runtime = runtime_price_file.readline()
     pl_text += runtime + "\n" + predict + "\n"
     runtime_price_file.close()

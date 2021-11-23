@@ -15,7 +15,10 @@ def save_models(symbols):
     for symbol in symbols:
         try:
             print(f"\n~~~ Now Training {symbol} ~~~")
-            epochs = nn_train_save(symbol, end_date=None, params=defaults)
+            for predictor in defaults["ENSEMBLE"]:
+                if "nn"in predictor:
+                    print(f"Training submodel {predictor} ...")
+                    epochs = nn_train_save(symbol, end_date=None, params=defaults, predictor=predictor)
 
         except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")

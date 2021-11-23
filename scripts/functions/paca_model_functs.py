@@ -6,11 +6,10 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.metrics import accuracy_score
 from config.api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
 intrinio_sandbox_key, intrinio_production_key)
-from config.environ import (back_test_days, to_plot, test_money, stocks_traded, 
-using_all_accuracies, directory_dict)
+from config.environ import (back_test_days, to_plot, test_money, stocks_traded, directory_dict)
 from config.symbols import trading_real_money
 from functions.time_functs import get_time_string, get_past_datetime
-from functions.io_functs import make_runtime_price, plot_graph, excel_output, write_nn_report
+from functions.io_functs import make_runtime_price, plot_graph, write_nn_report
 from functions.error_functs import error_handler
 from functions.data_load_functs import load_data
 from functions.functions import get_model_name
@@ -28,6 +27,7 @@ import xgboost as xgb
 import intrinio_sdk as intrinio
 import time
 import sys
+import copy
 
 
 def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS, classification, test_var="c"):
@@ -37,10 +37,10 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
     
     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var], classification)
 
-    report_dir = directory_dict["reports_dir"] + "/" + symbol + "/" + time_string + ".txt"
+    report_dir = directory_dict["reports"] + "/" + symbol + "/" + time_string + ".txt"
     
     if to_plot:
-        plot_graph(y_real, y_pred, symbol, back_test_days, time_string)
+        plot_graph(y_real, y_pred, symbol, back_test_days, test_var)
 
     total_minutes = total_time / 60
 
@@ -52,7 +52,7 @@ def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N
 
     write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
         curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred, test_var)
-    excel_output(symbol, curr_price, future_price)
+    # excel_output(symbol, curr_price, future_price)
 
     return percent
 
@@ -118,16 +118,16 @@ def model_last_layer(model, layers, ind):
     
     return model
 
-def load_model_with_data(symbol, current_date, params, directory, model_name, to_print=False, save_folder="trading"):
-    s = time.time()
-    data, train, valid, test = load_data(symbol, params, current_date, shuffle=False, to_print=to_print)
-    if to_print:
-        print("Loading the data took " + str(time.time() - s) + " seconds")    
-    s = time.time()
-    model = create_model(params)
-    model.load_weights(directory + "/" + save_folder + "/" + model_name + ".h5")
-    if to_print:
-        print("Loading the model took " + str(time.time() - s) + " seconds")    
+def load_model_with_data(symbol, current_date, params, predictor, to_print=False):
+    if params["TRADING"]:
+        fast_params = copy.deepcopy(params)
+        fast_params[predictor]["LIMIT"] = params[predictor]["N_STEPS"] * 2
+        data, train, valid, test = load_data(symbol, fast_params[predictor], current_date, shuffle=False, to_print=to_print)
+    else:
+        data, train, valid, test = load_data(symbol, params[predictor], current_date, shuffle=False, to_print=to_print)
+    model = create_model(params[predictor])
+    model.load_weights(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" + 
+        symbol + "-" + get_model_name(params[predictor]) + ".h5")
 
     return data, model
 
@@ -149,143 +149,6 @@ def predict(model, data, n_steps, test_var="c", classification=False):
     else:
         predicted_val = prediction[0][0]
     return predicted_val
-
-def getOwnedStocks():
-    api = get_api()
-    positions = api.list_positions()
-    owned = {}
-    for position in positions:
-        owned[position.symbol] = position.qty
-    return owned
-
-def buy_all_at_once(symbols, owned, price_list):
-    api = get_api()
-    clock = api.get_clock()
-    if not clock.is_open:
-        print("\nThe market is closed right now, go home. You're drunk.")
-        return
-
-    buy_list = []
-    for symbol in symbols:
-        try:
-            barset = api.get_barset(symbol, "day", limit=1)
-            current_price = 0
-            for symbol, bars in barset.items():
-                for bar in bars:
-                    current_price = bar.c
-            if current_price < price_list[symbol]:
-                if symbol not in owned:
-                    buy_list.append(symbol)
-                
-            else:
-                if symbol in owned:
-                    qty = owned.pop(symbol)
-
-                    sell = api.submit_order(
-                        symbol=symbol,
-                        qty=qty,
-                        side="sell",
-                        type="market",
-                        time_in_force="day"
-                    )
-
-                    print("\n~~~SELLING " + sell.symbol + "~~~")
-                    print("Quantity: " + sell.qty)
-                    print("Status: " + sell.status)
-                    print("Type: " + sell.type)
-                    print("Time in force: "  + sell.time_in_force + "\n")
-
-            print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
-            make_runtime_price(current_price)
-
-        except Exception:
-            error_handler(symbol, Exception)
-
-            
-    print("The Owned list: " + str(owned))
-    print("The buy list: " + str(buy_list))
-
-    account_equity = float(api.get_account().equity)
-    buy_power = float(api.get_account().cash)
-
-    value_in_stocks = 1 - (buy_power / account_equity)
-
-    print("Value in stocks: " + str(value_in_stocks))
-    print("Account equity: " + str(account_equity))
-
-    stock_portion_adjuster = 0
-
-    if value_in_stocks > .7:
-        stock_portion_adjuster = len(buy_list)
-    elif value_in_stocks > .3:
-        if (len(buy_list) / stocks_traded) > .8:
-            stock_portion_adjuster = len(buy_list) # want 100%
-        elif (len(buy_list) / stocks_traded) > .6:
-            stock_portion_adjuster = len(buy_list)  # want 100%
-        elif (len(buy_list) / stocks_traded) > .4:
-            stock_portion_adjuster = len(buy_list) / .90 # want 90%
-        else:
-            stock_portion_adjuster = len(buy_list) / .70 # want 70%
-    else:
-        if (len(buy_list) / stocks_traded) > .8:
-            stock_portion_adjuster = len(buy_list) # want 100%
-        elif (len(buy_list) / stocks_traded) > .6:
-            stock_portion_adjuster = len(buy_list) / .90 # want 90%
-        elif (len(buy_list) / stocks_traded) > .4:
-            stock_portion_adjuster = len(buy_list) / .70 # want 70%
-        else:
-            stock_portion_adjuster = len(buy_list) / .60 # want 60%
-            
-
-    print("\nThe value in stocks is " + str(value_in_stocks))
-    print("The Stock portion adjuster is " + str(stock_portion_adjuster))
-
-    for symbol in symbols:
-        try:
-            if symbol not in owned and symbol not in buy_list:
-                print("~~~Not buying " + symbol + "~~~")
-                continue
-
-            elif symbol in owned and symbol not in buy_list:
-                print("~~~Holding " + symbol + "~~~")
-                continue
-            
-            else:
-                current_price = 0
-                barset = api.get_barset(symbol, "day", limit=1)
-                for symbol, bars in barset.items():
-                    for bar in bars:
-                        current_price = bar.c
-                buy_qty = (buy_power / stock_portion_adjuster) // current_price
-
-                if buy_qty == 0:
-                    print("Not enough money to purchase stock " + symbol + ".")
-                    continue
-
-                buy = api.submit_order(
-                    symbol=symbol,
-                    qty=buy_qty,
-                    side="buy",
-                    type="market",
-                    time_in_force="day"
-                )
-                
-                print("\n~~~Buying " + buy.symbol + "~~~")
-                print("Quantity: " + buy.qty)
-                print("Status: " + buy.status)
-                print("Type: " + buy.type)
-                print("Time in force: "  + buy.time_in_force + "\n")
-                
-        except Exception:
-            error_handler(symbol, Exception)
-
-def get_api():
-    if trading_real_money:
-        api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
-    else:
-        api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
-
-    return api
 
 def sentiment_data(df):
     finviz_url = "https://finviz.com/quote.ashx?t="
@@ -439,21 +302,15 @@ def get_feature_importance(df):
         i += 1
     
 def get_all_accuracies(model, data, lookup_step, test_var="c", classification=False):
-    if using_all_accuracies:
-        y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], 
+    y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], 
+    data["column_scaler"][test_var], classification)
+    train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
+    y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
+    data["column_scaler"][test_var], classification)
+    valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
+    y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"],
         data["column_scaler"][test_var], classification)
-        train_acc = get_accuracy(y_train_real, y_train_pred, lookup_step)
-        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
-        data["column_scaler"][test_var], classification)
-        valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
-        y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"],
-         data["column_scaler"][test_var], classification)
-        test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
-    else:
-        y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
-        data["column_scaler"][test_var], classification)
-        valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step)
-        train_acc = test_acc = 0
+    test_acc = get_accuracy(y_test_real, y_test_pred, lookup_step)
 
     return train_acc, valid_acc, test_acc 
 

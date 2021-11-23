@@ -1,13 +1,14 @@
 import math
 from config.environ import *
 from config.symbols import *
-from functions.tuner_functs import EMA_comparator, MA_comparator, RSI_comparator, lin_reg_comparator, smooth_c_comparator
+from functions.tuner_functs import *
 from functions.paca_model_functs import *
 from functions.data_load_functs import *
 from functions.io_functs import *
 from functions.functions import *
 from functions.time_functs import *
 from paca_model import *
+from load_run import *
 from tuner import tuning
 from statistics import mean
 
@@ -23,13 +24,15 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
     for symbol in load_save_symbols:
         print(symbol, flush=True)
         for i in range(start_day, end_day):
-            data, train, valid, test = load_data(symbol, defaults, test_var="c", shuffle=False, to_print=False)
+            data, train, valid, test = load_data(symbol, defaults["nn1"], shuffle=False, to_print=False)
             if comparator == "7MA":
                 avg = MA_comparator(data, i, run_days)
             elif comparator == "lin_reg":
                 avg = lin_reg_comparator(data, i, run_days)
             elif comparator == "EMA":
                 avg = EMA_comparator(data, i, run_days)
+            elif comparator == "TSF":
+                avg = TSF_comparator(data, i, run_days)
             elif comparator == "smooth_c":
                 if i == 1 or i == 3:
                     continue
@@ -74,7 +77,7 @@ if __name__ == "__main__":
     # print(f" this is the data: {data}")
     # time_s = time.time()
     # model = create_model(defaults)
-    # model.load_weights(directory_dict["model_dir"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
+    # model.load_weights(directory_dict["model"] + "/" + defaults["SAVE_FOLDER"] + "/" + model_name + ".h5")
     # print("Loading the model took " + str(time.time() - time_s) + " seconds")    
 
     # time_s = time.time()
@@ -93,8 +96,8 @@ if __name__ == "__main__":
 
     # print(f"predicted value: {predicted_price}")
 
-    # def load_nn_and_predict(symbol, current_date, params, model_dir, model_name):
-    #     data, model = load_model_with_data(symbol, current_date, params, model_dir, model_name)
+    # def load_nn_and_predict(symbol, current_date, params, model, model_name):
+    #     data, model = load_model_with_data(symbol, current_date, params, model, model_name)
 
     #     # first grab the current price by getting the latest value from the og data frame
     #     y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var])
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     
     
     params = {
-        "ENSEMBLE": ["nn1"],
+        "ENSEMBLE": ["sav_gol"],
         "TRADING": False,
         "SAVE_FOLDER": "tuning4",
         "TEST_VAR": "c",
@@ -126,20 +129,30 @@ if __name__ == "__main__":
             "PATIENCE": 100,
             "SAVELOAD": True,
             "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["c", "RSI", "sc"]
+            "FEATURE_COLUMNS": ["c"]
         }
     }
 
+    # nn_train_save("AGYS", params=params)
+    # load_trade(["AGYS"], params)
+
     # tuning(tune_year, tune_month, tune_day, tune_days, params)
     # ensemble_predictor("AGYS", params, get_current_datetime())
+    # current_date = get_past_datetime(2020, 6, 1)
 
-    # df, blah, bal, alalal = load_data("AGYS", params["nn1"], test_var="c", to_print=True)
-    # print(f"AGYS: {smooth_c_comparator(df, 51, 3, 100)}", flush=True)
+    # df, blah, bal, alalal = load_data("AGYS", params["nn1"], current_date, test_var="c", to_print=False)
 
-    backtest_comparator(2, 52, "smooth_c", 3000)
+    # comparator_results_excel(df, 250, directory_dict["tuning"], "AGYS")
+    # plot_graph(df["df"].c, df["df"].sc, "AGYS", 100, "c")
+    # print(f"AGYS: {MA_comparator(df, 7, 3000)}", flush=True)
+    # y_real, y_pred = return_real_predict()
+
+    backtest_comparator(2, 52, "TSF", 3000)
 
     # for symbol in load_save_symbols:
-        # df, blah, bal, alalal = load_data(symbol, params["nn1"], test_var="c", to_print=False)
-        # print(f"{symbol}: {smooth_c_comparator(df, 7, 3, 250)}", flush=True)
+    #     df, blah, bal, alalal = load_data(symbol, params["nn1"], test_var="c", to_print=False)
+    #     print(f"{symbol}: {smooth_c_comparator(df, 7, 3, 250)}", flush=True)
+
+
 
 

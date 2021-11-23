@@ -4,30 +4,32 @@ silence_tensorflow()
 from tensorflow.keras.layers import LSTM
 
 directory_dict = {
-    "backtest_dir":        "../backtest",
-    "config_dir":          "../config",
-    "excel_dir":           "../excel",
-    "graph_dir":           "../plots",
-    "load_run_results":    "../excel/load_run_results",
-    "model_dir":           "../models",
-    "runtime_predict_dir":  "../excel/runtime_predict",
-    "PL_dir":              "../excel/profit_loss",
-    "reports_dir":         "../reports",
-    "results_dir":         "results",
-    "runtime_price_dir":   "../excel/curr_price",
-    "tax_dir":             "../tax",
-    "trade_perform_dir":   "../excel/trade_perform",
-    "tuning_dir":          "../tuning_info"
+    "backtest":          "../backtest",
+    "config":            "../config",
+    "day_summary":       "../excel/day_summary",
+    "excel":             "../excel",
+    "graph":             "../plots",
+    "load_run_results":  "../excel/load_run_results",
+    "model":             "../models",
+    "runtime_predict":   "../excel/runtime_predict",
+    "PL":                "../excel/profit_loss",
+    "reports":           "../reports",
+    "results":           "results",
+    "runtime_price":     "../excel/curr_price",
+    "tax":               "../tax",
+    "trade_perform":     "../excel/trade_perform",
+    "tuning":            "../tuning_info"
 }
 
 load_params = {
     "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-    "LIMIT": 200,
+    "LIMIT": 500,
     "N_STEPS": 100,
     "BATCH_SIZE": 1024,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "LOSS": "huber_loss"
+    "LOSS": "huber_loss",
+    "TEST_VAR": "c"
 }
 
 error_file = "../error_file.txt"
@@ -38,10 +40,8 @@ stocks_traded = 20
 random_seed = 314
 back_test_days = 100
 save_logs = False
-do_the_trades = True
 to_plot = False
 make_config = False
-using_all_accuracies = False
 
 
 """
@@ -71,21 +71,42 @@ using_all_accuracies = False
 """
 
 defaults = {
-    "N_STEPS": 100,
-    "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "LAYERS": [(256, LSTM), (256, LSTM)],
-    "UNITS": 256,
-    "DROPOUT": 0.4,
-    "BIDIRECTIONAL": False,
-    "LOSS": "huber_loss",
-    "OPTIMIZER": "adam",
-    "BATCH_SIZE": 1024,
-    "EPOCHS": 2000,
-    "PATIENCE": 200,
-    "LIMIT": 4000,
-    "SAVELOAD": True,
-    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-    "SAVE_FOLDER": "trading"
-}
+    "ENSEMBLE": ["nn1", "nn2"],
+    "TRADING": True,
+    "SAVE_FOLDER": "trading",
+    "nn1" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "UNITS": 256,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 100,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "TEST_VAR": "c"
+        },
+    "nn2" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "UNITS": 256,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 100,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
+        "TEST_VAR": "c"
+        }
+    }
 

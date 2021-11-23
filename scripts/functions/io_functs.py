@@ -2,7 +2,8 @@ from matplotlib import pyplot as plt
 from config.environ import test_money, directory_dict
 from functions.functions import percent_from_real, layers_string, get_model_name
 from functions.time_functs import get_current_date_string, get_time_string
-from functions.tuner_functs import MA_comparator, lin_reg_comparator
+from functions.tuner_functs import MA_comparator, lin_reg_comparator, smooth_c_comparator
+from statistics import mean
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -75,49 +76,27 @@ def perfect_money(money, data):
 def make_runtime_price(curr_price):
     date_string = get_current_date_string()
 
-    f = open(directory_dict["runtime_price_dir"] + "/" + date_string + ".txt", "a")
+    f = open(directory_dict["runtime_price"] + "/" + date_string + ".txt", "a")
     f.write(str(round(curr_price, 2)) + "\t")
     f.close()
 
-def make_excel_file():
+def runtime_predict_excel(symbols, pred_curr_list):
     date_string = get_current_date_string()
-
-    fsym = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "symbol" + ".txt", "r")
-    sym_vals = fsym.read()
-    fsym.close()
-
-    freal = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "real" + ".txt", "r")
-    real_vals = freal.read()
-    freal.close()
-
-    fpred = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "predict" + ".txt", "r")
-    pred_vals = fpred.read()
-    fpred.close()
-
-    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + ".txt", "a+")
     
-    f.write(sym_vals + "\n")
-    f.write(str(real_vals) + "\n")
-    f.write(str(pred_vals))
-    f.close()
+    run_pre_text = ""
+    for symbol in symbols:
+        run_pre_text += f"{symbol}:\t"
+    run_pre_text += "\n"
 
-    os.remove(directory_dict["runtime_predict_dir"] + "/" + date_string + "symbol" + ".txt")
-    os.remove(directory_dict["runtime_predict_dir"] + "/" + date_string + "real" + ".txt")
-    os.remove(directory_dict["runtime_predict_dir"] + "/" + date_string + "predict" + ".txt")
+    for symbol in symbols:   
+        run_pre_text += str(round(pred_curr_list[symbol]["predicted"], 2)) + "\t"
+    run_pre_text += "\n"
 
-def excel_output(symbol, real_price, predicted_price):
-    date_string = get_current_date_string()
+    for symbol in symbols:
+        run_pre_text += str(round(pred_curr_list[symbol]["current"], 2)) + "\t"
 
-    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "symbol" + ".txt", "a")
-    f.write(symbol + ":" + "\t")
-    f.close()
-
-    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "real" + ".txt", "a")
-    f.write(str(round(real_price, 2)) + "\t")
-    f.close()
-
-    f = open(directory_dict["runtime_predict_dir"] + "/" + date_string + "predict" + ".txt", "a")
-    f.write(str(round(predicted_price, 2)) + "\t")
+    f = open(directory_dict["runtime_predict"] + "/" + date_string + ".txt", "a+")
+    f.write(run_pre_text)
     f.close()
 
 def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, percent_away):
@@ -136,6 +115,13 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     file.write("Testing finished for ensemble: " + str(params["ENSEMBLE"]) + "\n")
     file.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     file.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
+    overall_epochs = []
+    for predictor in params["ENSEMBLE"]:
+        if "nn" in predictor:
+            overall_epochs.append(avg_e[predictor])
+    all_epochs = mean(overall_epochs)
+    file.write(f"The models (if any) used {all_epochs}.")
+
     
     if current_money != None:
         file.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
@@ -169,6 +155,12 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     print("\nTesting finished for ensemble: " + str(params["ENSEMBLE"]))
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
     print("and it predicted the correct direction " + avg_d + " percent of the time ")
+    overall_epochs = []
+    for predictor in params["ENSEMBLE"]:
+        if "nn" in predictor:
+            overall_epochs.append(avg_e[predictor])
+    all_epochs = mean(overall_epochs)
+    print(f"The models (if any) used {all_epochs}.")
 
     if current_money != None:
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
@@ -197,6 +189,7 @@ def print_model_params(params, predictor, avg_e):
 def comparator_results_excel(df, run_days, directory, stock):
     lin_avg_p, lin_avg_d, lin_current_money = lin_reg_comparator(df, 14, run_days)
     MA_avg_p, MA_avg_d, MA_current_money = MA_comparator(df, 7, run_days)
+    sc_p, sc_d, sc_current_money = smooth_c_comparator(df, 7, 3, run_days)
 
     directory_string = f"{directory}/{stock}-comparison.txt"
     if not os.path.isfile(directory_string):
@@ -205,7 +198,8 @@ def comparator_results_excel(df, run_days, directory, stock):
         return
     
     f.write("Linear percent away was " + str(lin_avg_p) + " with " + str(lin_avg_d) + " percent prediction making " + str(lin_current_money) + " dollars.\n")
-    f.write("Moving average percent away was " + str(MA_avg_p) + " with " + str(MA_avg_d) + " percent prediction making " + str(MA_current_money) + " dollars.")
+    f.write("Moving average percent away was " + str(MA_avg_p) + " with " + str(MA_avg_d) + " percent prediction making " + str(MA_current_money) + " dollars.\n")
+    f.write("sc " + str(sc_p) + " with " + str(sc_d) + " percent prediction making " + str(sc_current_money) + " dollars.")
     f.close()
 
 def read_saved_contents(file_path, return_dict):
@@ -234,7 +228,6 @@ def read_saved_contents(file_path, return_dict):
     return return_dict
 
 def save_to_dictionary(file_path, dictionary):
-    print(file_path)
     f = open(file_path, "w")
 
     for key in dictionary:
@@ -242,14 +235,14 @@ def save_to_dictionary(file_path, dictionary):
 
     f.close()
 
-def plot_graph(y_real, y_pred, symbol, back_test_days):
+def plot_graph(y_real, y_pred, symbol, back_test_days, test_var):
     real_y_values = y_real[-back_test_days:]
-    predicted_y_values = y_pred[-back_test_days:]
+    predicted_y_values = y_pred[-back_test_days:-1]
     
-    plot_dir = directory_dict["graph_dir"] + "/" + symbol
+    plot_dir = directory_dict["graph"] + "/" + get_current_date_string() + "/" + symbol
     if not os.path.isdir(plot_dir):
         os.mkdir(plot_dir)
-    plot_name = plot_dir + "/" + test_var + "_" + get_time_string() + ".png"
+    plot_name = plot_dir + "-" + get_time_string() + ".png"
     plt.plot(real_y_values, c="b")
     plt.plot(predicted_y_values, c="r")
     plt.xlabel("Days")
@@ -264,7 +257,7 @@ def graph_epochs_relationship(progress, test_name):
         correct_direction_list = progress["correct_direction_list"]
         epochs_list = progress["epochs_list"]
 
-        plot_name = directory_dict["graph_dir"] + "/" + test_name + "-dir.png"
+        plot_name = directory_dict["graph"] + "/" + test_name + "-dir.png"
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
 
@@ -287,7 +280,7 @@ def graph_epochs_relationship(progress, test_name):
         plt.savefig(plot_name)
         plt.close()
 
-        plot_name = directory_dict["graph_dir"] + "/" + test_name + "-away.png"
+        plot_name = directory_dict["graph"] + "/" + test_name + "-away.png"
         fig = plt.figure(figsize=(12,12))
         ax = fig.add_subplot(projection='3d')
 

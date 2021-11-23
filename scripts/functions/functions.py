@@ -10,10 +10,10 @@ def check_directories():
             os.mkdir(directory_dict[directory])
 
 def check_model_folders(save_folder, symbol):
-    if not os.path.isdir(directory_dict["model_dir"] + "/" + save_folder):
-        os.mkdir(directory_dict["model_dir"] + "/" + save_folder)
-    if not os.path.isdir(directory_dict["reports_dir"] + "/" + symbol):
-        os.mkdir(directory_dict["reports_dir"] + "/" + symbol)
+    if not os.path.isdir(directory_dict["model"] + "/" + save_folder):
+        os.mkdir(directory_dict["model"] + "/" + save_folder)
+    if not os.path.isdir(directory_dict["reports"] + "/" + symbol):
+        os.mkdir(directory_dict["reports"] + "/" + symbol)
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
@@ -44,7 +44,8 @@ def get_model_name(params):
     return (str(params["FEATURE_COLUMNS"]) + "-layers" + layers_string(params["LAYERS"]) + "-step" 
         + str(params["N_STEPS"]) + "-limit" + str(params["LIMIT"]) + "-epoch" + str(params["EPOCHS"]) 
         + "-pat" + str(params["PATIENCE"]) + "-batch" + str(params["BATCH_SIZE"]) 
-        + "-drop" + str(params["DROPOUT"]) + "-ts" + str(params["TEST_SIZE"]))
+        + "-drop" + str(params["DROPOUT"]) + "-ts" + str(params["TEST_SIZE"])
+        + params["TEST_VAR"])
 
 def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
@@ -55,7 +56,11 @@ def get_test_name(params):
                 + layers_string(model_params["LAYERS"]) + "s" + str(model_params["N_STEPS"]) 
                 + "l" + str(model_params["LIMIT"]) + "e" + str(model_params["EPOCHS"]) 
                 + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
-                + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"]))
+                + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"])
+                + model_params["TEST_VAR"])
+
+    if len(test_name) > 200:
+        test_name = test_name[:200]
     return test_name
 
 def layers_string(layers):
