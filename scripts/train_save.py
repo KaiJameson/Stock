@@ -27,8 +27,8 @@ def save_models(symbols):
         except Exception:
             error_handler(symbol, Exception)
         
-s = time.time()
+s = time.perf_counter()
 save_models(load_save_symbols)
-end = (time.time() - s) / 60
+end = (time.perf_counter() - s) / 60
 print("This took " + str(round(end , 2)) + " minutes to complete.")
 

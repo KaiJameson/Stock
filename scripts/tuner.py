@@ -65,7 +65,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
         current_date = get_past_datetime(progress["tune_year"], progress["tune_month"], progress["tune_day"])
         try:
             while progress["days_done"] <= progress["total_days"]:
-                time_s = time.time()
+                time_s = time.perf_counter()
                 current_date = increment_calendar(current_date, api, symbol)
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
 
@@ -85,7 +85,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 progress["percent_away_list"].append(p_diff)
                 progress["correct_direction_list"].append(correct_dir)
 
-                day_took = (time.time() - time_s)
+                day_took = (time.perf_counter() - time_s)
                 print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " 
                 + str(round(day_took / 60, 2)) + " minutes.", flush=True)
 

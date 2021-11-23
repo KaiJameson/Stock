@@ -114,13 +114,13 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
 
     file.write("Testing finished for ensemble: " + str(params["ENSEMBLE"]) + "\n")
     file.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
-    file.write("and it predicted the correct direction " + avg_d + " percent of the time\n")
+    file.write("and it predicted the correct direction " + avg_d + " percent of the time.\n")
     overall_epochs = []
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
             overall_epochs.append(avg_e[predictor])
     all_epochs = mean(overall_epochs)
-    file.write(f"The models (if any) used {all_epochs}.")
+    file.write(f"The models (if any) used {all_epochs}.\n")
 
     
     if current_money != None:

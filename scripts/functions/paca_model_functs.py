@@ -155,7 +155,7 @@ def sentiment_data(df):
 
     # nltk.download('vader_lexicon')
 
-    time_s = time.time()
+    time_s = time.perf_counter()
 
     news_tables = {}
     tickers = ["AGYS", "BG"]
@@ -255,7 +255,7 @@ def sentiment_data(df):
     plt.grid()
 
 
-    print("this took " + str(time.time() - time_s))
+    print("this took " + str(time.perf_counter() - time_s))
 
 
 def intrinio_news():

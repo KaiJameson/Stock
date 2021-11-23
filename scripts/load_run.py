@@ -28,9 +28,9 @@ def load_trade(symbols, params):
         try:
             print("\n~~~Now Starting " + symbol + "~~~")
             
-            s = time.time()
+            s = time.perf_counter()
             predicted_price, current_price, epochs_dict = ensemble_predictor(symbol, params, None)    
-            print(f"Ensemble_predictor took {round(time.time() - s, 2)}")
+            print(f"Ensemble_predictor took {round(time.perf_counter() - s, 2)}")
             
             pred_curr_list[symbol] = {"predicted": predicted_price, "current": current_price}
 
@@ -46,9 +46,9 @@ def load_trade(symbols, params):
             error_handler(symbol, Exception)
 
     if do_the_trades:
-        time_s = time.time()
+        time_s = time.perf_counter()
         results = buy_all_at_once(symbols, owned, pred_curr_list)
-        print("Performing all the trades took " + str(time.time() - time_s) + " seconds")
+        print("Performing all the trades took " + str(time.perf_counter() - time_s) + " seconds")
     else:
         print("Why are you running this if you don't want to do the trades?")
 
@@ -76,7 +76,7 @@ def create_day_summary(symbols, params, pred_curr_list, sold_list, hold_list, bo
     #         pass
 
     #     train_acc, valid_acc, test_acc = get_all_accuracies(model, data, defaults["LOOKUP_STEP"])
-    #     print("Getting the accuracies took " + str(time.time() - time_s) + " seconds")   
+    #     print("Getting the accuracies took " + str(time.perf_counter() - time_s) + " seconds")   
     #     y_real, y_pred = return_real_predict(model, data["X_valid"], data["y_valid"], data["column_scaler"]["c"])
     #     make_load_run_excel(symbol, train_acc, valid_acc, test_acc, percent_from_real(y_real, y_pred), abs((percent - 1) * 100))
 
@@ -113,10 +113,10 @@ def resume_running_training(pause_list):
         psutil.Process(pid).resume()
 
 if __name__ == "__main__":
-    s = time.time()
-    # pause_list = pause_running_training()
+    s = time.perf_counter()
+    pause_list = pause_running_training()
     load_trade(load_save_symbols, defaults)
-    # resume_running_training(pause_list)
-    tt = (time.time() - s) / 60
+    resume_running_training(pause_list)
+    tt = (time.perf_counter() - s) / 60
     print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
 

@@ -3,6 +3,7 @@ from config.symbols import trading_real_money
 from functions.time_functs import make_Timestamp, get_trade_day_back, get_full_end_date
 from functions.error_functs import net_error_handler
 from functions.trade_functs import get_api
+from functions.time_functs import increment_calendar, modify_timestamp
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing
@@ -51,6 +52,8 @@ def get_values(items):
 def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
     frames = []	    
 
+    # print(f"full {get_full_end_date()}")
+
     if end_date is not None:
         end_date = make_Timestamp(end_date + datetime.timedelta(1)) 
 
@@ -59,16 +62,14 @@ def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
             other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
             new_df = get_values(other_barset.items()) 
             limit -= 1000
+            end_date = modify_timestamp(1, end_date)
             end_date = get_trade_day_back(end_date, 1000)
         else:
-            ti = time.time()
+            print(2)
             other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
-            # print(f"get barset {time.time() - ti}")
             new_df = get_values(other_barset.items()) 
             limit -= 1000
-            ti= time.time()
             end_date = get_trade_day_back(get_full_end_date(), 1000)
-            # print(f"trade day back {time.time() - ti}")
 
         frames.insert(0, new_df)
 
@@ -78,16 +79,19 @@ def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
             barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit, until=end_date)
             items = barset.items()
             new_df = get_values(items)
-        else:	 
+        else:	
             barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
             items = barset.items() 	
             new_df = get_values(items)	
+            # print(f"head {new_df.c.head(3)}")
+            # print(f"tail {new_df.c.tail(3)}") 
 
         frames.insert(0, new_df)
 
     df = pd.concat(frames) 
+    df = df.drop_duplicates()
     df = alpaca_date_converter(df)  
-    
+    # print(df)    
     return df
 
 def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=True):
@@ -360,7 +364,7 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         pd.set_option("display.max_columns", None)
         # pd.set_option("display.max_rows", None)
         print(df.head(1))
-        print(df.tail(10))
+        print(df.tail(1))
         # print(df)
     return df
 
