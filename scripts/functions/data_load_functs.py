@@ -2,6 +2,7 @@ from config.api_key import real_api_key_id, real_api_secret_key, paper_api_key_i
 from config.symbols import trading_real_money
 from functions.time_functs import make_Timestamp, get_trade_day_back, get_full_end_date
 from functions.error_functs import net_error_handler
+from functions.trade_functs import get_api
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing
@@ -15,13 +16,6 @@ import datetime
 import alpaca_trade_api as tradeapi
 import time
 
-def get_api():
-    if trading_real_money:
-        api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
-    else:
-        api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
-
-    return api
 
 def get_values(items):
     data = {}
@@ -107,23 +101,25 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         except Exception:
             net_error_handler(symbol, Exception)
 
-    if "m" in feature_columns:
-        df["m"] = (df.l + df.h) / 2
+    df["m"] = (df.l + df.h) / 2
 
     if "sc" in feature_columns:
-        df["sc"] = savgol_filter(df.c, 51, 3)
+        df["sc"] = savgol_filter(df.c, 7, 3)
+
+    if "so" in feature_columns:
+        df["so"] = savgol_filter(df.o, 7, 3)
 
     if "sl" in feature_columns:
-        df["sl"] = savgol_filter(df.l, 51, 3)
+        df["sl"] = savgol_filter(df.l, 7, 3)
 
     if "sh" in feature_columns:
-        df["sh"] = savgol_filter(df.h, 51, 3)
+        df["sh"] = savgol_filter(df.h, 7, 3)
     
     if "sm" in feature_columns:
-        df["sm"] = savgol_filter(df.m, 51, 3)
+        df["sm"] = savgol_filter(df.m, 7, 3)
 
     if "sv" in feature_columns:
-        df["sv"] = savgol_filter(df.v, 51, 3)
+        df["sv"] = savgol_filter(df.v, 7, 3)
 
     if "S&P" in feature_columns:
         df2 = get_alpaca_data("SPY", end_date, api, limit=limit)
@@ -335,8 +331,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "beta" in feature_columns:
         df["beta"] = ta.BETA(df.h, df.l, timeperiod=5)
 
-    if "time_series_for" in feature_columns:
-        df["time_series_for"] = ta.TSF(df.c, timeperiod=14)
+    if "TSF" in feature_columns:
+        df["TSF"] = ta.TSF(df.c, timeperiod=14)
 
     if "day_of_week" in feature_columns:
         df = convert_date_values(df)
@@ -352,6 +348,9 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
 
     if "h" not in feature_columns:
         df = df.drop(columns=["h"])
+
+    if "m" not in feature_columns:
+        df = df.drop(columns=["m"])
 
     # get_feature_importance(df)
 
@@ -376,7 +375,7 @@ def convert_date_values(df):
 
     return df
 
-def load_data(symbol, params, end_date=None, test_var="c", shuffle=True, scale=True, to_print=True):
+def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
 
     if to_print:
         print("Included features: " + str(params["FEATURE_COLUMNS"]))
@@ -411,9 +410,9 @@ def load_data(symbol, params, end_date=None, test_var="c", shuffle=True, scale=T
         result["column_scaler"] = column_scaler
 
     if params["LOSS"] == "huber_loss":
-        df["future"] = df[test_var].shift(-params["LOOKUP_STEP"])
+        df["future"] = df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
     else:
-        df["future"] = df[test_var].shift(-params["LOOKUP_STEP"])
+        df["future"] = df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
         df["future"] = list(map(lambda current, future: int(float(future) > float(current)), df.c, df.future))
     # add the target column (label) by shifting by `lookup_step`\
 

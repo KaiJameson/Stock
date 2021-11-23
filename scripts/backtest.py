@@ -7,7 +7,7 @@ from functions.functions import check_directories,  delete_files_in_folder, get_
 from functions.io_functs import backtest_excel,  read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
 from functions.time_functs import get_past_datetime, get_year_month_day, increment_calendar, get_actual_price
 from functions.error_functs import error_handler
-from functions.paca_model_functs import get_api
+from functions.trade_functs import get_api
 from paca_model import ensemble_predictor
 from paca_model import configure_gpu
 from statistics import mean
@@ -43,15 +43,15 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
     print(test_name)
 
-    if os.path.isfile(directory_dict["backtest_dir"] + "/" + test_name + ".txt"):
+    if os.path.isfile(directory_dict["backtest"] + "/" + test_name + ".txt"):
         print("A fully completed file with the name " + test_name + " already exists.")
         print("Exiting the_real_test now: ")
         return
 
     # check if we already have a save file, if we do, extract the info and run it
-    if os.path.isfile(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt"):
+    if os.path.isfile(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt"):
         print("A save file was found, opening now: ")
-        progress = read_saved_contents(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt", progress)
+        progress = read_saved_contents(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         
     current_date = get_past_datetime(progress["test_year"], progress["test_month"], progress["test_day"])
@@ -88,7 +88,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
             progress["test_year"], progress["test_month"], progress["test_day"] = get_year_month_day(current_date)
 
-            save_to_dictionary(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt", progress)
+            save_to_dictionary(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt", progress)
 
         print("Percent away: " + str(progress["percent_away_list"]))
         print("Correct direction %: " + str(progress["correct_direction_list"]))
@@ -99,16 +99,16 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
         print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["test_year"], progress["test_month"], 
                     progress["test_day"], progress["time_so_far"], None, None)
-        backtest_excel(directory_dict["backtest_dir"], test_name, progress["test_year"], progress["test_month"], 
+        backtest_excel(directory_dict["backtest"], test_name, progress["test_year"], progress["test_month"], 
                     progress["test_day"], params, avg_p, avg_d, 
             avg_e, progress["time_so_far"], progress["total_days"], None, None)
 
         graph_epochs_relationship(progress, test_name)
 
-        if os.path.isfile(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt"):
-            os.remove(directory_dict["backtest_dir"] + "/" + "SAVE-" + test_name + ".txt")
+        if os.path.isfile(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt"):
+            os.remove(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt")
 
-        delete_files_in_folder(directory_dict["model_dir"] + "/" + params["SAVE_FOLDER"])
+        delete_files_in_folder(directory_dict["model"] + "/" + params["SAVE_FOLDER"])
 
     except KeyboardInterrupt:
             print("I acknowledge that you want this to stop.")

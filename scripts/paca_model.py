@@ -9,9 +9,11 @@ defaults, load_params)
 from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_datetime
 from functions.functions import get_model_name
-from functions.paca_model_functs import create_model, nn_report, get_all_accuracies, get_all_maes, get_current_price, load_model_with_data, predict
+from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, load_model_with_data, predict, return_real_predict
 from functions.data_load_functs import load_data, make_dataframe
+from scipy.signal import savgol_filter
 from statistics import mean
+import pandas as pd
 import talib as ta
 import numpy as np
 import socket
@@ -19,12 +21,11 @@ import random
 import os
 
 
-def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading", test_var="c"):
+def nn_train_save(symbol, end_date=None, params=defaults, predictor="nn1"):
     #description of all the parameters used is located inside environment.py
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
 
-   
     if socket.gethostname() != "Orion":
         os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
         tf.config.optimizer.set_jit(True)
@@ -33,33 +34,35 @@ def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading",
     np.random.seed(random_seed)
     tf.random.set_seed(random_seed)
     random.seed(random_seed)
+
+    nn_params = params[predictor]
     
-    check_model_folders(save_folder, symbol)
+    check_model_folders(params["SAVE_FOLDER"], symbol)
     
     # model name to save, making it as unique as possible based on parameters
-    model_name = (symbol + "-" + get_model_name(params))
+    model_name = (symbol + "-" + get_model_name(nn_params))
 
-    data, train, valid, test = load_data(symbol, params, end_date, test_var)
+    data, train, valid, test = load_data(symbol, nn_params, end_date)
 
-    model = create_model(params)
+    model = create_model(nn_params)
 
-    logs_dir = "logs/" + get_time_string() + "-" + save_folder
+    logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
-    if params["SAVELOAD"]:
-        checkpointer = ModelCheckpoint(directory_dict["model_dir"] + "/" + save_folder + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
-    else:    
-        checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
+    # if params["SAVELOAD"]:
+    checkpointer = ModelCheckpoint(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+    # else:    
+    #     checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
         tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch="200, 1200") 
     else:
         tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch=0)
 
-    early_stop = EarlyStopping(patience=params["PATIENCE"])
+    early_stop = EarlyStopping(patience=nn_params["PATIENCE"])
     
     history = model.fit(train,
-        batch_size=params["BATCH_SIZE"],
-        epochs=params["EPOCHS"],
+        batch_size=nn_params["BATCH_SIZE"],
+        epochs=nn_params["EPOCHS"],
         verbose=2,
         validation_data=valid,
         callbacks = [tboard_callback, checkpointer, early_stop]   
@@ -67,25 +70,24 @@ def nn_train_save(symbol, end_date=None, params=defaults, save_folder="trading",
 
     epochs_used = len(history.history["loss"])
     #before testing, no shuffle
-    if params["SAVELOAD"]:
-        test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
-    else:    
-        data, train, valid, test = load_data(symbol, params, end_date, test_var, False)
+    # if params["SAVELOAD"]:
+        # test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
+    # else:    
+    #     data, train, valid, test = load_data(symbol, params, end_date, params["TEST_VAR"], shuffle=False)
 
-        model_path = os.path.join("results", model_name + ".h5")
-        model.load_weights(model_path)
+    #     model_path = os.path.join("results", model_name + ".h5")
+    #     model.load_weights(model_path)
 
-        if params["LOSS"] == "categorical_hinge":
-            test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
-        else:
-            test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
-            train_acc, valid_acc, test_acc = get_all_accuracies(model, data, params["LOOKUP_STEP"])
+    #     if params["LOSS"] == "categorical_hinge":
+    #         test_acc = valid_acc = train_acc = test_mae = valid_mae = train_mae = 0    
+    #     else:
+    #         test_mae, valid_mae, train_mae = get_all_maes(model, test, valid, train, data) 
+    #         train_acc, valid_acc, test_acc = get_all_accuracies(model, data, params["LOOKUP_STEP"])
 
 
-        delete_files_in_folder(directory_dict["results_dir"])
-        os.rmdir(directory_dict["results_dir"])
+    #     delete_files_in_folder(directory_dict["results"])
+    #     os.rmdir(directory_dict["results"])
         
-
     if not save_logs:
         delete_files_in_folder(logs_dir)
         os.rmdir(logs_dir)
@@ -101,13 +103,14 @@ def configure_gpu():
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
-def nn_load_predict(symbol, current_date, params, model_name, save_folder, test_var="c"):
-    data, model = load_model_with_data(symbol, current_date, params, directory_dict["model_dir"], model_name, save_folder=save_folder)
-    predicted_price = predict(model, data, params["N_STEPS"], test_var)
+def nn_load_predict(symbol, current_date, params, predictor, to_print=False):
+    data, model = load_model_with_data(symbol, current_date, params, predictor, to_print)
+    predicted_price = predict(model, data, params[predictor]["N_STEPS"], params[predictor]["TEST_VAR"])
 
     return predicted_price
 
 def ensemble_predictor(symbol, params, current_date):
+    pd.set_option("display.max_columns", None)
     ensemb_predict_list = []
 
     epochs_dict = {}
@@ -128,19 +131,59 @@ def ensemble_predictor(symbol, params, current_date):
             predicted_price = np.float32(df.lin_reg[len(df.c) - 1])
             ensemb_predict_list.append(predicted_price)
 
-        elif "nn" in predictor:
-            model_name = symbol + "-" + get_model_name(params[predictor])
-            if params["TRADING"]:
-                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name, test_var=params["TEST_VAR"])
-            else:
-                epochs_run = nn_train_save(symbol, current_date, params[predictor], params["SAVE_FOLDER"], params["TEST_VAR"])
-                epochs_dict[predictor] = epochs_run
-                predicted_price = nn_load_predict(symbol, current_date, params[predictor], model_name, params["SAVE_FOLDER"], params["TEST_VAR"])
+        elif predictor == "sav_gol":
+            df["sc"] = savgol_filter(df.c, 7, 3)
+            # print(current_date)
+            # print(df.tail(3))
+            # predicted_price = np.float32(df.sc[len(df.c) - 1])
+            print(df.tail(10))
+            predicted_price = (df.sc[len(df.c) - 1])
+            # print(f"first pred {predicted_price}")
             ensemb_predict_list.append(predicted_price)
 
+        elif "nn" in predictor:
+            if params["TRADING"]:
+                predicted_price = nn_load_predict(symbol, current_date, params, predictor)
+            else:
+                epochs_run = nn_train_save(symbol, current_date, params, predictor)
+                epochs_dict[predictor] = epochs_run
+                predicted_price = nn_load_predict(symbol, current_date, params, predictor)
+            ensemb_predict_list.append(predicted_price)
+
+
     final_prediction = mean(ensemb_predict_list)
+    print(f"final pred {final_prediction}")
     current_price = get_current_price(df)
 
     return final_prediction, current_price, epochs_dict
 
 
+def ensemble_accuracy(symbol, params, current_date, classification=False):
+    for predictor in params:
+        if "nn" in predictor:
+            pass
+            data, model = load_model_with_data(symbol, current_date, params, predictor)
+
+            # get_all_accuracies(model, data, params[predictor["LOOKUP_STEP"]], params[predictor["TEST_VAR"]])
+
+            y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], 
+            data["column_scaler"][params[predictor["TEST_VAR"]]], classification)
+            print(f"{y_train_real, y_train_pred}")
+            y_valid_real, y_valid_pred = return_real_predict(model, data["X_valid"], data["y_valid"], 
+            data["column_scaler"][params[predictor["TEST_VAR"]]], classification)
+            y_test_real, y_test_pred = return_real_predict(model, data["X_test"], data["y_test"],
+            data["column_scaler"][params[predictor["TEST_VAR"]]], classification)
+
+
+
+
+
+    train_acc = get_accuracy(y_train_real, y_train_pred, params[predictor["LOOKUP_STEP"]])
+    valid_acc = get_accuracy(y_valid_real, y_valid_pred, params[predictor["LOOKUP_STEP"]])
+    test_acc = get_accuracy(y_test_real, y_test_pred, params[predictor["LOOKUP_STEP"]])
+    
+
+
+
+
+    return train_acc, valid_acc, test_acc 
