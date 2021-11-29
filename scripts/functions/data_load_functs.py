@@ -1,20 +1,17 @@
-from config.api_key import real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key
-from config.symbols import trading_real_money
 from functions.time_functs import make_Timestamp, get_trade_day_back, get_full_end_date
 from functions.error_functs import net_error_handler
 from functions.trade_functs import get_api
-from functions.time_functs import increment_calendar, modify_timestamp
+from functions.time_functs import modify_timestamp
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, cwt
 from collections import deque
 import talib as ta
 import pandas as pd
 import numpy as np
 import datetime
-import alpaca_trade_api as tradeapi
 import time
 
 
@@ -65,7 +62,6 @@ def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
             end_date = modify_timestamp(1, end_date)
             end_date = get_trade_day_back(end_date, 1000)
         else:
-            print(2)
             other_barset = api.get_barset(symbols=symbol, timeframe="day", limit=1000, until=end_date)
             new_df = get_values(other_barset.items()) 
             limit -= 1000
@@ -303,7 +299,7 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         df["double_exponetial_moving_avg"] = ta.DEMA(df.c, timeperiod=30)
 
     if "EMA" in feature_columns:
-        df["EMA"] = ta.EMA(df.c, timeperiod=30)
+        df["EMA"] = ta.EMA(df.c, timeperiod=5)
 
     if ("MESA_mama" or "MESA_fama") in feature_columns:
         df["MESA_mama"], df["MESA_fama"] = ta.MAMA(df.c)
@@ -336,7 +332,7 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         df["beta"] = ta.BETA(df.h, df.l, timeperiod=5)
 
     if "TSF" in feature_columns:
-        df["TSF"] = ta.TSF(df.c, timeperiod=14)
+        df["TSF"] = ta.TSF(df.c, timeperiod=17)
 
     if "day_of_week" in feature_columns:
         df = convert_date_values(df)
@@ -379,23 +375,21 @@ def convert_date_values(df):
 
     return df
 
-def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
-
+def aquire_preprocess_data(symbol, params, end_date=None, scale=True, to_print=True):
     if to_print:
-        print("Included features: " + str(params["FEATURE_COLUMNS"]))
-    
+        print(f"""Included features: {params["FEATURE_COLUMNS"]}""")
+
     if end_date is not None:
         df = make_dataframe(symbol, params["FEATURE_COLUMNS"], params["LIMIT"], end_date, to_print)
     else:
         df = make_dataframe(symbol, params["FEATURE_COLUMNS"], params["LIMIT"], to_print=to_print)
+    
+    for col in params["FEATURE_COLUMNS"]:
+        assert col in df.columns, f"'{col}' does not exist in the dataframe."
 
     result = {}
     result["df"] = df.copy()
 
-    for col in params["FEATURE_COLUMNS"]:
-        assert col in df.columns, f"'{col}' does not exist in the dataframe."
-
-    
     # print("future: " + str(df["future"]))
     # print("future: " + str(df["future"][0]))
     # print("future: " + str(df["future"].values))
@@ -420,12 +414,13 @@ def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=
         df["future"] = list(map(lambda current, future: int(float(future) > float(current)), df.c, df.future))
     # add the target column (label) by shifting by `lookup_step`\
 
-    # print(f"column scalar{column_scaler}")
-
-    # print(f"before df {df}")
     if "c" not in params["FEATURE_COLUMNS"]:
         df = df.drop(columns=["c"])
-    # print(f"after df {df}")
+
+    return df, result
+
+def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
+    df, result = aquire_preprocess_data(symbol, params, end_date, scale, to_print)
     
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
@@ -457,15 +452,11 @@ def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=
     X = np.array(X)
     y = np.array(y)
     # reshape X to fit the neural network
-    # print(X)
-    # print(y)
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
     
     # split the dataset
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
-
-    # print("in the load thingy " + str(result["X_valid"]))
 
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
     valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
@@ -486,3 +477,24 @@ def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=
     # return the result
     return result, train, valid, test
 
+def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
+    df, result = aquire_preprocess_data(symbol, params, end_date, scale, to_print)
+
+    df.dropna(inplace=True)
+    # print(f"""df.values {df[params["FEATURE_COLUMNS"]].values}""")
+    # print(f"""targets {df["future"].values}""")
+    y = df["future"]
+    df = df.drop(columns="future")
+    X = df.to_numpy()
+
+    X = np.array(X)
+    y = np.array(y)
+
+    # print(f"X {X}")
+    # print(f"y {y}")
+    
+    # split the dataset
+    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
+    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
+
+    return result

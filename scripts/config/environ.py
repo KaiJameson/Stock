@@ -18,7 +18,8 @@ directory_dict = {
     "runtime_price":     "../excel/curr_price",
     "tax":               "../tax",
     "trade_perform":     "../excel/trade_perform",
-    "tuning":            "../tuning_info"
+    "tuning":            "../tuning_info",
+    "save_predicts":     "../predictions"
 }
 
 load_params = {
@@ -31,6 +32,28 @@ load_params = {
     "LOSS": "huber_loss",
     "TEST_VAR": "c"
 }
+
+tree_params = {
+    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+    "LIMIT": 4000,
+    "BATCH_SIZE": 1024,
+    "LOOKUP_STEP": 1,
+    "TEST_SIZE": 0.2,
+    "LOSS": "huber_loss",
+    "TEST_VAR": "c"
+}
+
+comparator_params = {
+    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+    "LIMIT": 2000,
+    "N_STEPS": 100,
+    "BATCH_SIZE": 1024,
+    "LOOKUP_STEP": 1,
+    "TEST_SIZE": 0.2,
+    "LOSS": "huber_loss",
+    "TEST_VAR": "c"
+}
+
 
 error_file = "../error_file.txt"
 

@@ -5,13 +5,15 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import (directory_dict, random_seed, save_logs,
-defaults, load_params)
+defaults, load_params, tree_params)
 from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_datetime
 from functions.functions import get_model_name
 from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, load_model_with_data, predict, return_real_predict
-from functions.data_load_functs import load_data, make_dataframe
+from functions.data_load_functs import load_data, make_dataframe, load_2D_data
+from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
+from sklearn.tree import DecisionTreeRegressor
 from statistics import mean
 import pandas as pd
 import talib as ta
@@ -21,7 +23,7 @@ import random
 import os
 
 
-def nn_train_save(symbol, end_date=None, params=defaults, predictor="nn1"):
+def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1"):
     #description of all the parameters used is located inside environment.py
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
@@ -103,7 +105,7 @@ def configure_gpu():
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
-def nn_load_predict(symbol, current_date, params, predictor, to_print=False):
+def nn_load_predict(symbol, params, current_date, predictor, to_print=False):
     data, model = load_model_with_data(symbol, current_date, params, predictor, to_print)
     predicted_price = predict(model, data, params[predictor]["N_STEPS"], params[predictor]["TEST_VAR"])
 
@@ -133,21 +135,41 @@ def ensemble_predictor(symbol, params, current_date):
 
         elif predictor == "sav_gol":
             df["sc"] = savgol_filter(df.c, 7, 3)
-            # print(current_date)
-            # print(df.tail(3))
-            # predicted_price = np.float32(df.sc[len(df.c) - 1])
-            print(df.tail(10))
-            predicted_price = (df.sc[len(df.c) - 1])
-            # print(f"first pred {predicted_price}")
+            predicted_price = np.float32(df.sc[len(df.c) - 1])
+            ensemb_predict_list.append(predicted_price)
+
+        elif predictor == "EMA":
+            df["EMA"] = ta.EMA(df.c, timeperiod=5)
+            predicted_price = np.float32(df["EMA"][len(df.c) - 1])
+            ensemb_predict_list.append(predicted_price)
+
+        elif predictor == "DTREE":
+            df2D = load_2D_data(symbol, tree_params, current_date, shuffle=True, scale=True, to_print=False)
+            tree = DecisionTreeRegressor(min_samples_leaf=3)
+            tree.fit(df2D["X_train"], df2D["y_train"])
+            # print(df2D["X_test"])
+            df2D = load_2D_data(symbol, tree_params, current_date, shuffle=False, scale=True, to_print=False)
+            tree_pred = tree.predict(df2D["X_test"])
+            scale = df2D["column_scaler"][tree_params["TEST_VAR"]]
+            tree_pred = np.array(tree_pred)
+            print(f"before {tree_pred}")
+            tree_pred = tree_pred.reshape(1, -1)
+            print(f"after {tree_pred}")
+            predicted_price = np.float32(scale.inverse_transform(tree_pred)[-1][-1])
+            # print(predicted_price)
             ensemb_predict_list.append(predicted_price)
 
         elif "nn" in predictor:
             if params["TRADING"]:
-                predicted_price = nn_load_predict(symbol, current_date, params, predictor)
+                predicted_price = nn_load_predict(symbol, params, current_date,  predictor)
             else:
-                epochs_run = nn_train_save(symbol, current_date, params, predictor)
+                # if load_saved_predictions(symbol, params, current_date, predictor):
+                #     predicted_price = load_saved_predictions(symbol, params, current_date, predictor)
+                # else:
+                epochs_run = nn_train_save(symbol, params, current_date, predictor)
                 epochs_dict[predictor] = epochs_run
-                predicted_price = nn_load_predict(symbol, current_date, params, predictor)
+                predicted_price = nn_load_predict(symbol, params, current_date, predictor)
+                    # save_prediction(symbol, params, current_date, predictor)
             ensemb_predict_list.append(predicted_price)
 
 

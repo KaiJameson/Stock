@@ -1,8 +1,9 @@
 from matplotlib import pyplot as plt
 from config.environ import test_money, directory_dict
-from functions.functions import percent_from_real, layers_string, get_model_name
+from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2
 from functions.time_functs import get_current_date_string, get_time_string
-from functions.tuner_functs import MA_comparator, lin_reg_comparator, smooth_c_comparator
+from functions.tuner_functs import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
+    EMA_comparator, pre_c_comparator, TSF_comparator)
 from statistics import mean
 import matplotlib.pyplot as plt
 import numpy as np
@@ -89,11 +90,13 @@ def runtime_predict_excel(symbols, pred_curr_list):
     run_pre_text += "\n"
 
     for symbol in symbols:   
-        run_pre_text += str(round(pred_curr_list[symbol]["predicted"], 2)) + "\t"
+        # run_pre_text += str(round(pred_curr_list[symbol]["predicted"], 2)) + "\t"
+        run_pre_text += sr2(pred_curr_list[symbol]["predicted"]) + "\t"
     run_pre_text += "\n"
 
     for symbol in symbols:
-        run_pre_text += str(round(pred_curr_list[symbol]["current"], 2)) + "\t"
+        # run_pre_text += str(round(pred_curr_list[symbol]["current"], 2)) + "\t"
+        run_pre_text += sr2(pred_curr_list[symbol]["current"]) + "\t"
 
     f = open(directory_dict["runtime_predict"] + "/" + date_string + ".txt", "a+")
     f.write(run_pre_text)
@@ -102,9 +105,11 @@ def runtime_predict_excel(symbols, pred_curr_list):
 def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, percent_away):
     date_string = get_current_date_string()
     f = open(directory_dict["load_run_results"] + "/" + date_string + ".txt", "a")
-    f.write(symbol + "\t" + str(round(train_acc * 100, 2)) + "\t" + str(round(valid_acc * 100, 2)) + "\t" 
-    + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 
-    + "\n")
+    # f.write(symbol + "\t" + str(round(train_acc * 100, 2)) + "\t" + str(round(valid_acc * 100, 2)) + "\t" 
+    # + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 
+    # + "\n")
+    f.write(f"{symbol}\t{r1002(train_acc)}\t{r1002(valid_acc)}\t{r1002(test_acc)}\t"
+        f"{r2(from_real)}\t{r2(percent_away)}")
     f.close()
 
 def backtest_excel(directory, test_name, test_year, test_month, test_day, params, avg_p, 
@@ -119,16 +124,16 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
             overall_epochs.append(avg_e[predictor])
-    all_epochs = mean(overall_epochs)
-    file.write(f"The models (if any) used {all_epochs}.\n")
+    if overall_epochs:
+        all_epochs = mean(overall_epochs)
+        file.write(f"The models (if any) used {r2(all_epochs)}.\n")
 
-    
     if current_money != None:
         file.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
     file.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
     str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.\n")
-    file.write("The end day was: " + str(test_month) + "-" + str(test_day) + "-" + str(test_year) + ".\n\n")
-    file.write("The neural net models used were :\n")
+    file.write(f"The end day was: {test_month}-{test_day}-{test_year}.\n\n")
+    file.write(f"The neural net models used were :\n")
 
     nn_tested = False
     for predictor in params["ENSEMBLE"]:
@@ -148,9 +153,8 @@ def write_model_params(file, params, predictor, avg_e):
     file.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
     file.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
     file.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n")
-    file.write("The model used an average of " + str(round(avg_e, 2)) + " epochs.\n\n")
+    file.write(f"The model used an average of {r2(avg_e)} epochs.\n\n")
     
-
 def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
     print("\nTesting finished for ensemble: " + str(params["ENSEMBLE"]))
     print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
@@ -158,9 +162,11 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     overall_epochs = []
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
+            print(avg_e[predictor])
             overall_epochs.append(avg_e[predictor])
-    all_epochs = mean(overall_epochs)
-    print(f"The models (if any) used {all_epochs}.")
+    if overall_epochs:
+        all_epochs = mean(overall_epochs)
+        print(f"The models` (if any) used {r2(all_epochs)}.")
 
     if current_money != None:
         print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
@@ -184,12 +190,15 @@ def print_model_params(params, predictor, avg_e):
     print("Loss: " + params["LOSS"] + ", Optimizer: " +  params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
     print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
     print("Feature Columns: " + str(params["FEATURE_COLUMNS"]))
-    print("The model used an average of " + str(avg_e) + " epochs.\n")
+    print(f"The model used an average of {r2(avg_e)} epochs.\n")
 
 def comparator_results_excel(df, run_days, directory, stock):
-    lin_avg_p, lin_avg_d, lin_current_money = lin_reg_comparator(df, 14, run_days)
-    MA_avg_p, MA_avg_d, MA_current_money = MA_comparator(df, 7, run_days)
-    sc_p, sc_d, sc_current_money = smooth_c_comparator(df, 7, 3, run_days)
+    lin_avg_p, lin_avg_d, lin_cur_mon = lin_reg_comparator(df, 14, run_days)
+    MA_avg_p, MA_avg_d, MA_cur_mon = MA_comparator(df, 7, run_days)
+    sc_p, sc_d, sc_cur_mon = sav_gol_comparator(df, 7, 3, run_days)
+    pre_p, pre_d, pre_cur_mon = pre_c_comparator(df, run_days)
+    TSF_p, TSF_d, TSF_cur_mon = TSF_comparator(df, 17, run_days)
+    EMA_p, EMA_d, EMA_cur_mon = EMA_comparator(df, 5, run_days)
 
     directory_string = f"{directory}/{stock}-comparison.txt"
     if not os.path.isfile(directory_string):
@@ -197,9 +206,12 @@ def comparator_results_excel(df, run_days, directory, stock):
     else:
         return
     
-    f.write("Linear percent away was " + str(lin_avg_p) + " with " + str(lin_avg_d) + " percent prediction making " + str(lin_current_money) + " dollars.\n")
-    f.write("Moving average percent away was " + str(MA_avg_p) + " with " + str(MA_avg_d) + " percent prediction making " + str(MA_current_money) + " dollars.\n")
-    f.write("sc " + str(sc_p) + " with " + str(sc_d) + " percent prediction making " + str(sc_current_money) + " dollars.")
+    f.write(f"Linear percent away was {lin_avg_p} with {lin_avg_d} percent prediction making {lin_cur_mon} dollars.\n")
+    f.write(f"Moving percent away was {MA_avg_p} with {MA_avg_d} percent prediction making {MA_cur_mon} dollars.\n")
+    f.write(f"Sav_gol percent away was {sc_p} with {sc_d} percent prediction making {sc_cur_mon} dollars.\n")
+    f.write(f"Previous day percent away was {pre_p} with {pre_d} percent prediction making {pre_cur_mon} dollars.\n")
+    f.write(f"TSF percent away was {TSF_p} with {TSF_d} percent prediction making {TSF_cur_mon} dollars.\n")
+    f.write(f"Exponential MA percent away was {EMA_p} with {EMA_d} percent prediction making {EMA_cur_mon} dollars.\n")
     f.close()
 
 def read_saved_contents(file_path, return_dict):
@@ -253,52 +265,78 @@ def plot_graph(y_real, y_pred, symbol, back_test_days, test_var):
     plt.close()
 
 def graph_epochs_relationship(progress, test_name):
-        percent_away_list = progress["percent_away_list"]
-        correct_direction_list = progress["correct_direction_list"]
-        epochs_list = progress["epochs_list"]
+    percent_away_list = progress["percent_away_list"]
+    correct_direction_list = progress["correct_direction_list"]
+    epochs_list = progress["epochs_list"]
 
-        plot_name = directory_dict["graph"] + "/" + test_name + "-dir.png"
-        fig = plt.figure(figsize=(12,12))
-        ax = fig.add_subplot(projection='3d')
+    plot_name = directory_dict["graph"] + "/" + test_name + "-dir.png"
+    fig = plt.figure(figsize=(12,12))
+    ax = fig.add_subplot(projection='3d')
 
-        hist, xedges, yedges = np.histogram2d(epochs_list, correct_direction_list, bins=[8, 3], range=[[0, 2000], [0, 1]])
+    hist, xedges, yedges = np.histogram2d(epochs_list, correct_direction_list, bins=[8, 3], range=[[0, 2000], [0, 1]])
 
-        xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1], indexing="ij")
-        xpos = xpos.ravel()
-        ypos = ypos.ravel()
-        zpos = 0
+    xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1], indexing="ij")
+    xpos = xpos.ravel()
+    ypos = ypos.ravel()
+    zpos = 0
 
-        dz = hist.ravel()
-        c = ["red", "yellow", "green"] * 8
+    dz = hist.ravel()
+    c = ["red", "yellow", "green"] * 8
+
+    ax.bar3d(xpos, ypos, zpos, 100, .1, dz, color=c, zsort='average')
+    ax.set_xlabel("EPOCHS")
+    ax.set_ylabel("CORRECT DIR")
+    ax.set_zlabel("TIMES IN BUCKET")
+    ax.view_init(-2.4, 135)
     
-        ax.bar3d(xpos, ypos, zpos, 100, .1, dz, color=c, zsort='average')
-        ax.set_xlabel("EPOCHS")
-        ax.set_ylabel("CORRECT DIR")
-        ax.set_zlabel("TIMES IN BUCKET")
-        ax.view_init(-2.4, 135)
-        
-        plt.savefig(plot_name)
-        plt.close()
+    plt.savefig(plot_name)
+    plt.close()
 
-        plot_name = directory_dict["graph"] + "/" + test_name + "-away.png"
-        fig = plt.figure(figsize=(12,12))
-        ax = fig.add_subplot(projection='3d')
+    plot_name = directory_dict["graph"] + "/" + test_name + "-away.png"
+    fig = plt.figure(figsize=(12,12))
+    ax = fig.add_subplot(projection='3d')
 
-        hist, xedges, yedges = np.histogram2d(epochs_list, percent_away_list, bins=[8, 5], range=[[0, 2000], [0, 10]])
+    hist, xedges, yedges = np.histogram2d(epochs_list, percent_away_list, bins=[8, 5], range=[[0, 2000], [0, 10]])
 
-        xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1], indexing="ij")
-        xpos = xpos.ravel()
-        ypos = ypos.ravel()
-        zpos = 0
+    xpos, ypos = np.meshgrid(xedges[:-1], yedges[:-1], indexing="ij")
+    xpos = xpos.ravel()
+    ypos = ypos.ravel()
+    zpos = 0
 
-        dz = hist.ravel()
+    dz = hist.ravel()
+
+    ax.bar3d(xpos, ypos, zpos, 100, 1, dz, zsort='average')
+    ax.set_xlabel("EPOCHS")
+    ax.set_ylabel("% AWAY")
+    ax.set_zlabel("TIMES IN BUCKET")
+    ax.view_init(20, 135)
     
-        ax.bar3d(xpos, ypos, zpos, 100, 1, dz, zsort='average')
-        ax.set_xlabel("EPOCHS")
-        ax.set_ylabel("% AWAY")
-        ax.set_zlabel("TIMES IN BUCKET")
-        ax.view_init(20, 135)
-        
-        plt.savefig(plot_name)
-        plt.close()
+    plt.savefig(plot_name)
+    plt.close()
+
+def load_saved_predictions(symbol, params, current_date, predictor):
+    nn_params = params[predictor]
+    nn_name = get_model_name(nn_params)
+
+    if nn_params["SAVE_PRED"][symbol][current_date]:
+        prediction = nn_params["SAVE_PRED"][symbol][current_date]
+        return prediction
+
+    if os.path.isfile(f"""{directory_dict["save_predicts"]}/{nn_name}.txt"""):
+        nn_params["SAVE_PRED"] = read_saved_contents(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", nn_params["SAVE_PRED"])
+    else:
+        return None
+
+    if nn_params["SAVE_PRED"][symbol][current_date]:
+        prediction = nn_params["SAVE_PRED"][symbol][current_date]
+    else:
+        return None
+    
+def save_prediction(symbol, nn_params, current_date, prediction):
+    if not nn_params["SAVE_PRED"][symbol][current_date]:
+        nn_params["SAVE_PRED"][symbol][current_date] = prediction
+    else:
+        return
+
+    
 

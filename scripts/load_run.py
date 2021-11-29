@@ -115,7 +115,10 @@ def resume_running_training(pause_list):
 if __name__ == "__main__":
     s = time.perf_counter()
     pause_list = pause_running_training()
-    load_trade(load_save_symbols, defaults)
+    try:
+        load_trade(load_save_symbols, defaults)
+    except:
+        resume_running_training(pause_list)
     resume_running_training(pause_list)
     tt = (time.perf_counter() - s) / 60
     print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
