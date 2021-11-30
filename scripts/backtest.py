@@ -3,7 +3,7 @@ from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import real_test_symbols, test_year, test_month, test_day, test_days
 from config.environ import directory_dict, back_test_days
-from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002
+from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002, get_model_name
 from functions.io_functs import backtest_excel, read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
 from functions.time_functs import get_past_datetime, get_year_month_day, increment_calendar, get_actual_price
 from functions.error_functs import error_handler
@@ -89,6 +89,10 @@ def back_testing(test_year, test_month, test_day, test_days, params):
             progress["test_year"], progress["test_month"], progress["test_day"] = get_year_month_day(current_date)
 
             save_to_dictionary(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt", progress)
+            for predictor in params["ENSEMBLE"]:
+                    if "nn" in predictor: 
+                        nn_name = get_model_name(params[predictor])
+                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", params[predictor]["SAVE_PRED"])
 
         print("Percent away: " + str(progress["percent_away_list"]))
         print("Correct direction %: " + str(progress["correct_direction_list"]))
