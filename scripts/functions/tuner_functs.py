@@ -1,4 +1,4 @@
-from functions.functions import get_correct_direction
+from functions.functions import get_correct_direction, ra1002, sr2, sr1002
 from statistics import mean
 from scipy.signal import savgol_filter
 import talib as ta
@@ -110,12 +110,18 @@ def EMA_comparator(df, timeperiod, run_days):
 def TSF_comparator(df, timeperiod, run_days):
     df = df["df"]
     df["TSF"] = ta.TSF(df.c, timeperiod=timeperiod)
+    print(f"in TSF {df}")
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "TSF", run_days)
 
     return avg_p, avg_d, current_money
 
+def pre_c_comparator(df, run_days):
+    df = df["df"]
+    avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "c", run_days)
 
-def smooth_c_comparator(df, time_period, poly_order, run_days):
+    return avg_p, avg_d, current_money
+
+def sav_gol_comparator(df, time_period, poly_order, run_days):
     df = df["df"]
     current_money = 10000
     percent_away_list = []
@@ -124,19 +130,19 @@ def smooth_c_comparator(df, time_period, poly_order, run_days):
     for i in range(len(df) - 1, len(df) - run_days - 1, -1):
         actual_price = df.c[i]
         df.drop(labels=df.iloc[i].name, inplace=True)
-        df["sc"] = savgol_filter(df.c[:i], 7, 3)
+        df["sc"] = savgol_filter(df.c[:i], time_period, poly_order)
         current_price = df.c[i - 1]
         predicted_price = df.sc[i - 1]
 
-        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
         current_money = update_money(current_money, predicted_price, current_price, actual_price)
 
-    avg_p = str(round(mean(percent_away_list), 2))
-    avg_d = str(round(mean(correct_direction_list) * 100, 2))
+    avg_p = sr2(mean(percent_away_list))
+    avg_d = sr1002(mean(correct_direction_list))
 
     return avg_p, avg_d, current_money
 
@@ -153,15 +159,15 @@ def RSI_comparator(df, run_days):
         current_price = df.c[i - 1]
         predicted_price = df.c[i - 1] * (1/150000 * (-df.RSI[i - 1] + 50)**3 + 1)
             
-        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
         current_money = update_money(current_money, predicted_price, current_price, actual_price)
     
-    avg_p = str(round(mean(percent_away_list), 2))
-    avg_d = str(round(mean(correct_direction_list) * 100, 2))
+    avg_p = sr2(mean(percent_away_list))
+    avg_d = sr1002(mean(correct_direction_list))
 
     return avg_p, avg_d, current_money
 
@@ -175,16 +181,15 @@ def simple_one_day_predicting_comparator_guts(df, comp, run_days):
         current_price = df.c[i - 1]
         predicted_price = df[comp][i - 1]
 
-        p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+        p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
-        # print(f"day {df.index[i]} df.predict: {predicted_price} current: {current_price} actual: {actual_price} dir: {correct_dir}")
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
         current_money = update_money(current_money, predicted_price, current_price, actual_price)
 
-    avg_p = str(round(mean(percent_away_list), 2))
-    avg_d = str(round(mean(correct_direction_list) * 100, 2))
+    avg_p = sr2(mean(percent_away_list))
+    avg_d = sr1002(mean(correct_direction_list))
 
     return avg_p, avg_d, current_money
 

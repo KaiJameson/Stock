@@ -17,10 +17,10 @@ import sys
 
 check_directories()
 
-def load_trade(symbols, params):
+def load_trade(symbols, params, real_mon):
     configure_gpu()
 
-    owned = getOwnedStocks()
+    owned = getOwnedStocks(real_mon)
 
     pred_curr_list = {}
 
@@ -47,7 +47,7 @@ def load_trade(symbols, params):
 
     if do_the_trades:
         time_s = time.perf_counter()
-        results = buy_all_at_once(symbols, owned, pred_curr_list)
+        results = buy_all_at_once(symbols, owned, pred_curr_list, real_mon)
         print("Performing all the trades took " + str(time.perf_counter() - time_s) + " seconds")
     else:
         print("Why are you running this if you don't want to do the trades?")
@@ -114,9 +114,18 @@ def resume_running_training(pause_list):
 
 if __name__ == "__main__":
     s = time.perf_counter()
-    pause_list = pause_running_training()
-    load_trade(load_save_symbols, defaults)
-    resume_running_training(pause_list)
+    if sys.argv[1] == "paper":
+        print(f"~~~ Running load_run in paper testing mode ~~~")
+        load_trade(load_save_symbols, defaults, False)
+    else:
+        print(f"~~~ Running load_run in real money mode ~~~")
+        pause_list = pause_running_training()
+        try:
+            load_trade(load_save_symbols, defaults, True)
+        except:
+            resume_running_training(pause_list)
+        resume_running_training(pause_list)
+    
     tt = (time.perf_counter() - s) / 60
     print("In total it took " + str(round(tt, 2)) + " minutes to run all the files.")
 

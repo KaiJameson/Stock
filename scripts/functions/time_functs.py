@@ -118,7 +118,7 @@ def increment_calendar(current_date, api, symbol):
         try:
             calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
             while calendar.date != current_date + datetime.timedelta(1):
-                print("Skipping " + str(current_date + datetime.timedelta(1)) + " because it was not a market day.")
+                print(f"Skipping {current_date + datetime.timedelta(1)} because it was not a market day.")
                 current_date = current_date + datetime.timedelta(1)
 
             print("Moving forward one day in time: ")

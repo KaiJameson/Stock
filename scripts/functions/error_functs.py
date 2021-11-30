@@ -15,7 +15,6 @@ def net_error_handler(symbol, exception):
     err_file = open(error_file, "a")
     err_file.write("\n EXCEPTION HANDLED \n")
     write_exception_details(err_file, symbol, exception)
-    write_exc_info(err_file)
     err_file.close()
     print("EXCEPTION HANDLED", flush=True)
     time.sleep(3)

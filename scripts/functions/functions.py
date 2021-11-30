@@ -40,12 +40,11 @@ def delete_files_in_folder(directory):
         error_handler("Deleting files ", Exception)
 
 
-def get_model_name(params):
-    return (str(params["FEATURE_COLUMNS"]) + "-layers" + layers_string(params["LAYERS"]) + "-step" 
-        + str(params["N_STEPS"]) + "-limit" + str(params["LIMIT"]) + "-epoch" + str(params["EPOCHS"]) 
-        + "-pat" + str(params["PATIENCE"]) + "-batch" + str(params["BATCH_SIZE"]) 
-        + "-drop" + str(params["DROPOUT"]) + "-ts" + str(params["TEST_SIZE"])
-        + params["TEST_VAR"])
+def get_model_name(nn_params):
+    return (f"""{nn_params["FEATURE_COLUMNS"]}-layers{layers_string(nn_params["LAYERS"])}-step"""
+            f"""{nn_params["N_STEPS"]}-limit{nn_params["LIMIT"]}-epoch{nn_params["EPOCHS"]}""" 
+            f"""-pat{nn_params["PATIENCE"]}-batch{nn_params["BATCH_SIZE"]}-drop{nn_params["DROPOUT"]}"""
+            f"""-ts{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")
 
 def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
@@ -108,11 +107,17 @@ def percent_from_real(y_real, y_predict):
     pddf = pddf.values
     return round(pddf.mean(), 2)
 
-def sr1002(string):
-        return str(round(string * 100, 2))
+def sr1002(num):
+        return str(round(num * 100, 2))
 
-def sr2(string):
-    return str(round(string, 2))
+def sr2(num):
+    return str(round(num, 2))
 
-def r1002(f):
-    return round(f * 100, 2)
+def r1002(num):
+    return round(num * 100, 2)
+
+def ra1002(num):
+    return round(abs(num) * 100, 2)
+
+def r2(num):
+    return round(num, 2)

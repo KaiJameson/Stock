@@ -1,9 +1,9 @@
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
-from config.environ import back_test_days, directory_dict, test_money, load_params
+from config.environ import back_test_days, directory_dict, test_money, comparator_params
 from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
-from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name
+from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002, r2, get_model_name
 from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price
@@ -98,21 +98,23 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
                 save_to_dictionary(directory_dict["tuning"] + "/" + "SAVE-" + 
                     test_name + ".txt", progress)
+                for predictor in params["ENSEMBLE"]:
+                    if "nn" in predictor: 
+                        nn_name = get_model_name(params[predictor])
+                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", params[predictor]["SAVE_PRED"])
 
             print("Percent away: " + str(progress["percent_away_list"]))
             print("Correct direction %: " + str(progress["correct_direction_list"]))
-            avg_p = str(round(mean(progress["percent_away_list"]), 2))
-            avg_d = str(round(mean(progress["correct_direction_list"]) * 100, 2))
+            avg_p = sr2(mean(progress["percent_away_list"]))
+            avg_d = sr1002(mean(progress["correct_direction_list"]))
             avg_e = {}
             for predictor in params["ENSEMBLE"]:
                 if "nn" in predictor:
                     avg_e[predictor] = mean(progress["epochs_dict"][predictor])
-            hold_money = round(test_money * (current_price / starting_day_price), 2)
+            hold_money = r2(test_money * (current_price / starting_day_price))
 
-            # data, train, valid, test = load_data(symbol, load_params, current_date, test_var="c", shuffle=False, scale=False, to_print=False)
-            # data, train, valid, test = load_data(symbol, load_params, shuffle=False, scale=False, to_print=False)
-            # print(data["df"].tail(10))
-            # comparator_results_excel(data, tune_days, directory_dict["tuning"], symbol)
+            data, train, valid, test = load_data(symbol, comparator_params, current_date, shuffle=False, scale=False, to_print=False)
+            comparator_results_excel(data, tune_days, directory_dict["tuning"], symbol)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
                 progress["tune_day"], progress["time_so_far"], progress["current_money"], hold_money)
@@ -131,14 +133,13 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                     sys.exit(-1)
 
         except Exception:
-            current_date -= datetime.timedelta(1)
             error_handler(symbol, Exception)
 
 
 if __name__ == "__main__":
     check_directories()
     params = {
-    "ENSEMBLE": ["nn1", "nn2", "nn3", "nn4"],
+    "ENSEMBLE": ["nn1", "DTREE", "EMA", "sav_gol"],
     "TRADING": False,
     "SAVE_FOLDER": "tuning4",
     "nn1" : { 
@@ -156,57 +157,6 @@ if __name__ == "__main__":
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
-        "TEST_VAR": "c"
-        },
-    "nn2" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 400,
-        "PATIENCE": 100,
-        "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["7MA"],
-        "TEST_VAR": "c"
-        },
-    "nn3" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 400,
-        "PATIENCE": 100,
-        "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["sc", "RSI", "TSF"],
-        "TEST_VAR": "c"
-        },
-    "nn4" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 400,
-        "PATIENCE": 100,
-        "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["c", "sc", "v"],
         "TEST_VAR": "c"
         }
     }
