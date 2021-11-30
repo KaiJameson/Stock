@@ -481,19 +481,13 @@ def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, to_pri
     df, result = aquire_preprocess_data(symbol, params, end_date, scale, to_print)
 
     df.dropna(inplace=True)
-    # print(f"""df.values {df[params["FEATURE_COLUMNS"]].values}""")
-    # print(f"""targets {df["future"].values}""")
     y = df["future"]
     df = df.drop(columns="future")
     X = df.to_numpy()
 
     X = np.array(X)
     y = np.array(y)
-
-    # print(f"X {X}")
-    # print(f"y {y}")
     
-    # split the dataset
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
 

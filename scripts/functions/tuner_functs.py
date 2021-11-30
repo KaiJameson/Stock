@@ -134,7 +134,6 @@ def sav_gol_comparator(df, time_period, poly_order, run_days):
         current_price = df.c[i - 1]
         predicted_price = df.sc[i - 1]
 
-        # p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
@@ -160,7 +159,6 @@ def RSI_comparator(df, run_days):
         current_price = df.c[i - 1]
         predicted_price = df.c[i - 1] * (1/150000 * (-df.RSI[i - 1] + 50)**3 + 1)
             
-        # p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
@@ -183,14 +181,10 @@ def simple_one_day_predicting_comparator_guts(df, comp, run_days):
         current_price = df.c[i - 1]
         predicted_price = df[comp][i - 1]
 
-        # p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
         
         percent_away_list.append(p_diff)
-        if comp == "TSF":
-            print(f"day {df.index[i]} df.predict: {predicted_price} current: {current_price} actual: {actual_price} dir: {correct_dir}")
-            print(f"p_diff {p_diff}")
         correct_direction_list.append(correct_dir)
         current_money = update_money(current_money, predicted_price, current_price, actual_price)
 

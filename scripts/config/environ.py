@@ -112,7 +112,8 @@ defaults = {
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-        "TEST_VAR": "c"
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
         },
     "nn2" : { 
         "N_STEPS": 100,
@@ -129,7 +130,8 @@ defaults = {
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
-        "TEST_VAR": "c"
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
         }
     }
 

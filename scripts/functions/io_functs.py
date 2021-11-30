@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 from config.environ import test_money, directory_dict
 from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2
-from functions.time_functs import get_current_date_string, get_time_string
+from functions.time_functs import get_current_date_string, get_time_string, get_past_date_string
 from functions.tuner_functs import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
     EMA_comparator, pre_c_comparator, TSF_comparator)
 from statistics import mean
@@ -193,18 +193,18 @@ def print_model_params(params, predictor, avg_e):
     print(f"The model used an average of {r2(avg_e)} epochs.\n")
 
 def comparator_results_excel(df, run_days, directory, stock):
+    directory_string = f"{directory}/{stock}-comparison.txt"
+    if not os.path.isfile(directory_string):
+        f = open(directory_string, "a")
+    else:
+        return
+
     lin_avg_p, lin_avg_d, lin_cur_mon = lin_reg_comparator(df, 14, run_days)
     MA_avg_p, MA_avg_d, MA_cur_mon = MA_comparator(df, 7, run_days)
     sc_p, sc_d, sc_cur_mon = sav_gol_comparator(df, 7, 3, run_days)
     pre_p, pre_d, pre_cur_mon = pre_c_comparator(df, run_days)
     TSF_p, TSF_d, TSF_cur_mon = TSF_comparator(df, 17, run_days)
     EMA_p, EMA_d, EMA_cur_mon = EMA_comparator(df, 5, run_days)
-
-    directory_string = f"{directory}/{stock}-comparison.txt"
-    if not os.path.isfile(directory_string):
-        f = open(directory_string, "a")
-    else:
-        return
     
     f.write(f"Linear percent away was {lin_avg_p} with {lin_avg_d} percent prediction making {lin_cur_mon} dollars.\n")
     f.write(f"Moving percent away was {MA_avg_p} with {MA_avg_d} percent prediction making {MA_cur_mon} dollars.\n")
@@ -317,24 +317,34 @@ def graph_epochs_relationship(progress, test_name):
 def load_saved_predictions(symbol, params, current_date, predictor):
     nn_params = params[predictor]
     nn_name = get_model_name(nn_params)
-
-    if nn_params["SAVE_PRED"][symbol][current_date]:
-        prediction = nn_params["SAVE_PRED"][symbol][current_date]
-        return prediction
+    s_current_date = get_past_date_string(current_date)
+    # print(nn_params["SAVE_PRED"][symbol])
+    if nn_params["SAVE_PRED"][symbol][s_current_date]:
+        prediction = nn_params["SAVE_PRED"][symbol][s_current_date]["prediction"]
+        epochs = nn_params["SAVE_PRED"][symbol][s_current_date]["epochs"]
+        return prediction, epochs
 
     if os.path.isfile(f"""{directory_dict["save_predicts"]}/{nn_name}.txt"""):
         nn_params["SAVE_PRED"] = read_saved_contents(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", nn_params["SAVE_PRED"])
     else:
         return None
 
-    if nn_params["SAVE_PRED"][symbol][current_date]:
-        prediction = nn_params["SAVE_PRED"][symbol][current_date]
+    if s_current_date in nn_params["SAVE_PRED"][symbol]:
+        prediction = nn_params["SAVE_PRED"][symbol][s_current_date]["prediction"]
+        epochs = nn_params["SAVE_PRED"][symbol][s_current_date]["epochs"]
+        return prediction, epochs
     else:
         return None
     
-def save_prediction(symbol, nn_params, current_date, prediction):
-    if not nn_params["SAVE_PRED"][symbol][current_date]:
-        nn_params["SAVE_PRED"][symbol][current_date] = prediction
+def save_prediction(symbol, params, current_date, predictor, prediction, epochs):
+    nn_params = params[predictor]
+    s_current_date = get_past_date_string(current_date)
+    
+    # print(nn_params["SAVE_PRED"])
+    if s_current_date not in nn_params["SAVE_PRED"][symbol]:
+        nn_params["SAVE_PRED"][symbol][s_current_date] = {"prediction": prediction, "epochs":epochs}
+    elif nn_params["SAVE_PRED"][symbol][s_current_date] == {}:
+        nn_params["SAVE_PRED"][symbol][s_current_date] = {"prediction": prediction, "epochs":epochs}
     else:
         return
 

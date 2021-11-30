@@ -98,10 +98,10 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
                 save_to_dictionary(directory_dict["tuning"] + "/" + "SAVE-" + 
                     test_name + ".txt", progress)
-                # for predictor in params["ENSEMBLE"]:
-                #     if "nn" in predictor: 
-                #         nn_name = get_model_name(params[predictor])
-                #         save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""")
+                for predictor in params["ENSEMBLE"]:
+                    if "nn" in predictor: 
+                        nn_name = get_model_name(params[predictor])
+                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", params[predictor]["SAVE_PRED"])
 
             print("Percent away: " + str(progress["percent_away_list"]))
             print("Correct direction %: " + str(progress["correct_direction_list"]))

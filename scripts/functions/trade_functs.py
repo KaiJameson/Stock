@@ -14,16 +14,24 @@ def get_api():
 
     return api
 
-def getOwnedStocks():
-    api = get_api()
+def get_toggleable_api(real_mon):
+    if real_mon:
+        api = tradeapi.REST(real_api_key_id, real_api_secret_key, base_url="https://api.alpaca.markets")
+    else:
+        api = tradeapi.REST(paper_api_key_id, paper_api_secret_key, base_url="https://paper-api.alpaca.markets")
+
+    return api
+
+def getOwnedStocks(real_mon):
+    api = get_toggleable_api(real_mon)
     positions = api.list_positions()
     owned = {}
     for position in positions:
         owned[position.symbol] = position.qty
     return owned
 
-def buy_all_at_once(symbols, owned, price_list):
-    api = get_api()
+def buy_all_at_once(symbols, owned, price_list, real_mon):
+    api = get_toggleable_api(real_mon)
     clock = api.get_clock()
     if not clock.is_open:
         print("\nThe market is closed right now, go home. You're drunk.")
