@@ -1,11 +1,13 @@
 import sys
 from config.environ import directory_dict
+from config.symbols import real_test_symbols
 from functions.time_functs import get_past_date_string, increment_calendar, make_Timestamp, read_date_string, get_current_datetime
 from functions.trade_functs import get_api
 from functions.time_functs import make_Timestamp
 from functions.functions import check_directories, get_correct_direction
+from functions.io_functs import read_saved_contents
 import datetime
-
+import os
 
 # Option 3: read in multiple tuning files or backtest files
 # 
@@ -38,17 +40,18 @@ def get_user_input():
                 sys.exit(-1)
         elif sys.argv[1] == "tuning":
             if len(sys.argv) > 2:
-                # TODO read given model_name
-                make_tuning_sheet()
+                test_name = read_date_string(sys.argv[2])
+                print(f"\n~~~Running tuning with test: {test_name}~~~")
+                make_tuning_sheet(test_name)
             else:
-                print("Tuning requires another argument for the model name.")
+                print("Tuning requires another argument for the test name.")
                 print("Please try again")
                 sys.exit(-1)
         else:
             print("You must give this program one of the three following options.")
             print("\"trade_perform date\" to create the trade performance excel sheet,")
             print("\"PL date\" to create the profit less excel sheet,")
-            print("\"tuning model_name\" to create the tuning excel sheet,")
+            print("\"tuning test_name\" to create the tuning excel sheet,")
             print("Please try again")
             sys.exit(-1)
 
@@ -56,7 +59,7 @@ def get_user_input():
         print("You gotta give some arguments buddy, pick one of the following:")
         print("\"trade_perform date\" to create the trade performance excel sheet,")
         print("\"PL date\" to create the profit less excel sheet,")
-        print("\"tuning model_name\" to create the tuning excel sheet,")
+        print("\"tuning test_name\" to create the tuning excel sheet,")
         print("Please try again")
         sys.exit(-1)
 
@@ -189,8 +192,28 @@ def make_PL_sheet(date, api):
     pl_file.close()
     print("~~~Task Complete~~~")
 
-def make_tuning_sheet():
-    pass
+def make_tuning_sheet(test_name):
+    tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
+    for symbol in real_test_symbols:
+        extraction_dict = {
+            "percent_away": 0,
+            "correct_direction": 0,
+            "epochs": 0,
+            "total_money": 0
+        }
+
+        if os.path.isfile(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt"""):
+            extraction_dict = read_saved_contents(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt""", extraction_dict)
+            tune_text += (f"""{symbol}\t{extraction_dict["percent_away"]}\t{extraction_dict["correct_direction"]}\t"""
+                          f"""{extraction_dict["epochs"]}\t{extraction_dict["total_money"]}\n""") 
+        else:
+            print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
+            print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
+            print(f"Are you feeling lucky yet?")
+    f = open(f"""{directory_dict["tune_summary"]}{test_name}""", "a")
+    f.write(tune_text)
+    f.close()
+    print("~~~Task Complete~~~")
 
 get_user_input()
 

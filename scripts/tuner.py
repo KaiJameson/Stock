@@ -101,7 +101,12 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 for predictor in params["ENSEMBLE"]:
                     if "nn" in predictor: 
                         nn_name = get_model_name(params[predictor])
-                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", params[predictor]["SAVE_PRED"])
+                        print(f"""params[predictor]["SAVE_PRED"] before {params[predictor]["SAVE_PRED"]}""")
+                        for sym in params[predictor]["SAVE_PRED"].copy():
+                            if sym != symbol:
+                                del params[predictor]["SAVE_PRED"][sym]
+                        print(f"""params[predictor]["SAVE_PRED"] after {params[predictor]["SAVE_PRED"]}""")
+                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", params[predictor]["SAVE_PRED"])
 
             print("Percent away: " + str(progress["percent_away_list"]))
             print("Correct direction %: " + str(progress["correct_direction_list"]))
@@ -139,7 +144,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 if __name__ == "__main__":
     check_directories()
     params = {
-    "ENSEMBLE": ["nn1", "DTREE", "EMA", "sav_gol"],
+    "ENSEMBLE": ["nn1"],
     "TRADING": False,
     "SAVE_FOLDER": "tuning4",
     "nn1" : { 
@@ -156,8 +161,9 @@ if __name__ == "__main__":
         "EPOCHS": 2000,
         "PATIENCE": 100,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
-        "TEST_VAR": "c"
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
         }
     }
 

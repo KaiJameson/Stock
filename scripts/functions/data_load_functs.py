@@ -79,8 +79,6 @@ def get_alpaca_data(symbol, end_date, api, timeframe="day", limit=1000):
             barset = api.get_barset(symbols=symbol, timeframe="day", limit=limit)
             items = barset.items() 	
             new_df = get_values(items)	
-            # print(f"head {new_df.c.head(3)}")
-            # print(f"tail {new_df.c.tail(3)}") 
 
         frames.insert(0, new_df)
 

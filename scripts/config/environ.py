@@ -18,6 +18,7 @@ directory_dict = {
     "runtime_price":     "../excel/curr_price",
     "tax":               "../tax",
     "trade_perform":     "../excel/trade_perform",
+    "tune_summary":      "../tuning_info/summary",
     "tuning":            "../tuning_info",
     "save_predicts":     "../predictions"
 }

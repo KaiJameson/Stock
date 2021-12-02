@@ -15,6 +15,10 @@ def check_model_folders(save_folder, symbol):
     if not os.path.isdir(directory_dict["reports"] + "/" + symbol):
         os.mkdir(directory_dict["reports"] + "/" + symbol)
 
+def check_prediction_subfolders(nn_name):
+    if not os.path.isdir(f"""{directory_dict["save_predicts"]}/{nn_name}"""):
+        os.mkdir(f"""{directory_dict["save_predicts"]}/{nn_name}""")
+
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
         name = os.fsdecode(dirObject.name)

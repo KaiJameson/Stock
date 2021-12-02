@@ -78,6 +78,16 @@ def back_testing(test_year, test_month, test_day, test_days, params):
 
                 progress["percent_away_list"].append(p_diff)
                 progress["correct_direction_list"].append(correct_dir)
+                
+                for predictor in params["ENSEMBLE"]:
+                    if "nn" in predictor: 
+                        nn_name = get_model_name(params[predictor])
+                        # print(f"""params[predictor]["SAVE_PRED"] before {params[predictor]["SAVE_PRED"]}""")
+                        for sym in params[predictor]["SAVE_PRED"].copy():
+                            if sym != symbol:
+                                del params[predictor]["SAVE_PRED"][sym]
+                        # print(f"""params[predictor]["SAVE_PRED"] after {params[predictor]["SAVE_PRED"]}""")
+                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", params[predictor]["SAVE_PRED"])
             
 
             day_took = (time.perf_counter() - time_s)
@@ -89,10 +99,6 @@ def back_testing(test_year, test_month, test_day, test_days, params):
             progress["test_year"], progress["test_month"], progress["test_day"] = get_year_month_day(current_date)
 
             save_to_dictionary(directory_dict["backtest"] + "/" + "SAVE-" + test_name + ".txt", progress)
-            for predictor in params["ENSEMBLE"]:
-                    if "nn" in predictor: 
-                        nn_name = get_model_name(params[predictor])
-                        save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", params[predictor]["SAVE_PRED"])
 
         print("Percent away: " + str(progress["percent_away_list"]))
         print("Correct direction %: " + str(progress["correct_direction_list"]))
