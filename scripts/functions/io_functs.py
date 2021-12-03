@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from config.environ import test_money, directory_dict
-from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2
+from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2, check_prediction_subfolders
 from functions.time_functs import get_current_date_string, get_time_string, get_past_date_string
 from functions.tuner_functs import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
     EMA_comparator, pre_c_comparator, TSF_comparator)
@@ -121,6 +121,7 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     file.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
     file.write("and it predicted the correct direction " + avg_d + " percent of the time.\n")
     overall_epochs = []
+    all_epochs = 0
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
             overall_epochs.append(avg_e[predictor])
@@ -142,6 +143,12 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
         nn_tested = True
     if not nn_tested:
         file.write("NONE\n")
+
+    if current_money != None:
+        file.write(f"percent_away|{avg_p}\n")
+        file.write(f"correct_direction|{avg_d}\n")
+        file.write(f"epochs|{all_epochs}\n")
+        file.write(f"total_money|{current_money}\n")
 
     file.close()
 
@@ -219,11 +226,14 @@ def read_saved_contents(file_path, return_dict):
 
     file_contents = {}
     for line in f:
-        parts = line.strip().split("|")
-        file_contents[parts[0]] = parts[1]
+        if "|" in line:
+            parts = line.strip().split("|")
+            file_contents[parts[0]] = parts[1]
     f.close()
 
     for key in file_contents:
+        print(f"key {key}")
+        print(f"return dict[key] {return_dict[key]}")
         if type(return_dict[key]) == type("str"):
             return_dict[key] = file_contents[key]
         elif type(return_dict[key]) == type(0):
@@ -324,8 +334,11 @@ def load_saved_predictions(symbol, params, current_date, predictor):
         epochs = nn_params["SAVE_PRED"][symbol][s_current_date]["epochs"]
         return prediction, epochs
 
-    if os.path.isfile(f"""{directory_dict["save_predicts"]}/{nn_name}.txt"""):
-        nn_params["SAVE_PRED"] = read_saved_contents(f"""{directory_dict["save_predicts"]}/{nn_name}.txt""", nn_params["SAVE_PRED"])
+    check_prediction_subfolders(nn_name)
+    if os.path.isfile(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt"""):
+        print(f"""in load_saved {nn_params["SAVE_PRED"]}""")
+        print(f"""type of nn_params["SAVE_PRED"] {type(nn_params["SAVE_PRED"])}""")
+        nn_params["SAVE_PRED"] = read_saved_contents(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", nn_params["SAVE_PRED"])
     else:
         return None
 
@@ -340,7 +353,7 @@ def save_prediction(symbol, params, current_date, predictor, prediction, epochs)
     nn_params = params[predictor]
     s_current_date = get_past_date_string(current_date)
     
-    # print(nn_params["SAVE_PRED"])
+    print(f"""in save predeiciton {nn_params["SAVE_PRED"]}""")
     if s_current_date not in nn_params["SAVE_PRED"][symbol]:
         nn_params["SAVE_PRED"][symbol][s_current_date] = {"prediction": prediction, "epochs":epochs}
     elif nn_params["SAVE_PRED"][symbol][s_current_date] == {}:

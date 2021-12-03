@@ -114,9 +114,10 @@ def resume_running_training(pause_list):
 
 if __name__ == "__main__":
     s = time.perf_counter()
-    if sys.argv[1] == "paper":
-        print(f"~~~ Running load_run in paper testing mode ~~~")
-        load_trade(load_save_symbols, defaults, False)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "paper":
+            print(f"~~~ Running load_run in paper testing mode ~~~")
+            load_trade(load_save_symbols, defaults, False)
     else:
         print(f"~~~ Running load_run in real money mode ~~~")
         pause_list = pause_running_training()
