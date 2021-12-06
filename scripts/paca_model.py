@@ -32,6 +32,19 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1"):
         os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
         tf.config.optimizer.set_jit(True)
 
+    # os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
+    # os.environ["TF_GPU_THREAD_COUNT"] = "16"
+
+    # options = {"shape_optimization": True}
+    # tf.config.optimizer.set_experimental_options(options)
+    # os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2, --tf_xla_cpu_global_jit" # turns on xla and cpu xla
+    # tf.config.optimizer.set_jit(True)
+
+    # policy = tf.keras.mixed_precision.Policy('mixed_float16')
+    # tf.keras.mixed_precision.set_global_policy(policy)
+
+    
+
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(random_seed)
     tf.random.set_seed(random_seed)
@@ -158,8 +171,9 @@ def ensemble_predictor(symbol, params, current_date):
                     epochs_dict[predictor] = epochs_run
                     predicted_price = nn_load_predict(symbol, params, current_date, predictor)
                     save_prediction(symbol, params, current_date, predictor, predicted_price, epochs_run)
-            ensemb_predict_list.append(predicted_price)
+            ensemb_predict_list.append(np.float32(predicted_price))
 
+    print(ensemb_predict_list)
     # print(f"ensemb predict list {ensemb_predict_list}")
     final_prediction = mean(ensemb_predict_list)
     print(f"final pred {final_prediction}")

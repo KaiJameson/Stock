@@ -50,19 +50,20 @@ def change_params(index_dict, params):
     return new_params
 
 def get_user_input(tune_sym_dict, params):
+    print(tune_sym_dict)
     if len(sys.argv) > 1:
-        if sys.argv[1] == "tuning1":
+        if sys.argv[1] == "tune1":
             tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tuning2":
+        elif sys.argv[1] == "tune2":
             tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tuning3":
+        elif sys.argv[1] == "tune3":
             tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tuning4":
+        elif sys.argv[1] == "tune4":
             tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tuning5":
+        elif sys.argv[1] == "tune5":
             tune_symbols = tune_sym_dict[sys.argv[1]]
         else:
-            print("You must give this program an argument in the style of \"tuning#\"")
+            print("You must give this program an argument in the style of \"tune#\"")
             print("So that it knows what folder to save your models into.")
             print("Please try again")
             sys.exit(-1)

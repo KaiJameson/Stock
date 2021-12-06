@@ -40,7 +40,7 @@ def get_user_input():
                 sys.exit(-1)
         elif sys.argv[1] == "tuning":
             if len(sys.argv) > 2:
-                test_name = read_date_string(sys.argv[2])
+                test_name = sys.argv[2]
                 print(f"\n~~~Running tuning with test: {test_name}~~~")
                 make_tuning_sheet(test_name)
             else:
@@ -196,10 +196,10 @@ def make_tuning_sheet(test_name):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
     for symbol in real_test_symbols:
         extraction_dict = {
-            "percent_away": 0,
-            "correct_direction": 0,
-            "epochs": 0,
-            "total_money": 0
+            "percent_away": 0.0,
+            "correct_direction": 0.0,
+            "epochs": 0.0,
+            "total_money": 0.0
         }
 
         if os.path.isfile(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt"""):
@@ -210,7 +210,8 @@ def make_tuning_sheet(test_name):
             print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
             print(f"Are you feeling lucky yet?")
-    f = open(f"""{directory_dict["tune_summary"]}{test_name}""", "a")
+            
+    f = open(f"""{directory_dict["tune_summary"]}/{test_name}.txt""", "a")
     f.write(tune_text)
     f.close()
     print("~~~Task Complete~~~")

@@ -86,10 +86,11 @@ def model_first_layer(model, layers, ind, n_steps):
         print("Sorry buddy")
         sys.exit(-1)
 
-    if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
-        model.add(layers[ind][1](layers[ind][0], return_sequences=True, input_shape=(None, n_steps)))
-    else:
+    # if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
+    if (next_layer_name == "Dense"):
         model.add(layers[ind][1](layers[ind][0], return_sequences=False, input_shape=(None, n_steps)))
+    else:
+        model.add(layers[ind][1](layers[ind][0], return_sequences=True, input_shape=(None, n_steps)))
 
     return model
 
@@ -97,21 +98,33 @@ def model_hidden_layers(model, layers, ind):
     layer_name = layer_name_converter(layers[ind])
     next_layer_name = layer_name_converter(layers[ind + 1])
 
-    if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
+    if layer_name == "Dense":
         model.add(layers[ind][1](layers[ind][0]))
     else:
-        if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
-            model.add(layers[ind][1](layers[ind][0], return_sequences=True))
-        else:
+        if next_layer_name == "Dense":
             model.add(layers[ind][1](layers[ind][0], return_sequences=False))
+        else:
+            model.add(layers[ind][1](layers[ind][0], return_sequences=True))
+
+    # if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
+    #     model.add(layers[ind][1](layers[ind][0]))
+    # else:
+    #     if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
+    #         model.add(layers[ind][1](layers[ind][0], return_sequences=True))
+    #     else:
+    #         model.add(layers[ind][1](layers[ind][0], return_sequences=False))
 
     return model
 
 def model_last_layer(model, layers, ind):
     layer_name = layer_name_converter(layers[ind])
 
-    if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
+    # if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
+    #     model.add(layers[ind][1](layers[ind][0]))
+    if layer_name == "Dense":
         model.add(layers[ind][1](layers[ind][0]))
+    # elif layer_name == "ESN":
+    #     model.add(layers[ind][1](layers[ind][0]))
     else:
         model.add(layers[ind][1](layers[ind][0], return_sequences=False))
     

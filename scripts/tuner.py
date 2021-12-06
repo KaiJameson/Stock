@@ -101,11 +101,11 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 for predictor in params["ENSEMBLE"]:
                     if "nn" in predictor: 
                         nn_name = get_model_name(params[predictor])
-                        print(f"""params[predictor]["SAVE_PRED"] before {params[predictor]["SAVE_PRED"]}""")
+                        # print(f"""params[predictor]["SAVE_PRED"] before {params[predictor]["SAVE_PRED"]}""")
                         for sym in params[predictor]["SAVE_PRED"].copy():
                             if sym != symbol:
                                 del params[predictor]["SAVE_PRED"][sym]
-                        print(f"""params[predictor]["SAVE_PRED"] after {params[predictor]["SAVE_PRED"]}""")
+                        # print(f"""params[predictor]["SAVE_PRED"] after {params[predictor]["SAVE_PRED"]}""")
                         save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", params[predictor]["SAVE_PRED"])
 
             print("Percent away: " + str(progress["percent_away_list"]))
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     params = {
     "ENSEMBLE": ["nn1"],
     "TRADING": False,
-    "SAVE_FOLDER": "tuning4",
+    "SAVE_FOLDER": "tune4",
     "nn1" : { 
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
         "EPOCHS": 2000,
-        "PATIENCE": 100,
+        "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
         "TEST_VAR": "c",
