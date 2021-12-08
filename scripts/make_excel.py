@@ -4,7 +4,7 @@ from config.symbols import real_test_symbols
 from functions.time_functs import get_past_date_string, increment_calendar, make_Timestamp, read_date_string, get_current_datetime
 from functions.trade_functs import get_api
 from functions.time_functs import make_Timestamp
-from functions.functions import check_directories, get_correct_direction
+from functions.functions import check_directories, get_correct_direction, r2
 from functions.io_functs import read_saved_contents
 import datetime
 import os
@@ -40,7 +40,7 @@ def get_user_input():
                 sys.exit(-1)
         elif sys.argv[1] == "tuning":
             if len(sys.argv) > 2:
-                test_name = read_date_string(sys.argv[2])
+                test_name = sys.argv[2]
                 print(f"\n~~~Running tuning with test: {test_name}~~~")
                 make_tuning_sheet(test_name)
             else:
@@ -194,23 +194,30 @@ def make_PL_sheet(date, api):
 
 def make_tuning_sheet(test_name):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
+    total_time = 0
     for symbol in real_test_symbols:
         extraction_dict = {
-            "percent_away": 0,
-            "correct_direction": 0,
-            "epochs": 0,
-            "total_money": 0
+            "percent_away": 0.0,
+            "correct_direction": 0.0,
+            "epochs": 0.0,
+            "total_money": 0.0,
+            "time_so_far": 0.0
         }
 
         if os.path.isfile(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt"""):
+            print(f"""Opening the juicy file {directory_dict["tuning"]}/{symbol}-{test_name}.txt now""", flush=True)
             extraction_dict = read_saved_contents(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt""", extraction_dict)
             tune_text += (f"""{symbol}\t{extraction_dict["percent_away"]}\t{extraction_dict["correct_direction"]}\t"""
                           f"""{extraction_dict["epochs"]}\t{extraction_dict["total_money"]}\n""") 
+            total_time += extraction_dict["time_so_far"]
         else:
             print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
             print(f"Are you feeling lucky yet?")
-    f = open(f"""{directory_dict["tune_summary"]}{test_name}""", "a")
+            
+    tune_text += (f"\nTesting all of the days took {r2(total_time / 3600)} hours or {int(total_time // 3600)}:"
+        f"{int((total_time / 3600 - (total_time // 3600)) * 60)} minutes.\n")
+    f = open(f"""{directory_dict["tune_summary"]}/{test_name}.txt""", "a")
     f.write(tune_text)
     f.close()
     print("~~~Task Complete~~~")

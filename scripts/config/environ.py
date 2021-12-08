@@ -30,17 +30,6 @@ load_params = {
     "BATCH_SIZE": 1024,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "LOSS": "huber_loss",
-    "TEST_VAR": "c"
-}
-
-tree_params = {
-    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-    "LIMIT": 4000,
-    "BATCH_SIZE": 1024,
-    "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "LOSS": "huber_loss",
     "TEST_VAR": "c"
 }
 
@@ -51,7 +40,6 @@ comparator_params = {
     "BATCH_SIZE": 1024,
     "LOOKUP_STEP": 1,
     "TEST_SIZE": 0.2,
-    "LOSS": "huber_loss",
     "TEST_VAR": "c"
 }
 
@@ -103,7 +91,6 @@ defaults = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
@@ -121,7 +108,6 @@ defaults = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",

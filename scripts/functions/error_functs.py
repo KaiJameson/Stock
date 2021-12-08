@@ -13,11 +13,11 @@ def error_handler(symbol, exception):
 
 def net_error_handler(symbol, exception):
     err_file = open(error_file, "a")
-    err_file.write("\n EXCEPTION HANDLED \n")
+    err_file.write("EXCEPTION HANDLED\n")
     write_exception_details(err_file, symbol, exception)
     err_file.close()
     print("EXCEPTION HANDLED", flush=True)
-    time.sleep(3)
+    time.sleep(2)
     
 def write_exc_info(err_file):
     exit_info = sys.exc_info()

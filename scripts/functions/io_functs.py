@@ -149,6 +149,7 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
         file.write(f"correct_direction|{avg_d}\n")
         file.write(f"epochs|{all_epochs}\n")
         file.write(f"total_money|{current_money}\n")
+        file.write(f"time_so_far|{time_so_far}\n")
 
     file.close()
 
@@ -169,7 +170,6 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
     overall_epochs = []
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
-            print(avg_e[predictor])
             overall_epochs.append(avg_e[predictor])
     if overall_epochs:
         all_epochs = mean(overall_epochs)
@@ -232,8 +232,8 @@ def read_saved_contents(file_path, return_dict):
     f.close()
 
     for key in file_contents:
-        print(f"key {key}")
-        print(f"return dict[key] {return_dict[key]}")
+        # print(f"key {key}")
+        # print(f"return dict[key] {return_dict[key]}")
         if type(return_dict[key]) == type("str"):
             return_dict[key] = file_contents[key]
         elif type(return_dict[key]) == type(0):
@@ -336,8 +336,8 @@ def load_saved_predictions(symbol, params, current_date, predictor):
 
     check_prediction_subfolders(nn_name)
     if os.path.isfile(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt"""):
-        print(f"""in load_saved {nn_params["SAVE_PRED"]}""")
-        print(f"""type of nn_params["SAVE_PRED"] {type(nn_params["SAVE_PRED"])}""")
+        # print(f"""in load_saved {nn_params["SAVE_PRED"]}""")
+        # print(f"""type of nn_params["SAVE_PRED"] {type(nn_params["SAVE_PRED"])}""")
         nn_params["SAVE_PRED"] = read_saved_contents(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", nn_params["SAVE_PRED"])
     else:
         return None
@@ -353,7 +353,7 @@ def save_prediction(symbol, params, current_date, predictor, prediction, epochs)
     nn_params = params[predictor]
     s_current_date = get_past_date_string(current_date)
     
-    print(f"""in save predeiciton {nn_params["SAVE_PRED"]}""")
+    # print(f"""in save predeiciton {nn_params["SAVE_PRED"]}""")
     if s_current_date not in nn_params["SAVE_PRED"][symbol]:
         nn_params["SAVE_PRED"][symbol][s_current_date] = {"prediction": prediction, "epochs":epochs}
     elif nn_params["SAVE_PRED"][symbol][s_current_date] == {}:

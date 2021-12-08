@@ -50,6 +50,13 @@ def get_model_name(nn_params):
             f"""-pat{nn_params["PATIENCE"]}-batch{nn_params["BATCH_SIZE"]}-drop{nn_params["DROPOUT"]}"""
             f"""-ts{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")
 
+def get_dtree_name(dt_params):
+    return (f"""{dt_params["FEATURE_COLUMNS"]}-md{dt_params["MAX_DEPTH"]}-msl{dt_params["MIN_SAMP_LEAF"]}""")
+
+def get_rfore_name(rf_params):
+    return "implement me pls"
+
+
 def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
     for predictor in params["ENSEMBLE"]:
@@ -80,12 +87,14 @@ def layer_name_converter(layer):
     
     if str(layer[1]) == "<class 'keras.layers.recurrent_v2.LSTM'>":
         string += "LSTM"
-    elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent.SimpleRNN'>":
+    elif str(layer[1]) == "<class 'keras.layers.recurrent.SimpleRNN'>":
         string += "SRNN"
-    elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.recurrent_v2.GRU'>":
+    elif str(layer[1]) == "<class 'keras.layers.recurrent_v2.GRU'>":
         string += "GRU"
-    elif str(layer[1]) == "<class 'tensorflow.python.keras.layers.core.Dense'>":
+    elif str(layer[1]) == "<class 'keras.layers.core.dense.Dense'>":
         string += "Dense"
+    elif str(layer[1]) == "<class 'tensorflow_addons.layers.esn.ESN'>":
+        string += "ESN"
     else:
         string += str(layer[1])
 

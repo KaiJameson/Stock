@@ -388,13 +388,6 @@ def aquire_preprocess_data(symbol, params, end_date=None, scale=True, to_print=T
     result = {}
     result["df"] = df.copy()
 
-    # print("future: " + str(df["future"]))
-    # print("future: " + str(df["future"][0]))
-    # print("future: " + str(df["future"].values))
-    # if params["LOSS"] == "huber_loss":
-    #             print(df["future"].values)
-    #             df[column] = scaler.fit_transform(np.expand_dims(df[column].values, axis=1), df["future"])
-
     if scale:
         column_scaler = {}
         # scale the data (prices) from 0 to 1
@@ -405,11 +398,8 @@ def aquire_preprocess_data(symbol, params, end_date=None, scale=True, to_print=T
 
         result["column_scaler"] = column_scaler
 
-    if params["LOSS"] == "huber_loss":
-        df["future"] = df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
-    else:
-        df["future"] = df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
-        df["future"] = list(map(lambda current, future: int(float(future) > float(current)), df.c, df.future))
+    df["future"] = df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
+    
     # add the target column (label) by shifting by `lookup_step`\
 
     if "c" not in params["FEATURE_COLUMNS"]:
@@ -417,8 +407,8 @@ def aquire_preprocess_data(symbol, params, end_date=None, scale=True, to_print=T
 
     return df, result
 
-def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
-    df, result = aquire_preprocess_data(symbol, params, end_date, scale, to_print)
+def load_3D_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
+    df, result = aquire_preprocess_data(symbol, params, end_date, scale=scale, to_print=to_print)
     
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
@@ -456,26 +446,11 @@ def load_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
 
-    train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
-    valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
-    test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
-    
-    train = train.batch(params["BATCH_SIZE"])
-    valid = valid.batch(params["BATCH_SIZE"])
-    test = test.batch(params["BATCH_SIZE"])
-    
-    train = train.cache()
-    valid = valid.cache()
-    test = test.cache()
+    train, valid, test = make_tensor_slices(params, result)
 
-    train = train.prefetch(buffer_size=AUTOTUNE)
-    valid = valid.prefetch(buffer_size=AUTOTUNE)
-    test = test.prefetch(buffer_size=AUTOTUNE)
-
-    # return the result
     return result, train, valid, test
 
-def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, to_print=True):
+def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, tensorify=False, to_print=True):
     df, result = aquire_preprocess_data(symbol, params, end_date, scale, to_print)
 
     df.dropna(inplace=True)
@@ -489,4 +464,35 @@ def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, to_pri
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
     result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
 
-    return result
+    # print(result["X_test"])
+    # print(result["y_test"])
+
+    if tensorify:
+        train, valid, test = make_tensor_slices(params, result)
+        # print(test)
+        # print("after")
+        # print(f"""{result["X_test"]}\n{result["y_test"]}""")
+        return result, train, valid, test
+    else:
+        return result
+
+def make_tensor_slices(params, result):
+    train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))
+    valid = Dataset.from_tensor_slices((result["X_valid"], result["y_valid"]))
+    test = Dataset.from_tensor_slices((result["X_test"], result["y_test"]))
+
+    train = train.batch(params["BATCH_SIZE"])
+    valid = valid.batch(params["BATCH_SIZE"])
+    test = test.batch(params["BATCH_SIZE"])
+    
+    train = train.cache()
+    valid = valid.cache()
+    test = test.cache()
+
+    train = train.prefetch(buffer_size=AUTOTUNE)
+    valid = valid.prefetch(buffer_size=AUTOTUNE)
+    test = test.prefetch(buffer_size=AUTOTUNE)
+
+    return train, valid, test
+
+

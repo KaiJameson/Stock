@@ -5,15 +5,16 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import (directory_dict, random_seed, save_logs,
-defaults, load_params, tree_params)
+defaults, load_params)
 from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_date_string
-from functions.functions import get_model_name
+from functions.functions import get_model_name, layer_name_converter
 from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, load_model_with_data, predict, return_real_predict
-from functions.data_load_functs import load_data, make_dataframe, load_2D_data
+from functions.data_load_functs import load_3D_data, make_dataframe, load_2D_data
 from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 from statistics import mean
 import pandas as pd
 import talib as ta
@@ -28,9 +29,10 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1"):
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
 
-    if socket.gethostname() != "Orion":
-        os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit" # turns on xla and cpu xla
-        tf.config.optimizer.set_jit(True)
+    options = {"shape_optimization": True}
+    tf.config.optimizer.set_experimental_options(options)
+    os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2, --tf_xla_cpu_global_jit" # turns on xla and cpu xla
+    tf.config.optimizer.set_jit(True)
 
     # set seed, so we can get the same results after rerunning several times
     np.random.seed(random_seed)
@@ -44,16 +46,18 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1"):
     # model name to save, making it as unique as possible based on parameters
     model_name = (symbol + "-" + get_model_name(nn_params))
 
-    data, train, valid, test = load_data(symbol, nn_params, end_date)
+    first_layer = layer_name_converter(nn_params["LAYERS"][0])
+    if first_layer == "Dense":
+        data, train, valid, test = load_2D_data(symbol, nn_params, end_date, tensorify=True)
+    else:
+        data, train, valid, test = load_3D_data(symbol, nn_params, end_date)
 
     model = create_model(nn_params)
 
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
-    # if params["SAVELOAD"]:
-    checkpointer = ModelCheckpoint(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
-    # else:    
-    #     checkpointer = ModelCheckpoint(os.path.join("results", model_name + ".h5"), save_weights_only=True, save_best_only=True, verbose=1)
+    checkpointer = ModelCheckpoint(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" 
+        + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
     
     if save_logs:
         tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch="200, 1200") 
@@ -87,7 +91,8 @@ def configure_gpu():
 
 def nn_load_predict(symbol, params, current_date, predictor, to_print=False):
     data, model = load_model_with_data(symbol, current_date, params, predictor, to_print)
-    predicted_price = predict(model, data, params[predictor]["N_STEPS"], params[predictor]["TEST_VAR"])
+    predicted_price = predict(model, data, params[predictor]["N_STEPS"], params[predictor]["TEST_VAR"],
+        layer=params[predictor]["LAYERS"][0])
 
     return predicted_price
 
@@ -96,7 +101,8 @@ def ensemble_predictor(symbol, params, current_date):
     ensemb_predict_list = []
 
     epochs_dict = {}
-    df = make_dataframe(symbol, load_params["FEATURE_COLUMNS"], limit=load_params["LIMIT"], end_date=current_date, to_print=False)
+    df = make_dataframe(symbol, load_params["FEATURE_COLUMNS"], limit=load_params["LIMIT"], 
+        end_date=current_date, to_print=False)
 
     if not params["TRADING"]:
         if current_date:
@@ -130,20 +136,33 @@ def ensemble_predictor(symbol, params, current_date):
             predicted_price = np.float32(df["EMA"][len(df.c) - 1])
             ensemb_predict_list.append(predicted_price)
 
-        elif predictor == "DTREE":
-            df2D = load_2D_data(symbol, tree_params, current_date, shuffle=True, scale=True, to_print=False)
-            tree = DecisionTreeRegressor(min_samples_leaf=3)
+        elif "DTREE" in predictor:
+            df2D = load_2D_data(symbol, params[predictor], current_date, shuffle=True, 
+                scale=True, to_print=False)
+            tree = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
+                min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
             tree.fit(df2D["X_train"], df2D["y_train"])
-            # print(df2D["X_test"])
-            df2D = load_2D_data(symbol, tree_params, current_date, shuffle=False, scale=True, to_print=False)
+            df2D = load_2D_data(symbol, params[predictor], current_date, shuffle=False, 
+                scale=True, to_print=False)
             tree_pred = tree.predict(df2D["X_test"])
-            scale = df2D["column_scaler"][tree_params["TEST_VAR"]]
+            scale = df2D["column_scaler"][params[predictor]["TEST_VAR"]]
             tree_pred = np.array(tree_pred)
-            # print(f"before {tree_pred}")
             tree_pred = tree_pred.reshape(1, -1)
-            # print(f"after {tree_pred}")
             predicted_price = np.float32(scale.inverse_transform(tree_pred)[-1][-1])
-            # print(predicted_price)
+            ensemb_predict_list.append(predicted_price)
+
+        elif "RFORE" in predictor:
+            df2D = load_2D_data(symbol, params[predictor], current_date, shuffle=True, 
+                scale=True, to_print=False)
+            fore = RandomForestRegressor(n_estimators=100)
+            fore.fit(df2D["X_train"], df2D["y_train"])
+            df2D = load_2D_data(symbol, params[predictor], current_date, shuffle=False, 
+                scale=True, to_print=False)
+            fore_pred = fore.predict(df2D["X_test"])
+            scale = df2D["column_scaler"][params[predictor]["TEST_VAR"]]
+            fore_pred = np.array(fore_pred)
+            fore_pred = fore_pred.reshape(1, -1)
+            predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
             ensemb_predict_list.append(predicted_price)
 
         elif "nn" in predictor:
@@ -158,8 +177,9 @@ def ensemble_predictor(symbol, params, current_date):
                     epochs_dict[predictor] = epochs_run
                     predicted_price = nn_load_predict(symbol, params, current_date, predictor)
                     save_prediction(symbol, params, current_date, predictor, predicted_price, epochs_run)
-            ensemb_predict_list.append(predicted_price)
+            ensemb_predict_list.append(np.float32(predicted_price))
 
+    print(ensemb_predict_list)
     # print(f"ensemb predict list {ensemb_predict_list}")
     final_prediction = mean(ensemb_predict_list)
     print(f"final pred {final_prediction}")
