@@ -4,7 +4,7 @@ from config.symbols import load_save_symbols, do_the_trades
 from config.environ import directory_dict, defaults
 from functions.functions import check_directories, get_model_name, percent_from_real
 from functions.trade_functs import getOwnedStocks, buy_all_at_once
-from functions.data_load_functs import load_data
+from functions.data_load_functs import load_3D_data
 from functions.error_functs import error_handler
 from functions.io_functs import  make_load_run_excel, runtime_predict_excel
 from functions.time_functs import get_current_date_string

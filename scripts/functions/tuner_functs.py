@@ -50,7 +50,6 @@ def change_params(index_dict, params):
     return new_params
 
 def get_user_input(tune_sym_dict, params):
-    print(tune_sym_dict)
     if len(sys.argv) > 1:
         if sys.argv[1] == "tune1":
             tune_symbols = tune_sym_dict[sys.argv[1]]

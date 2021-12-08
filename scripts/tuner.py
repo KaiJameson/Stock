@@ -9,7 +9,7 @@ from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_
 from functions.time_functs import increment_calendar, get_actual_price
 from functions.error_functs import error_handler
 from functions.tuner_functs import grab_index, change_params, get_user_input, update_money
-from functions.data_load_functs import load_data
+from functions.data_load_functs import load_3D_data
 from functions.time_functs import get_past_datetime, get_year_month_day
 from paca_model import ensemble_predictor, configure_gpu
 from statistics import mean
@@ -54,7 +54,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
         if os.path.isfile(directory_dict["tuning"] + "/" + test_name + ".txt"):
             print("A fully completed file with the name " + test_name + " already exists.")
-            print("Exiting this instance of exhaustive tune now: ")
+            print("Exiting this instance of tuning now: ")
         
             continue
     
@@ -118,7 +118,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                     avg_e[predictor] = mean(progress["epochs_dict"][predictor])
             hold_money = r2(test_money * (current_price / starting_day_price))
 
-            data, train, valid, test = load_data(symbol, comparator_params, current_date, shuffle=False, scale=False, to_print=False)
+            data, train, valid, test = load_3D_data(symbol, comparator_params, current_date, shuffle=False, scale=False, to_print=False)
             comparator_results_excel(data, tune_days, directory_dict["tuning"], symbol)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         "EPOCHS": 2000,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         }

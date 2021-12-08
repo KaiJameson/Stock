@@ -28,7 +28,7 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
     for symbol in load_save_symbols:
         print(symbol, flush=True)
         for i in range(start_day, end_day):
-            data, train, valid, test = load_data(symbol, params=defaults["nn1"], end_date=None, shuffle=False, to_print=False)
+            data, train, valid, test = load_3D_data(symbol, params=defaults["nn1"], end_date=None, shuffle=False, to_print=False)
             if comparator == "7MA":
                 avg = MA_comparator(data, i, run_days)
             elif comparator == "lin_reg":
@@ -62,48 +62,61 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
 if __name__ == "__main__":
 
     params = {
-        "ENSEMBLE": ["nn1"],
+        "ENSEMBLE": ["RFORE1"],
         "TRADING": False,
         "SAVE_FOLDER": "tune4",
         "nn1" : { 
             "N_STEPS": 100,
             "LOOKUP_STEP": 1,
             "TEST_SIZE": 0.2,
-            "LAYERS": [(256, ESN), (256, ESN)],
-            "UNITS": 256,
+            "LAYERS": [(256, Dense), (256, Dense), (256, Dense), (256, Dense)],
             "DROPOUT": .4,
             "BIDIRECTIONAL": False,
             "LOSS": "huber_loss",
             "OPTIMIZER": "adam",
             "BATCH_SIZE": 1024,
             "EPOCHS": 2000,
-            "PATIENCE": 201,
+            "PATIENCE": 200,
             "SAVELOAD": True,
             "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "FEATURE_COLUMNS": ["c", "o"],
             "TEST_VAR": "c",
             "SAVE_PRED": {}
         },
         "DTREE1":{
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
             "MAX_DEPTH": 99,
-            "MIN_SAMP_LEAF": 1
+            "MIN_SAMP_LEAF": 1,
+            "LIMIT": 4000,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "TEST_VAR": "c"
+        },
+        "RFORE1":{
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "MAX_DEPTH": 99,
+            "MIN_SAMP_LEAF": 1,
+            "LIMIT": 4000,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "TEST_VAR": "c"
         }
     }
  
     # "macd", "macdsignal", "macdhist","balance_of_pow",  "parabolic_SAR_extended", "money_flow_ind", "7MA", "sc", "so", "sl", "sh", "sm", "sv"
  
-    tuning(tune_year, tune_month, tune_day, 1, params)
+    tuning(tune_year, tune_month, tune_day, 250, params)
     # ensemble_predictor("AGYS", params, get_current_datetime())
 
-    # year = 2021
-    # month = 5
-    # day = 15
-    # current_date = get_past_datetime(year, month, day)
-    # print(f"year {year} month {month} day {day}")
+    year = 2021
+    month = 5
+    day = 15
+    current_date = get_past_datetime(year, month, day)
+    print(f"year {year} month {month} day {day}")
 
-    # df, blah, bal, alalal = load_data("AMKR", params["nn1"], current_date,  to_print=False)
-    # df, train, valid, test = load_data("AGYS", params["nn1"], scale=False, shuffle=False, to_print=True)
+    # df, blah, bal, alalal = load_3D_data("AMKR", params["nn1"], current_date,  to_print=False)
+    # df, train, valid, test = load_3D_data("AGYS", params["nn1"], scale=False, shuffle=False, to_print=True)
+
     # s = time.perf_counter()
     # df2D = load_2D_data("AGYS", params["nn1"], end_date=current_date, shuffle=True, scale=True, to_print=False)
     # # reg = DecisionTreeRegressor(max_depth=5, min_samples_leaf=3)
@@ -129,7 +142,7 @@ if __name__ == "__main__":
     # fuck_me_symbols = ["AGYS", "AMKR","BG", "BGS", "CAKE", "CCJ", "DFS", "ELY", "FLEX", 
     #     "INTC", "JBLU", "LLNW", "NWL", "QCOM", "RDN", "SHO", "SMED", "STLD", "WERN", "ZION"]
     # for symbol in fuck_me_symbols:
-    #     df, blah, bal, alalal = load_data(symbol, params["nn1"], to_print=False)
+    #     df, blah, bal, alalal = load_3D_data(symbol, params["nn1"], to_print=False)
     #     print(symbol)
     #     print(f"{symbol}: {pre_c_comparator(df, 3000)}", flush=True)
 

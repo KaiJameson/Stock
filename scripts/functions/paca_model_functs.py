@@ -1,6 +1,6 @@
+from tensorflow.python.keras.layers.core import Activation
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
-from functions.functions import layer_name_converter
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.metrics import accuracy_score
@@ -10,8 +10,8 @@ from config.environ import (back_test_days, to_plot, test_money, stocks_traded, 
 from functions.time_functs import get_time_string, get_past_datetime
 from functions.io_functs import make_runtime_price, plot_graph, write_nn_report
 from functions.error_functs import error_handler
-from functions.data_load_functs import load_data
-from functions.functions import get_model_name
+from functions.data_load_functs import load_3D_data, load_2D_data
+from functions.functions import get_model_name, layer_name_converter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
@@ -61,7 +61,7 @@ def create_model(params):
     # print(bi_string)
     for layer in range(len(params["LAYERS"])):
         if layer == 0:
-            model_first_layer(model, params["LAYERS"], layer, params["N_STEPS"])
+            model_first_layer(model, params["LAYERS"], layer, params["N_STEPS"], params["FEATURE_COLUMNS"])
         elif layer == len(params["LAYERS"]) - 1:
             model_last_layer(model, params["LAYERS"], layer)
         else:
@@ -69,28 +69,23 @@ def create_model(params):
     
         model.add(Dropout(params["DROPOUT"]))
     model.add(Dense(1, activation="linear"))
-    if params["LOSS"] == "huber_loss":
-        model.compile(loss=params["LOSS"], metrics=["mean_absolute_error"], optimizer=params["OPTIMIZER"])
-    else:
-        model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=params["OPTIMIZER"])
-    # print(model.summary())
+    model.compile(loss=params["LOSS"], metrics=["mean_absolute_error"], optimizer=params["OPTIMIZER"])
+
     return model
 
-def model_first_layer(model, layers, ind, n_steps):
+def model_first_layer(model, layers, ind, n_steps, features):
     layer_name = layer_name_converter(layers[ind])
     next_layer_name = layer_name_converter(layers[ind + 1])
 
     if layer_name == "Dense":
-        print("You need to have a recurrent layer leading your model")
-        print("otherwise everything breaks, limitation of the loading code.")
-        print("Sorry buddy")
-        sys.exit(-1)
-
-    # if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
-    if (next_layer_name == "Dense"):
-        model.add(layers[ind][1](layers[ind][0], return_sequences=False, input_shape=(None, n_steps)))
+        model.add(layers[ind][1](layers[ind][0], activation="elu", input_shape=(None, len(features))))
     else:
-        model.add(layers[ind][1](layers[ind][0], return_sequences=True, input_shape=(None, n_steps)))
+        if next_layer_name == "Dense":
+            model.add(layers[ind][1](layers[ind][0], return_sequences=False, 
+                input_shape=(None, n_steps)))
+        else:
+            model.add(layers[ind][1](layers[ind][0], return_sequences=True, 
+                input_shape=(None, n_steps)))
 
     return model
 
@@ -99,32 +94,20 @@ def model_hidden_layers(model, layers, ind):
     next_layer_name = layer_name_converter(layers[ind + 1])
 
     if layer_name == "Dense":
-        model.add(layers[ind][1](layers[ind][0]))
+        model.add(layers[ind][1](layers[ind][0], activation="elu"))
     else:
         if next_layer_name == "Dense":
             model.add(layers[ind][1](layers[ind][0], return_sequences=False))
         else:
             model.add(layers[ind][1](layers[ind][0], return_sequences=True))
 
-    # if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
-    #     model.add(layers[ind][1](layers[ind][0]))
-    # else:
-    #     if (next_layer_name == "LSTM" or next_layer_name == "SRNN" or next_layer_name == "GRU"):
-    #         model.add(layers[ind][1](layers[ind][0], return_sequences=True))
-    #     else:
-    #         model.add(layers[ind][1](layers[ind][0], return_sequences=False))
-
     return model
 
 def model_last_layer(model, layers, ind):
     layer_name = layer_name_converter(layers[ind])
 
-    # if (not(layer_name == "LSTM" or layer_name == "SRNN" or layer_name == "GRU")):
-    #     model.add(layers[ind][1](layers[ind][0]))
     if layer_name == "Dense":
-        model.add(layers[ind][1](layers[ind][0]))
-    # elif layer_name == "ESN":
-    #     model.add(layers[ind][1](layers[ind][0]))
+        model.add(layers[ind][1](layers[ind][0], activation="elu"))
     else:
         model.add(layers[ind][1](layers[ind][0], return_sequences=False))
     
@@ -134,32 +117,50 @@ def load_model_with_data(symbol, current_date, params, predictor, to_print=False
     if params["TRADING"]:
         fast_params = copy.deepcopy(params)
         fast_params[predictor]["LIMIT"] = params[predictor]["N_STEPS"] * 2
-        data, train, valid, test = load_data(symbol, fast_params[predictor], current_date, shuffle=False, to_print=to_print)
+        if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
+            data = load_2D_data(symbol, fast_params[predictor], current_date, 
+                shuffle=False, to_print=to_print)
+        else:
+            data, train, valid, test = load_3D_data(symbol, fast_params[predictor], current_date, 
+                shuffle=False, to_print=to_print)
     else:
-        data, train, valid, test = load_data(symbol, params[predictor], current_date, shuffle=False, to_print=to_print)
+        if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
+            data = load_2D_data(symbol, params[predictor], current_date, 
+                shuffle=False, to_print=to_print)
+        else:
+            data, train, valid, test = load_3D_data(symbol, params[predictor], current_date, 
+            shuffle=False, to_print=to_print)
     model = create_model(params[predictor])
     model.load_weights(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" + 
         symbol + "-" + get_model_name(params[predictor]) + ".h5")
 
     return data, model
 
-def predict(model, data, n_steps, test_var="c", classification=False):
-    # retrieve the last sequence from data
-    last_sequence = data["last_sequence"][:n_steps]
-    # retrieve the column scalers
-    column_scaler = data["column_scaler"]
-    # reshape the last sequence
-    last_sequence = last_sequence.reshape((last_sequence.shape[1], last_sequence.shape[0]))
-    # expand dimension
-    last_sequence = np.expand_dims(last_sequence, axis=0)
-    # get the prediction (scaled from 0 to 1)
-    prediction = model.predict(last_sequence)
-
-    # get the price (by inverting the scaling)
+def predict(model, data, n_steps, test_var="c", classification=False, layer="LSTM"):
+    
     if not classification:
-        predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
+        column_scaler = data["column_scaler"]
+        
+        if layer_name_converter(layer) != "Dense":
+            last_sequence = data["last_sequence"][:n_steps]
+            # reshape the last sequence
+            last_sequence = last_sequence.reshape((last_sequence.shape[1], last_sequence.shape[0]))
+            # expand dimension
+            last_sequence = np.expand_dims(last_sequence, axis=0)
+            # get the prediction (scaled from 0 to 1)
+            prediction = model.predict(last_sequence)
+            predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
+            
+        else: 
+            print(data)
+            print(f"""what we put in {data["X_test"]}""")
+            prediction = model.predict(data["X_test"])
+            pred = np.array(prediction)
+            pred= pred.reshape(1, -1)
+            print(pred)
+            predicted_val = column_scaler[test_var].inverse_transform(pred)[-1][-1]
     else:
-        predicted_val = prediction[0][0]
+        pass
     return predicted_val
 
 def sentiment_data(df):
@@ -213,59 +214,43 @@ def sentiment_data(df):
             # splice text in the td tag into a list 
             date_scrape = x.td.text.split()
             # if the length of 'date_scrape' is 1, load 'time' as the only element
-
             if len(date_scrape) == 1:
                 the_time = date_scrape[0]
-                
             # else load 'date' as the 1st element and 'time' as the second    
             else:
                 date = date_scrape[0]
                 the_time = date_scrape[1]
             # Extract the ticker from the file name, get the string up to the 1st '_'  
             ticker = file_name.split('_')[0]
-            
             # Append ticker, date, time and headline as a list to the 'parsed_news' list
             parsed_news.append([ticker, date, the_time, text])
             
     parsed_news
 
     vader = SentimentIntensityAnalyzer()
-
     # Set column names
     columns = ['ticker', 'date', 'time', 'headline']
-
     # Convert the parsed_news list into a DataFrame called 'parsed_and_scored_news'
     parsed_and_scored_news = pd.DataFrame(parsed_news, columns=columns)
-
     # Iterate through the headlines and get the polarity scores using vader
     scores = parsed_and_scored_news['headline'].apply(vader.polarity_scores).tolist()
-
     # Convert the 'scores' list of dicts into a DataFrame
     scores_df = pd.DataFrame(scores)
-
     # Join the DataFrames of the news and the list of dicts
     parsed_and_scored_news = parsed_and_scored_news.join(scores_df, rsuffix='_right')
-
     # Convert the date column from string to datetime
     parsed_and_scored_news['date'] = pd.to_datetime(parsed_and_scored_news.date).dt.date
-
     print(parsed_and_scored_news)
-
     plt.rcParams['figure.figsize'] = [10, 6]
-
     # Group by date and ticker columns from scored_news and calculate the mean
     mean_scores = parsed_and_scored_news.groupby(['ticker','date']).mean()
-
     # Unstack the column ticker
     mean_scores = mean_scores.unstack()
-
     # Get the cross-section of compound in the 'columns' axis
     mean_scores = mean_scores.xs('compound', axis="columns").transpose()
-
     # Plot a bar chart with pandas
     mean_scores.plot(kind = 'bar')
     plt.grid()
-
 
     print("this took " + str(time.perf_counter() - time_s))
 

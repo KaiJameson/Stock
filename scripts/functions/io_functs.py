@@ -149,6 +149,7 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
         file.write(f"correct_direction|{avg_d}\n")
         file.write(f"epochs|{all_epochs}\n")
         file.write(f"total_money|{current_money}\n")
+        file.write(f"time_so_far|{time_so_far}\n")
 
     file.close()
 
