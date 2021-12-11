@@ -8,7 +8,7 @@ from functions.data_load_functs import load_3D_data
 from functions.error_functs import error_handler
 from functions.io_functs import  make_load_run_excel, runtime_predict_excel
 from functions.time_functs import get_current_date_string
-from functions.trade_functs import get_api
+from functions.trade_functs import get_toggleable_api
 from paca_model import configure_gpu, ensemble_predictor
 import tensorflow as tf
 import psutil
@@ -53,10 +53,10 @@ def load_trade(symbols, params, real_mon):
         print("Why are you running this if you don't want to do the trades?")
 
     runtime_predict_excel(symbols, pred_curr_list)
-    create_day_summary(symbols, params, pred_curr_list, results[0], results[1], results[2], results[3], results[4], results[5])
+    create_day_summary(symbols, params, pred_curr_list, results[0], results[1], results[2], results[3], results[4], results[5], real_mon)
 
-def create_day_summary(symbols, params, pred_curr_list, sold_list, hold_list, bought_list, account_equity, value_in_stocks_before, value_in_stocks_after):
-    api = get_api()
+def create_day_summary(symbols, params, pred_curr_list, sold_list, hold_list, bought_list, account_equity, value_in_stocks_before, value_in_stocks_after, real_mon):
+    api = get_toggleable_api(real_mon)
     account = api.get_account()
     day_text = "~~~ Symbols sold, hold, or bought ~~~\n"
     for symbol in sold_list:

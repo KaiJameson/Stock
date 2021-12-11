@@ -6,6 +6,7 @@ from tensorflow.keras.layers import LSTM
 directory_dict = {
     "backtest":          "../backtest",
     "config":            "../config",
+    "data":              "../data", 
     "day_summary":       "../excel/day_summary",
     "excel":             "../excel",
     "graph":             "../plots",

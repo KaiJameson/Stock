@@ -15,6 +15,7 @@ from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
 from statistics import mean
 import pandas as pd
 import talib as ta
@@ -22,6 +23,7 @@ import numpy as np
 import socket
 import random
 import os
+import time
 
 
 def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1"):
@@ -91,19 +93,22 @@ def configure_gpu():
 
 def nn_load_predict(symbol, params, current_date, predictor, to_print=False):
     data, model = load_model_with_data(symbol, current_date, params, predictor, to_print)
+    s = time.perf_counter()
     predicted_price = predict(model, data, params[predictor]["N_STEPS"], params[predictor]["TEST_VAR"],
         layer=params[predictor]["LAYERS"][0])
+    print(f"prediction {time.perf_counter() - s}")
 
     return predicted_price
 
 def ensemble_predictor(symbol, params, current_date):
-    pd.set_option("display.max_columns", None)
     ensemb_predict_list = []
 
     epochs_dict = {}
+    s = time.perf_counter()
     df = make_dataframe(symbol, load_params["FEATURE_COLUMNS"], limit=load_params["LIMIT"], 
         end_date=current_date, to_print=False)
-
+    print(f"make dataframe {time.perf_counter() - s}")
+    
     if not params["TRADING"]:
         if current_date:
             s_current_date = get_past_date_string(current_date)
@@ -165,9 +170,23 @@ def ensemble_predictor(symbol, params, current_date):
             predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
             ensemb_predict_list.append(predicted_price)
 
+        elif "KNN" in predictor:
+            df2D = load_2D_data(symbol, params[predictor], current_date, shuffle=True, 
+                scale=True, to_print=False)
+            knn = KNeighborsRegressor(n_neighbors=5)
+            knn.fit(df2D["X_train"], df2D["y_train"])
+            df2D = load_2D_data(symbol, params[predictor], current_date, shuffle=False, 
+                scale=True, to_print=False)
+            knn_pred = knn.predict(df2D["X_test"])
+            scale = df2D["column_scaler"][params[predictor]["TEST_VAR"]]
+            knn_pred = np.array(knn_pred)
+            knn_pred = knn_pred.reshape(1, -1)
+            predicted_price = np.float32(scale.inverse_transform(knn_pred)[-1][-1])
+            ensemb_predict_list.append(predicted_price)
+
         elif "nn" in predictor:
             if params["TRADING"]:
-                predicted_price = nn_load_predict(symbol, params, current_date,  predictor)
+                predicted_price = nn_load_predict(symbol, params, current_date, predictor)
             else:
                 if load_saved_predictions(symbol, params, current_date, predictor):
                     predicted_price, epochs_run = load_saved_predictions(symbol, params, current_date, predictor)
@@ -179,8 +198,7 @@ def ensemble_predictor(symbol, params, current_date):
                     save_prediction(symbol, params, current_date, predictor, predicted_price, epochs_run)
             ensemb_predict_list.append(np.float32(predicted_price))
 
-    print(ensemb_predict_list)
-    # print(f"ensemb predict list {ensemb_predict_list}")
+    print(f"ensemb predict list {ensemb_predict_list}")
     final_prediction = mean(ensemb_predict_list)
     print(f"final pred {final_prediction}")
     current_price = get_current_price(df)

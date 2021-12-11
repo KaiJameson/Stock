@@ -159,7 +159,7 @@ if __name__ == "__main__":
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
         "EPOCHS": 2000,
-        "PATIENCE": 200,
+        "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
         "TEST_VAR": "c",
