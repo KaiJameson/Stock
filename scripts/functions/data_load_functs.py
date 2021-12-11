@@ -138,10 +138,10 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "7MA" in feature_columns:
         df["7MA"] = df.c.rolling(window=7).mean()
     
-    if ("upper_band" or "lower_band") in feature_columns:
+    if ("up_band" or "low_band") in feature_columns:
         upperband, middleband, lowerband = ta.BBANDS(df.c, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
-        df["upper_band"] = upperband
-        df["lower_band"] = lowerband
+        df["up_band"] = upperband
+        df["low_band"] = lowerband
 
     if "OBV" in feature_columns:
         df["OBV"] = ta.OBV(df.c, df.v)
@@ -152,23 +152,23 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "lin_reg" in feature_columns:
         df["lin_reg"] = ta.LINEARREG(df.c, timeperiod=14)
 
-    if "lin_reg_angle" in feature_columns:
-        df["lin_reg_angle"] = ta.LINEARREG_ANGLE(df.c, timeperiod=14)
+    if "lin_reg_ang" in feature_columns:
+        df["lin_reg_ang"] = ta.LINEARREG_ANGLE(df.c, timeperiod=14)
 
-    if "lin_reg_intercept" in feature_columns:
-        df["lin_reg_intercept"] = ta.LINEARREG_INTERCEPT(df.c, timeperiod=14)
+    if "lin_reg_int" in feature_columns:
+        df["lin_reg_int"] = ta.LINEARREG_INTERCEPT(df.c, timeperiod=14)
 
     if "lin_reg_slope" in feature_columns:
         df["lin_reg_slope"] = ta.LINEARREG_SLOPE(df.c, timeperiod=14)
 
-    if "pearsons_correl" in feature_columns:
-        df["pearsons_correl"] = ta.CORREL(df.h, df.l, timeperiod=30)
+    if "pears_cor" in feature_columns:
+        df["pears_cor"] = ta.CORREL(df.h, df.l, timeperiod=30)
 
-    if "money_flow_ind" in feature_columns:
-        df["money_flow_ind"] = ta.MFI(df.h, df.l, df.c, df.v, timeperiod=14)
+    if "mon_flow_ind" in feature_columns:
+        df["mon_flow_ind"] = ta.MFI(df.h, df.l, df.c, df.v, timeperiod=14)
 
-    if "wills_r" in feature_columns:
-        df["wills_r"] = ta.WILLR(df.h, df.l, df.c, timeperiod=14)
+    if "willR" in feature_columns:
+        df["willR"] = ta.WILLR(df.h, df.l, df.c, timeperiod=14)
 
     if "std_dev" in feature_columns:
         df["std_dev"] = ta.STDDEV(df.c, timeperiod=5, nbdev=1)
@@ -178,15 +178,14 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
         df["min"] = minimum
         df["max"] = maximum
 
-    if "commodity_channel_ind" in feature_columns:
-        df["commodity_channel_ind"] = ta.CCI(df.h, df.l, df.c, timeperiod=14)
+    if "commod_chan_ind" in feature_columns:
+        df["commod_chan_ind"] = ta.CCI(df.h, df.l, df.c, timeperiod=14)
 
-    if "parabolic_SAR" in feature_columns:
-        df["parabolic_SAR"] = ta.SAR(df.h, df.l)
+    if "para_SAR" in feature_columns:
+        df["para_SAR"] = ta.SAR(df.h, df.l)
 
-    if "parabolic_SAR_extended" in feature_columns:
-        df["parabolic_SAR_extended"] = ta.SAREXT(df.h, df.l, startvalue=0, offsetonreverse=0, accelerationinitlong=0, 
-        accelerationlong=0, accelerationmaxlong=0, accelerationinitshort=0, accelerationshort=0, accelerationmaxshort=0)
+    if "para_SAR_ext" in feature_columns:
+        df["para_SAR_ext"] = ta.SAREXT(df.h, df.l)
 
     if "rate_of_change" in feature_columns:
         df["rate_of_change"] = ta.ROC(df.c, timeperiod=10)
@@ -209,8 +208,8 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "ht_trendline" in feature_columns:
         df["ht_trendline"] = ta.HT_TRENDLINE(df.c)
 
-    if "momentum" in feature_columns:
-        df["momentum"] = ta.MOM(df.c, timeperiod=10)
+    if "mom" in feature_columns:
+        df["mom"] = ta.MOM(df.c, timeperiod=10)
 
     if "abs_price_osc" in feature_columns:
         df["abs_price_osc"] = ta.APO(df.c, fastperiod=12, slowperiod=26, matype=0)
@@ -218,26 +217,26 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "KAMA" in feature_columns:
         df["KAMA"] = ta.KAMA(df.c, timeperiod=30)
 
-    if "typical_price" in feature_columns:    
-        df["typical_price"] = ta.TYPPRICE(df.h, df.l, df.c)
+    if "typ_price" in feature_columns:    
+        df["typ_price"] = ta.TYPPRICE(df.h, df.l, df.c)
 
-    if "ultimate_osc" in feature_columns:
-        df["ultimate_osc"] = ta.ULTOSC(df.h, df.l, df.c, timeperiod1=7, timeperiod2=14, timeperiod3=28)
+    if "ult_osc" in feature_columns:
+        df["ult_osc"] = ta.ULTOSC(df.h, df.l, df.c, timeperiod1=7, timeperiod2=14, timeperiod3=28)
 
-    if "chaikin_line" in feature_columns:
-        df["chaikin_line"] = ta.AD(df.h, df.l, df.c, df.v)
+    if "chai_line" in feature_columns:
+        df["chai_line"] = ta.AD(df.h, df.l, df.c, df.v)
 
-    if "chaikin_osc" in feature_columns:
-        df["chaikin_osc"] = ta.ADOSC(df.h, df.l, df.c, df.v, fastperiod=3, slowperiod=10)
+    if "chai_osc" in feature_columns:
+        df["chai_osc"] = ta.ADOSC(df.h, df.l, df.c, df.v, fastperiod=3, slowperiod=10)
 
-    if "norm_average_true_range" in feature_columns:
-        df["norm_average_true_range"] = ta.NATR(df.h, df.l, df.c, timeperiod=14)
+    if "norm_avg_true_range" in feature_columns:
+        df["norm_avg_true_range"] = ta.NATR(df.h, df.l, df.c, timeperiod=14)
 
     if "median_price" in feature_columns:
         df["median_price"] = ta.MEDPRICE(df.h, df.l)
 
-    if "variance" in feature_columns:
-        df["variance"] = ta.VAR(df.c, timeperiod=5, nbdev=1)
+    if "var" in feature_columns:
+        df["var"] = ta.VAR(df.c, timeperiod=5, nbdev=1)
 
     if ("aroon_down" or "aroon_up") in feature_columns:
         df["aroon_down"], df["aroon_up"] = ta.AROON(df.h, df.l, timeperiod=14)
@@ -245,56 +244,53 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "aroon_osc" in feature_columns:
         df["aroon_osc"] = ta.AROONOSC(df.h, df.l, timeperiod=14)
 
-    if "balance_of_pow" in feature_columns:
+    if "bal_of_pow" in feature_columns:
         df["balance_of_pow"] = ta.BOP(df.o, df.h, df.l, df.c)
 
-    if "chande_momen_osc" in feature_columns:    
-        df["chande_momen_osc"] = ta.CMO(df.c, timeperiod=14)
+    if "chande_mom_osc" in feature_columns:    
+        df["chande_mom_osc"] = ta.CMO(df.c, timeperiod=14)
 
-    if ("macd" or "macdsignal" or "macdhist") in feature_columns:
-        df["macd"], df["macdsignal"], df["macdhist"] = ta.MACD(df.c, fastperiod=12, slowperiod=26, signalperiod=9)
+    if ("MACD" or "MACD_signal" or "MACD_hist") in feature_columns:
+        df["MACD"], df["MACD_signal"], df["MACD_hist"] = ta.MACD(df.c, fastperiod=12, slowperiod=26, signalperiod=9)
 
-    if ("control_MACD" or "control_MACD_signal" or "control_MACD_hist") in feature_columns:
-        df["control_MACD"], df["control_MACD_signal"], df["control_MACD_hist"] = ta.MACDEXT(df.c, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
+    if ("con_MACD" or "con_MACD_signal" or "con_MACD_hist") in feature_columns:
+        df["con_MACD"], df["con_MACD_signal"], df["con_MACD_hist"] = ta.MACDEXT(df.c, fastperiod=12, fastmatype=0, slowperiod=26, slowmatype=0, signalperiod=9, signalmatype=0)
 
     if ("fix_MACD" or "fix_MACD_signal" or "fix_MACD_hist") in feature_columns:
         df["fix_MACD"], df["fix_MACD_signal"], df["fix_MACD_hist"] = ta.MACDFIX(df.c, signalperiod=9)
 
-    if "minus_directional_ind" in feature_columns:
-        df["minus_directional_ind"] = ta.MINUS_DI(df.h, df.l, df.c, timeperiod=14)
+    if "min_dir_ind" in feature_columns:
+        df["min_dir_ind"] = ta.MINUS_DI(df.h, df.l, df.c, timeperiod=14)
 
-    if "minus_directional_move" in feature_columns:
-        df["minus_directional_move"] = ta.MINUS_DM(df.h, df.l, timeperiod=14)
+    if "min_dir_mov" in feature_columns:
+        df["min_dir_mov"] = ta.MINUS_DM(df.h, df.l, timeperiod=14)
 
-    if "plus_directional_ind" in feature_columns:
-        df["plus_directional_ind"] = ta.PLUS_DI(df.h, df.l, df.c, timeperiod=14)
+    if "plus_dir_ind" in feature_columns:
+        df["plus_dir_ind"] = ta.PLUS_DI(df.h, df.l, df.c, timeperiod=14)
 
-    if "plus_directional_move" in feature_columns:
-        df["plus_directional_move"] = ta.PLUS_DM(df.h, df.l, timeperiod=14)
+    if "plus_dir_mov" in feature_columns:
+        df["plus_dir_mov"] = ta.PLUS_DM(df.h, df.l, timeperiod=14)
 
-    if "percentage_price_osc" in feature_columns:
-        df["percentage_price_osc"] = ta.PPO(df.c, fastperiod=12, slowperiod=26, matype=0)
+    if "per_price_osc" in feature_columns:
+        df["per_price_osc"] = ta.PPO(df.c, fastperiod=12, slowperiod=26, matype=0)
 
-    if ("stochas_fast_k" or "stochas_fast_d") in feature_columns:
-        df["stochas_fast_k"], df["stochas_fast_d"] = ta.STOCHF(df.h, df.l, df.c, fastk_period=5, fastd_period=3, fastd_matype=0)
+    if ("stoch_fast_k" or "stoch_fast_d") in feature_columns:
+        df["stoch_fast_k"], df["stoch_fast_d"] = ta.STOCHF(df.h, df.l, df.c, fastk_period=5, fastd_period=3, fastd_matype=0)
 
-    if ("stochas_relative_strength_k" or "stochas_relative_strength_d") in feature_columns:
-        df["stochas_relative_strength_k"], df["stochas_relative_strength_d"] = ta.STOCHRSI(df.c, fastk_period=5, fastd_period=3, fastd_matype=0)
+    if ("stoch_rel_stren_k" or "stoch_rel_stren_d") in feature_columns:
+        df["stoch_rel_stren_k"], df["stoch_rel_stren_d"] = ta.STOCHRSI(df.c, fastk_period=5, fastd_period=3, fastd_matype=0)
 
-    if ("stochas_slowk" or "stochas_slowd") in feature_columns:
-        df["stochas_slowk"], df["stochas_slowd"] = ta.STOCH(df.h, df.l, df.c, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
+    if ("stoch_slowk" or "stoch_slowd") in feature_columns:
+        df["stoch_slowk"], df["stoch_slowd"] = ta.STOCH(df.h, df.l, df.c, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
 
     if "TRIX" in feature_columns:
         df["TRIX"] = ta.TRIX(df.c, timeperiod=30)
 
-    if "weighted_moving_avg" in feature_columns:
-        df["weighted_moving_avg"] = ta.WMA(df.c, timeperiod=30)
+    if "weigh_mov_avg" in feature_columns:
+        df["weigh_mov_avg"] = ta.WMA(df.c, timeperiod=30)
 
-    if ("upband" or "midband" or "lowband") in feature_columns:
-        df["upband"], df["midband"], df["lowband"] = ta.BBANDS(df.c, timeperiod=5, nbdevup=2, nbdevdn=2, matype=0)
-
-    if "double_exponetial_moving_avg" in feature_columns:
-        df["double_exponetial_moving_avg"] = ta.DEMA(df.c, timeperiod=30)
+    if "DEMA" in feature_columns:
+        df["DEMA"] = ta.DEMA(df.c, timeperiod=30)
 
     if "EMA" in feature_columns:
         df["EMA"] = ta.EMA(df.c, timeperiod=5)
@@ -302,20 +298,20 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if ("MESA_mama" or "MESA_fama") in feature_columns:
         df["MESA_mama"], df["MESA_fama"] = ta.MAMA(df.c)
 
-    if "midpoint" in feature_columns:
-        df["midpoint"] = ta.MIDPOINT(df.c, timeperiod=14)
+    if "midpnt" in feature_columns:
+        df["midpnt"] = ta.MIDPOINT(df.c, timeperiod=14)
 
     if "midprice" in feature_columns:
         df["midprice"] = ta.MIDPRICE(df.h, df.l, timeperiod=14)
 
-    if "triple_exponential_moving_avg" in feature_columns:
-        df["triple_exponential_moving_avg"] = ta.TEMA(df.c, timeperiod=30)
+    if "triple_EMA" in feature_columns:
+        df["triple_EMA"] = ta.TEMA(df.c, timeperiod=30)
 
-    if "triangular_moving_avg" in feature_columns:
-        df["triangular_moving_avg"] = ta.TRIMA(df.c, timeperiod=30)
+    if "tri_MA" in feature_columns:
+        df["tri_MA"] = ta.TRIMA(df.c, timeperiod=30)
 
-    if "avg_directional_movement_index" in feature_columns:
-        df["avg_directional_movement_index"] = ta.ADX(df.h, df.l, df.c, timeperiod=14)
+    if "avg_dir_mov_ind" in feature_columns:
+        df["avg_dir_mov_ind"] = ta.ADX(df.h, df.l, df.c, timeperiod=14)
 
     if "true_range" in feature_columns:
         df["true_range"] = ta.TRANGE(df.h, df.l, df.c)
@@ -323,14 +319,14 @@ def make_dataframe(symbol, feature_columns, limit=1000, end_date=None, to_print=
     if "avg_price" in feature_columns:
         df["avg_price"] = ta.AVGPRICE(df.o, df.h, df.l, df.c)
 
-    if "weighted_c_price" in feature_columns:
-        df["weighted_c_price"] = ta.WCLPRICE(df.h, df.l, df.c)
+    if "weig_c_price" in feature_columns:
+        df["weig_c_price"] = ta.WCLPRICE(df.h, df.l, df.c)
 
     if "beta" in feature_columns:
         df["beta"] = ta.BETA(df.h, df.l, timeperiod=5)
 
     if "TSF" in feature_columns:
-        df["TSF"] = ta.TSF(df.c, timeperiod=17)
+        df["TSF"] = ta.TSF(df.c, timeperiod=14)
 
     if "day_of_week" in feature_columns:
         df = convert_date_values(df)
@@ -441,10 +437,9 @@ def load_3D_data(symbol, params, end_date=None, shuffle=True, scale=True, to_pri
     y = np.array(y)
     # reshape X to fit the neural network
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
-    
-    # split the dataset
-    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
-    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
+    print(f"len X {len(X)} len y {len(y)}")
+
+    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
 
     train, valid, test = make_tensor_slices(params, result)
 
@@ -461,11 +456,7 @@ def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, tensor
     X = np.array(X)
     y = np.array(y)
     
-    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(X, y, test_size=params["TEST_SIZE"], shuffle=shuffle)
-    result["X_valid"], result["X_test"], result["y_valid"], result["y_test"] = train_test_split(result["X_valid"], result["y_valid"], test_size=.006, shuffle=shuffle)
-
-    # print(result["X_test"])
-    # print(result["y_test"])
+    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
 
     if tensorify:
         train, valid, test = make_tensor_slices(params, result)
@@ -475,6 +466,19 @@ def load_2D_data(symbol, params, end_date=None, shuffle=True, scale=True, tensor
         return result, train, valid, test
     else:
         return result
+
+def split_data(X, y, test_size, shuffle, result):
+    print(f"""before split {len(result["df"])}""")
+    result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=2, random_state=42, 
+        shuffle=False)
+    print(f"""len train{len(result["X_train"])}  len test {len(result["X_test"])}""")
+    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(result["X_train"], result["y_train"],
+        test_size=test_size, random_state=42, shuffle=shuffle)
+    print(f"""len train{len(result["X_train"])} len valid {len(result["X_valid"])} len test {len(result["X_test"])}""")
+    # print(result["X_test"])
+    print(f"""result["y_test"] {result["y_test"]}""")
+
+    return result
 
 def make_tensor_slices(params, result):
     train = Dataset.from_tensor_slices((result["X_train"], result["y_train"]))

@@ -117,12 +117,14 @@ def load_model_with_data(symbol, current_date, params, predictor, to_print=False
     if params["TRADING"]:
         fast_params = copy.deepcopy(params)
         fast_params[predictor]["LIMIT"] = params[predictor]["N_STEPS"] * 2
+        s = time.perf_counter()
         if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
             data = load_2D_data(symbol, fast_params[predictor], current_date, 
                 shuffle=False, to_print=to_print)
         else:
             data, train, valid, test = load_3D_data(symbol, fast_params[predictor], current_date, 
                 shuffle=False, to_print=to_print)
+        print(f"loading data {time.perf_counter() - s} with {predictor}")
     else:
         if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
             data = load_2D_data(symbol, params[predictor], current_date, 
@@ -130,10 +132,11 @@ def load_model_with_data(symbol, current_date, params, predictor, to_print=False
         else:
             data, train, valid, test = load_3D_data(symbol, params[predictor], current_date, 
             shuffle=False, to_print=to_print)
+    s = time.perf_counter()
     model = create_model(params[predictor])
     model.load_weights(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" + 
         symbol + "-" + get_model_name(params[predictor]) + ".h5")
-
+    print(f"model loading {time.perf_counter() - s}")
     return data, model
 
 def predict(model, data, n_steps, test_var="c", classification=False, layer="LSTM"):
