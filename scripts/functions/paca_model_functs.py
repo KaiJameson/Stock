@@ -113,31 +113,6 @@ def model_last_layer(model, layers, ind):
     
     return model
 
-def load_model_with_data(symbol, current_date, params, predictor, to_print=False):
-    if params["TRADING"]:
-        fast_params = copy.deepcopy(params)
-        fast_params[predictor]["LIMIT"] = params[predictor]["N_STEPS"] * 2
-        s = time.perf_counter()
-        if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
-            data = load_2D_data(symbol, fast_params[predictor], current_date, 
-                shuffle=False, to_print=to_print)
-        else:
-            data, train, valid, test = load_3D_data(symbol, fast_params[predictor], current_date, 
-                shuffle=False, to_print=to_print)
-        print(f"loading data {time.perf_counter() - s} with {predictor}")
-    else:
-        if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
-            data = load_2D_data(symbol, params[predictor], current_date, 
-                shuffle=False, to_print=to_print)
-        else:
-            data, train, valid, test = load_3D_data(symbol, params[predictor], current_date, 
-            shuffle=False, to_print=to_print)
-    s = time.perf_counter()
-    model = create_model(params[predictor])
-    model.load_weights(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" + 
-        symbol + "-" + get_model_name(params[predictor]) + ".h5")
-    print(f"model loading {time.perf_counter() - s}")
-    return data, model
 
 def predict(model, data, n_steps, test_var="c", classification=False, layer="LSTM"):
     
@@ -152,7 +127,7 @@ def predict(model, data, n_steps, test_var="c", classification=False, layer="LST
             last_sequence = np.expand_dims(last_sequence, axis=0)
             # get the prediction (scaled from 0 to 1)
             prediction = model.predict(last_sequence)
-            predicted_val = column_scaler[test_var].inverse_transform(prediction)[0][0]
+            predicted_val = column_scaler["future"].inverse_transform(prediction)[0][0]
             
         else: 
             print(data)
@@ -161,7 +136,7 @@ def predict(model, data, n_steps, test_var="c", classification=False, layer="LST
             pred = np.array(prediction)
             pred= pred.reshape(1, -1)
             print(pred)
-            predicted_val = column_scaler[test_var].inverse_transform(pred)[-1][-1]
+            predicted_val = column_scaler["future"].inverse_transform(pred)[-1][-1]
     else:
         pass
     return predicted_val

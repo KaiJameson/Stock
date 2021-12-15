@@ -110,7 +110,6 @@ def EMA_comparator(df, timeperiod, run_days):
 def TSF_comparator(df, timeperiod, run_days):
     df = df["df"]
     df["TSF"] = ta.TSF(df.c, timeperiod=timeperiod)
-    print(f"in TSF {df}")
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "TSF", run_days)
 
     return avg_p, avg_d, current_money

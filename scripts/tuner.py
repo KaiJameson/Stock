@@ -7,7 +7,7 @@ from functions.functions import check_directories, delete_files_in_folder, get_c
 from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price
-from functions.error_functs import error_handler
+from functions.error_functs import error_handler, keyboard_interrupt
 from functions.tuner_functs import grab_index, change_params, get_user_input, update_money
 from functions.data_load_functs import load_3D_data
 from functions.time_functs import get_past_datetime, get_year_month_day
@@ -49,13 +49,12 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
         print(test_name)
         print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
-        starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) - datetime.timedelta(1)), 
-            api, symbol)
+        starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
+            - datetime.timedelta(1)), api, symbol)
 
         if os.path.isfile(directory_dict["tuning"] + "/" + test_name + ".txt"):
             print("A fully completed file with the name " + test_name + " already exists.")
             print("Exiting this instance of tuning now: ")
-        
             continue
     
         # check if we already have a save file, if we do, extract the info and run it
@@ -133,10 +132,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
 
         except KeyboardInterrupt:
-                    print("I acknowledge that you want this to stop.")
-                    print("Thy will be done.")
-                    sys.exit(-1)
-
+            keyboard_interrupt()
         except Exception:
             error_handler(symbol, Exception)
 
@@ -144,7 +140,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 if __name__ == "__main__":
     check_directories()
     params = {
-    "ENSEMBLE": ["nn1"],
+    "ENSEMBLE": ["nn1", "nn2", "DTREE1", "sav_gol"],
     "TRADING": False,
     "SAVE_FOLDER": "tune4",
     "nn1" : { 
@@ -161,9 +157,36 @@ if __name__ == "__main__":
         "EPOCHS": 2000,
         "PATIENCE": 100,
         "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn2" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "UNITS": 256,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 100,
+        "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
         "TEST_VAR": "c",
         "SAVE_PRED": {}
+        },
+    "DTREE1" : {
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
+            "MAX_DEPTH": 10,
+            "MIN_SAMP_LEAF": 1,
+            "LIMIT": 4000,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "TEST_VAR": "c"
         }
     }
 

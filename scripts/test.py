@@ -20,6 +20,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from tensorflow_addons.layers import ESN
 from iexfinance.stocks import Stock, get_historical_data
 import requests
+import copy
 
 
 def backtest_comparator(start_day, end_day, comparator, run_days):
@@ -92,16 +93,15 @@ if __name__ == "__main__":
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
             "MAX_DEPTH": 99,
             "MIN_SAMP_LEAF": 1,
-            "LIMIT": 4000,
             "LOOKUP_STEP": 1,
             "TEST_SIZE": 0.2,
             "TEST_VAR": "c"
         },
         "RFORE1" : {
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "N_ESTIMATORS": 100,
             "MAX_DEPTH": 99,
             "MIN_SAMP_LEAF": 1,
-            "LIMIT": 4000,
             "LOOKUP_STEP": 1,
             "TEST_SIZE": 0.2,
             "TEST_VAR": "c"
@@ -109,7 +109,6 @@ if __name__ == "__main__":
         "KNN1" : {
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
             "N_NEIGHBORS": 5,
-            "LIMIT": 4000,
             "LOOKUP_STEP":1,
             "TEST_SIZE": 0.2,
             "TEST_VAR": "c"
@@ -169,63 +168,116 @@ if __name__ == "__main__":
     #  
     # check to see that all calendar testing days are in df
     #
-    # def idk(symbol, output_size):
-    #     load_dictionary = {
-    #         "1. open": {},
-    #         "2. high": {},
-    #         "3. low": {},
-    #         "4. close": {},
-    #         "5. adjusted close": {},
-    #         "6. volume": {},
-    #         "7. dividend amount": {},
-    #         "8. split coefficient": {}
-    #     }
-    #     if os.path.isfile(f"""{directory_dict["data"]}/{symbol}.txt"""):
-    #         load_dictionary = read_saved_contents("""{directory_dict["data"]}/symbol.txt""", load_dictionary)
-    #         df = pd.DataFrame(load_dictionary)
-    #     else:
-    #         df = get_alpha_dataframe(symbol, output_size)
 
-    # features = ["sc", "so", "sl", "sh", "m", "sv", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", "pears_cor",
-    #     "mon_flow_ind", "willR", "std_dev", "min", "max", "commod_chan_ind", "para_SAR", "para_SAR_ext", "rate_of_change", "ht_dcperiod", "ht_trendmode",
-    #     "ht_dcphase", "ht_inphase", "quadrature", "ht_sine", "ht_leadsine", "ht_trendline", "mom", "abs_price_osc", "KAMA", "typ_price", "ult_osc", "chai_line",
-    #     "chai_osc", "norm_avg_true_range", "median_price", "var", "aroon_down", "aroon_up", "aroon_osc", "bal_of_pow", "chande_mom_osc", "MACD", "MACD_signal",
-    #     "MACD_hist", "con_MACD", "con_MACD_signal", "con_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "min_dir_ind", "min_dir_mov", "plus_dir_ind",
-    #     "plus_dir_mov", "per_price_osc", "stoch_fast_k", "stoch_fast_d", "stoch_rel_stren_k", "stoch_rel_stren_d", "stoch_slowk", "stoch_slowd", "TRIX",
-    #     "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_dir_mov_ind", "true_range", "avg_price",
-    #     "weig_c_price", "beta", "TSF", "day_of_week"]
-
-    # def modify_dataframe(features, df):
-    #     base_features = ["o", "c", "l", "h", "v"]
-    #     for feature in features:
-    #         if feature not in base_features:
-    #             if techs_dict[feature]:
-    #                 print(feature)
-    #                 # df = techs_dict[feature]["function"](feature, df)
-    #                 techs_dict[feature]["function"](feature, df)
-    #             else:
-    #                 print("Feature is not in the technical indicators dictionary. That sucks, probably")
-
-    #     print(df)
-
-    # df = get_alpaca_data("AGYS", None, get_api(), limit=4000)
-    # s = time.perf_counter()
-    # modify_dataframe(features, df)
-    # print(f"modifications time!!! {time.perf_counter() - s}")
-
-
-    # def get_alpha_dataframe(symbol, output_size):
-    #     url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize={output_size}&apikey={alpha_key}"
-    #     r = requests.get(url)
-    #     data = r.json()
-    #     df = pd.DataFrame(data["Time Series (Daily)"])
-    #     df = df.transpose()
-    #     df_dict = df.to_dict()
-    #     save_to_dictionary("../tmp.txt", df_dict)
-        
-    #     return df
+    features = ["sc", "so", "sl", "sh", "m", "sv", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", "pears_cor",
+        "mon_flow_ind", "willR", "std_dev", "min", "max", "commod_chan_ind", "para_SAR", "para_SAR_ext", "rate_of_change", "ht_dcperiod", "ht_trendmode",
+        "ht_dcphase", "ht_inphase", "quadrature", "ht_sine", "ht_leadsine", "ht_trendline", "mom", "abs_price_osc", "KAMA", "typ_price", "ult_osc", "chai_line",
+        "chai_osc", "norm_avg_true_range", "median_price", "var", "aroon_down", "aroon_up", "aroon_osc", "bal_of_pow", "chande_mom_osc", "MACD", "MACD_signal",
+        "MACD_hist", "con_MACD", "con_MACD_signal", "con_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "min_dir_ind", "min_dir_mov", "plus_dir_ind",
+        "plus_dir_mov", "per_price_osc", "stoch_fast_k", "stoch_fast_d", "stoch_rel_stren_k", "stoch_rel_stren_d", "stoch_slowk", "stoch_slowd", "TRIX",
+        "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_dir_mov_ind", "true_range", "avg_price",
+        "weig_c_price", "beta", "TSF", "day_of_week"]
 
     
+
+    def get_calendar(current_date, api, symbol):
+        got_cal= False
+        while not got_cal:    
+            try:
+                calendar = api.get_calendar(start=current_date, end=get_current_datetime())
+                got_cal = True
+
+            except KeyboardInterrupt:
+                keyboard_interrupt()
+            except Exception:
+                error_handler(symbol, Exception)
+        
+        return calendar
+
+    def increment_calendar(current_date, calendar):
+        # print(calendar)
+        # print(f"incoming current_date {current_date}")
+        # print(calendar[0].date.date())
+        for day, ele in enumerate(calendar):
+            # print(f" day {day}")
+            # print(f" ele {ele}")
+            if calendar[day].date.date() == current_date:
+
+                # print(calendar[day + 1].date.date())
+                current_date = calendar[day + 1].date.date()
+                return current_date
+
+        current_date = calendar[0].date.date()
+        # print(current_date)
+        return current_date
+
+
+    df = get_proper_df("AGYS", 0, "training")
+    
+    result = load_2D_data(params["DTREE1"], df)
+    print(result)
+    print(result["X_train"].shape[0])
+    
+
+    
+
+    current_date = get_past_datetime(tune_year, tune_month, tune_day)
+
+    api = get_api()
+    cal = get_calendar(current_date, api, "AGYS")
+    
+
+    print(current_date)
+    s = time.perf_counter()
+    master_df = get_alpha_df("AGYS", "full")
+    print(f"you get the idea {time.perf_counter() - s}")
+
+    def df_subset(df):
+        df_sub = copy.deepcopy(df)
+        if type(df_sub.index[0]) == type(""):
+            df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+        df_sub = df_sub[df_sub.index <= get_past_date_string(current_date)]
+        
+        return df_sub
+
+    def get_actual_price(current_date, df, cal):
+        df_sub = copy.deepcopy(df)
+        if type(df_sub.index[0]) == type(""):
+            df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+        cd_copy = copy.copy(current_date)
+        cd_copy = increment_calendar(cd_copy, cal)
+        
+        return (df_sub.loc[get_past_date_string(cd_copy)]["c"].values[0])
+        
+
+    # df = df_subset(master_df)
+    # print(f"subset df\n{df}")
+    # print(f"master df\n{master_df}")
+
+    # print(get_actual_price(current_date, master_df, cal))
+
+
+    
+
+    def store_sci_predictors(params, data_dict, saved_models):
+        for predictor in params["ENSEMBLE"]:
+            if "DTREE" in predictor:
+                tree = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
+                    min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
+                tree.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])     
+                saved_models[predictor] = tree         
+            # elif "RFORE" in predictor:
+
+            # elif "KNN" in predictor:
+
+        return saved_models
+
+
+    
+
+        
+
+
 
     """
     LOAD ALL DATA
@@ -246,9 +298,8 @@ if __name__ == "__main__":
     
     """
 
-    # "macd", "macdsignal", "macdhist","balance_of_pow",  "parabolic_SAR_extended", "money_flow_ind", "7MA", "sc", "so", "sl", "sh", "sm", "sv"
  
-    tuning(tune_year, tune_month, tune_day, 250, params)
+    # tuning(tune_year, tune_month, tune_day, 250, params)
 
     # year = 2021
     # month = 5
