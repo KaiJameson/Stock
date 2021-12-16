@@ -132,6 +132,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             tree = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
                 min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
             tree.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
+            print(f"""length of the data{len(data_dict[predictor]["X_train"])}""")
             tree_pred = tree.predict(data_dict[predictor]["X_test"])
             scale =data_dict[predictor]["column_scaler"]["future"]
             tree_pred = np.array(tree_pred)
@@ -165,7 +166,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
                     predicted_price, epochs_run = load_saved_predictions(symbol, params, current_date, predictor)
                     epochs_dict[predictor] = epochs_run
                 else:
-                    epochs_run = nn_train_save(symbol, params, current_date, predictor)
+                    epochs_run = nn_train_save(symbol, params, current_date, predictor, data_dict[predictor])
                     epochs_dict[predictor] = epochs_run
                     predicted_price = nn_load_predict(symbol, params, predictor, data_dict[predictor])
                     save_prediction(symbol, params, current_date, predictor, predicted_price, epochs_run)
@@ -184,7 +185,7 @@ def ensemble_accuracy(symbol, params, current_date, classification=False):
         if "nn" in predictor:
             pass
             # data, model = load_model_with_data(symbol, current_date, params, predictor)
-
+            model = {}
             # get_all_accuracies(model, data, params[predictor["LOOKUP_STEP"]], params[predictor["TEST_VAR"]])
 
             y_train_real, y_train_pred = return_real_predict(model, data["X_train"], data["y_train"], 

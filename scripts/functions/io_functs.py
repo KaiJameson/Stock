@@ -199,8 +199,9 @@ def print_model_params(params, predictor, avg_e):
     print("Feature Columns: " + str(params["FEATURE_COLUMNS"]))
     print(f"The model used an average of {r2(avg_e)} epochs.\n")
 
-def comparator_results_excel(df, run_days, directory, stock):
-    directory_string = f"{directory}/{stock}-comparison.txt"
+def comparator_results_excel(df, run_days, stock):
+    # directory_string = f"{directory}/{stock}-comparison.txt"
+    directory_string = f"""{directory_dict["comparator_results"]}/{stock}-comparison.txt"""
     if not os.path.isfile(directory_string):
         f = open(directory_string, "a")
     else:

@@ -5,6 +5,7 @@ from tensorflow.keras.layers import LSTM
 
 directory_dict = {
     "backtest":          "../backtest",
+    "comparator_results" "../tuning/comparators"
     "config":            "../config",
     "data":              "../data", 
     "day_summary":       "../excel/day_summary",
@@ -97,7 +98,7 @@ defaults = {
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
-        "EPOCHS": 2000,
+        "EPOCHS": 10,
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
@@ -114,7 +115,7 @@ defaults = {
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
-        "EPOCHS": 2000,
+        "EPOCHS": 10,
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],

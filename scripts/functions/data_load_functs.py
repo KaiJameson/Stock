@@ -1,6 +1,6 @@
 from config.environ import directory_dict
 from config.api_key import alpha_key
-from functions.time_functs import make_Timestamp, get_trade_day_back, get_full_end_date
+from functions.time_functs import get_past_date_string
 from functions.error_functs import  net_error_handler, keyboard_interrupt
 from functions.trade_functs import get_api
 from functions.time_functs import modify_timestamp, get_current_datetime, get_past_datetime
@@ -46,10 +46,10 @@ def modify_dataframe(features, df):
         if feature not in features and feature in list(df.columns):
             df = df.drop(columns=[feature])
 
-    # pd.set_option("display.max_columns", None)
+    pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
-    # print(df.head(1))
-    # print(df.tail(1))
+    print(df.head(1))
+    print(df.tail(1))
     # print(df)
 
     return df
@@ -98,21 +98,27 @@ def get_alpha_df(symbol, output_size):
         "div": {},
         "split": {}
     }
+    # print(f"""{directory_dict["data"]}/{symbol}.txt""")
     if os.path.isfile(f"""{directory_dict["data"]}/{symbol}.txt"""):
         load_dictionary = read_saved_contents(f"""{directory_dict["data"]}/{symbol}.txt""", load_dictionary)
         df = pd.DataFrame(load_dictionary, dtype=np.float32)
         # TODO check for whether or not this is up to date and then update it
     else:
-        no_connection = False
-        while no_connection:
+        connection = False
+        # print("hehe")
+        while not connection:
+            # print("hello", flush=True)
             try:
                 df = download_alpha_df(symbol, output_size)
-                no_connection = True
+                connection = True
             except KeyboardInterrupt:
                 keyboard_interrupt()
             except Exception:
                 net_error_handler(symbol, Exception)
-
+    
+    df = df.iloc[::-1]
+    print(df.head(1))
+    print(df.tail(1))
     return df
 
 def download_alpha_df(symbol, output_size):
@@ -132,8 +138,8 @@ def download_alpha_df(symbol, output_size):
     df = df.transpose()
     df = df.rename(columns={"1. open": "o", "2. high": "h", "3. low": "l", "4. close": "c", "5. adjusted close": "adj_c",
         "6. volume": "v", "7. dividend amount": "div","8. split coefficient": "split"})
-    print(df.head(1))
-    print(df.tail(1))
+    # print(df.head(1))
+    # print(df.tail(1))
     df_dict = df.to_dict()
     save_to_dictionary(f"""{directory_dict["data"]}/{symbol}.txt""", df_dict)
     
@@ -150,22 +156,21 @@ def get_proper_df(symbol, limit, option):
 def load_all_data(params, df):
     data_dict = {}
     req_2d = ["DTREE1", "RFORE1", "KNN1"]
-    types_to_load = []
 
     for predictor in params["ENSEMBLE"]:
-        if predictor in req_2d and "2D" not in types_to_load:
+        if predictor in req_2d:
             result = load_2D_data(params[predictor], df, tensorify=False)
             data_dict[predictor] = result
         elif "nn" in predictor:
-            if (layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense"
-                and "2D_tensor" not in types_to_load):
+            if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
                 result, train, valid, test = load_2D_data(params[predictor], df, tensorify=True)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
-            elif "3D_tensor" not in types_to_load:
+            else:
                 result, train, valid, test = load_3D_data(params[predictor], df)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
+                # print(data_dict[predictor])
 
     return data_dict
 
@@ -280,5 +285,13 @@ def make_tensor_slices(params, result):
     test = test.prefetch(buffer_size=AUTOTUNE)
 
     return train, valid, test
+
+def df_subset(current_date, df):
+    df_sub = copy.deepcopy(df)
+    if type(df_sub.index[0]) == type(""):
+        df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+    df_sub = df_sub[df_sub.index <= get_past_date_string(current_date)]
+    
+    return df_sub
 
 

@@ -210,6 +210,7 @@ def make_tuning_sheet(test_name):
             tune_text += (f"""{symbol}\t{extraction_dict["percent_away"]}\t{extraction_dict["correct_direction"]}\t"""
                           f"""{extraction_dict["epochs"]}\t{extraction_dict["total_money"]}\n""") 
             total_time += extraction_dict["time_so_far"]
+            print(extraction_dict)
         else:
             print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")

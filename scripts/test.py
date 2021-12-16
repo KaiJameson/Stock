@@ -94,7 +94,7 @@ if __name__ == "__main__":
             "MAX_DEPTH": 99,
             "MIN_SAMP_LEAF": 1,
             "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
+            "TEST_SIZE": 1,
             "TEST_VAR": "c"
         },
         "RFORE1" : {
@@ -103,14 +103,14 @@ if __name__ == "__main__":
             "MAX_DEPTH": 99,
             "MIN_SAMP_LEAF": 1,
             "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
+            "TEST_SIZE": 1,
             "TEST_VAR": "c"
         },
         "KNN1" : {
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
             "N_NEIGHBORS": 5,
             "LOOKUP_STEP":1,
-            "TEST_SIZE": 0.2,
+            "TEST_SIZE": 1,
             "TEST_VAR": "c"
         }
     }
@@ -178,83 +178,6 @@ if __name__ == "__main__":
         "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_dir_mov_ind", "true_range", "avg_price",
         "weig_c_price", "beta", "TSF", "day_of_week"]
 
-    
-
-    def get_calendar(current_date, api, symbol):
-        got_cal= False
-        while not got_cal:    
-            try:
-                calendar = api.get_calendar(start=current_date, end=get_current_datetime())
-                got_cal = True
-
-            except KeyboardInterrupt:
-                keyboard_interrupt()
-            except Exception:
-                error_handler(symbol, Exception)
-        
-        return calendar
-
-    def increment_calendar(current_date, calendar):
-        # print(calendar)
-        # print(f"incoming current_date {current_date}")
-        # print(calendar[0].date.date())
-        for day, ele in enumerate(calendar):
-            # print(f" day {day}")
-            # print(f" ele {ele}")
-            if calendar[day].date.date() == current_date:
-
-                # print(calendar[day + 1].date.date())
-                current_date = calendar[day + 1].date.date()
-                return current_date
-
-        current_date = calendar[0].date.date()
-        # print(current_date)
-        return current_date
-
-
-    df = get_proper_df("AGYS", 0, "training")
-    
-    result = load_2D_data(params["DTREE1"], df)
-    print(result)
-    print(result["X_train"].shape[0])
-    
-
-    
-
-    current_date = get_past_datetime(tune_year, tune_month, tune_day)
-
-    api = get_api()
-    cal = get_calendar(current_date, api, "AGYS")
-    
-
-    print(current_date)
-    s = time.perf_counter()
-    master_df = get_alpha_df("AGYS", "full")
-    print(f"you get the idea {time.perf_counter() - s}")
-
-    def df_subset(df):
-        df_sub = copy.deepcopy(df)
-        if type(df_sub.index[0]) == type(""):
-            df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
-        df_sub = df_sub[df_sub.index <= get_past_date_string(current_date)]
-        
-        return df_sub
-
-    def get_actual_price(current_date, df, cal):
-        df_sub = copy.deepcopy(df)
-        if type(df_sub.index[0]) == type(""):
-            df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
-        cd_copy = copy.copy(current_date)
-        cd_copy = increment_calendar(cd_copy, cal)
-        
-        return (df_sub.loc[get_past_date_string(cd_copy)]["c"].values[0])
-        
-
-    # df = df_subset(master_df)
-    # print(f"subset df\n{df}")
-    # print(f"master df\n{master_df}")
-
-    # print(get_actual_price(current_date, master_df, cal))
 
 
     
@@ -272,31 +195,6 @@ if __name__ == "__main__":
 
         return saved_models
 
-
-    
-
-        
-
-
-
-    """
-    LOAD ALL DATA
-    make sure that each feature column is loaded 
-    before loading new dataframe check that it doesn't already exit in dataframe dictionary
-    by default return unmodified dataframe
-    return 2D train/valid split data with a test that's never shuffled
-    return 2D tensor if using Dense as first part of a model
-    return 3D tensor if using recurrent models
-    3d last sequence stuff will have to be dealt with somehow
-    
-    
-    
-    
-    
-    
-    
-    
-    """
 
  
     # tuning(tune_year, tune_month, tune_day, 250, params)
@@ -336,9 +234,6 @@ if __name__ == "__main__":
     #     df, blah, bal, alalal = load_3D_data(symbol, params["nn1"], to_print=False)
     #     print(symbol)
     #     print(f"{symbol}: {pre_c_comparator(df, 3000)}", flush=True)
-
-
-
 
 
 
