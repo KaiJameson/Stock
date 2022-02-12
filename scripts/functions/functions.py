@@ -54,8 +54,15 @@ def get_dtree_name(dt_params):
     return (f"""{dt_params["FEATURE_COLUMNS"]}-md{dt_params["MAX_DEPTH"]}-msl{dt_params["MIN_SAMP_LEAF"]}""")
 
 def get_rfore_name(rf_params):
-    return "implement me pls"
+    return (f"""{rf_params["FEATURE_COLUMNS"]}-md{rf_params["MAX_DEPTH"]}-est{rf_params["N_ESTIMATORS"]}"""
+        f"""-msl{rf_params["MIN_SAMP_LEAF"]}""")
 
+def get_knn_name(knn_params):
+    return f"""{knn_params["FEATURE_COLUMNS"]}nei{knn_params["N_NEIGHBORS"]}"""
+
+def get_ada_name(ada_params):
+    return (f"""{ada_params["FEATURE_COLUMNS"]}-md{ada_params["MAX_DEPTH"]}-est{ada_params["N_ESTIMATORS"]}"""
+        f"""-msl{ada_params["MIN_SAMP_LEAF"]}""")
 
 def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
@@ -68,6 +75,14 @@ def get_test_name(params):
                 + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
                 + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"])
                 + model_params["TEST_VAR"])
+        elif "DTREE" in predictor:
+            test_name += get_dtree_name(params[predictor])
+        elif "RFORE" in predictor:
+            test_name += get_rfore_name(params[predictor])
+        elif "KNN" in predictor:
+            test_name += get_knn_name(params[predictor])
+        elif "ADA" in predictor:
+            test_name += get_ada_name(params[predictor])
 
     if len(test_name) > 200:
         test_name = test_name[:200]

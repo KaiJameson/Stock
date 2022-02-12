@@ -2,10 +2,10 @@ from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import load_save_symbols, do_the_trades
 from config.environ import directory_dict, defaults
-from functions.functions import check_directories, get_model_name, percent_from_real
+from functions.functions import check_directories, r2
 from functions.trade_functs import getOwnedStocks, buy_all_at_once
-from functions.data_load_functs import load_3D_data
-from functions.error_functs import error_handler
+from functions.data_load_functs import get_proper_df, load_all_data
+from functions.error_functs import error_handler, keyboard_interrupt
 from functions.io_functs import  make_load_run_excel, runtime_predict_excel
 from functions.time_functs import get_current_date_string
 from functions.trade_functs import get_toggleable_api
@@ -28,20 +28,24 @@ def load_trade(symbols, params, real_mon):
         try:
             print("\n~~~Now Starting " + symbol + "~~~")
             
+            ss = time.perf_counter()
             s = time.perf_counter()
-            predicted_price, current_price, epochs_dict = ensemble_predictor(symbol, params, None)    
-            print(f"Ensemble_predictor took {round(time.perf_counter() - s, 2)}")
+            df = get_proper_df(symbol, 9999, "V2")
+            data_dict = load_all_data(defaults, df)
+            print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
+            s = time.perf_counter()
+            predicted_price, current_price, epochs_dict = ensemble_predictor(symbol, params, None, 
+                data_dict, df)    
+            print(f"Ensemble_predictor took {r2(time.perf_counter() - s)} seconds")
             
             pred_curr_list[symbol] = {"predicted": predicted_price, "current": current_price}
-
+            print(f"Running everything for {symbol} took {r2(time.perf_counter() - ss)} seconds")
             print("Finished running: " + symbol)
 
             sys.stdout.flush()
 
         except KeyboardInterrupt:
-            print("I acknowledge that you want this to stop")
-            print("Thy will be done")
-            sys.exit(-1)
+            keyboard_interrupt()
         except Exception:
             error_handler(symbol, Exception)
 

@@ -1,4 +1,4 @@
-from functions.data_load_functs import convert_date_values
+
 from scipy.signal import savgol_filter
 import talib as ta
 
@@ -7,6 +7,8 @@ def df_m(name, df):
 
 def df_savgol(name, df):
     df_selector = name[1]
+    if df_selector not in list(df.columns):
+        df_m("m", df) 
     df[name] = savgol_filter(df[df_selector], 7, 3)
 
 def df_7MA(name, df):
@@ -252,8 +254,9 @@ def df_beta(name, df):
 def df_TSF(name, df):
     df[name] = ta.TSF(df.c, timeperiod=14)
 
-def df_day_of_week(name, df):
-    df[name] = convert_date_values(df)
+def convert_date_values(name, df):	    
+    df[name] = df.index	
+    df[name] = df[name].dt.dayofweek
 
 
 techs_dict = {
@@ -342,6 +345,6 @@ techs_dict = {
     "avg_price": {"function":df_avg_price},
     "beta": {"function":df_beta},
     "TSF": {"function":df_TSF},
-    "day_of_week": {"function":df_day_of_week}
+    "day_of_week": {"function":convert_date_values}
 }
 

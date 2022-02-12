@@ -6,7 +6,7 @@ from config.environ import directory_dict, back_test_days
 from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002, get_model_name
 from functions.io_functs import backtest_excel, read_saved_contents, save_to_dictionary, print_backtest_results, graph_epochs_relationship
 from functions.time_functs import get_past_datetime, get_year_month_day, increment_calendar, get_actual_price
-from functions.error_functs import error_handler
+from functions.error_functs import error_handler, keyboard_interrupt
 from functions.trade_functs import get_api
 from paca_model import ensemble_predictor
 from paca_model import configure_gpu
@@ -124,9 +124,7 @@ def back_testing(test_year, test_month, test_day, test_days, params):
         delete_files_in_folder(directory_dict["model"] + "/" + params["SAVE_FOLDER"])
 
     except KeyboardInterrupt:
-            print("I acknowledge that you want this to stop.")
-            print("Thy will be done.")
-            sys.exit(-1)
+        keyboard_interrupt()
 
     except Exception:
         error_handler(symbol, Exception)

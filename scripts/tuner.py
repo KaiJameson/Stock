@@ -1,17 +1,18 @@
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
-from config.environ import back_test_days, directory_dict, test_money, comparator_params
+from config.environ import directory_dict, test_money
 from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
 from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002, r2, get_model_name
 from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
-from functions.time_functs import increment_calendar, get_actual_price
-from functions.error_functs import error_handler
+from functions.time_functs import increment_calendar, get_actual_price, get_calendar
+from functions.error_functs import error_handler, keyboard_interrupt
 from functions.tuner_functs import grab_index, change_params, get_user_input, update_money
-from functions.data_load_functs import load_3D_data
+from functions.data_load_functs import load_3D_data, df_subset, get_proper_df, load_all_data
 from functions.time_functs import get_past_datetime, get_year_month_day
 from paca_model import ensemble_predictor, configure_gpu
+from make_excel import make_tuning_sheet
 from statistics import mean
 import time
 import sys
@@ -49,13 +50,15 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
         print(test_name)
         print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
-        starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) - datetime.timedelta(1)), 
-            api, symbol)
+        # master_df = get_proper_df(symbol, "full", "alp")
+        master_df = get_proper_df(symbol, 9999, "V2")
+        tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
+        starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
+            - datetime.timedelta(1)), master_df, tmp_cal)
 
         if os.path.isfile(directory_dict["tuning"] + "/" + test_name + ".txt"):
             print("A fully completed file with the name " + test_name + " already exists.")
             print("Exiting this instance of tuning now: ")
-        
             continue
     
         # check if we already have a save file, if we do, extract the info and run it
@@ -63,31 +66,35 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
             progress = read_saved_contents(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt", progress)
     
         current_date = get_past_datetime(progress["tune_year"], progress["tune_month"], progress["tune_day"])
+        print(f" starting day price {starting_day_price}")
+        calendar = get_calendar(current_date, api, symbol)
         try:
             while progress["days_done"] <= progress["total_days"]:
                 time_s = time.perf_counter()
-                current_date = increment_calendar(current_date, api, symbol)
-                print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " using folder: " + params["SAVE_FOLDER"] + ".\n")
+                current_date = increment_calendar(current_date, calendar)
+                print(f"outside current date {current_date}")
+                sub_df = df_subset(current_date, master_df)
+                data_dict = load_all_data(params, sub_df)
+                print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) 
+                    + " using folder: " + params["SAVE_FOLDER"] + ".\n")
 
-                predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date)
+                predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
+                    data_dict, sub_df)
                 if bool(epochs_run):
                     for predictor in epochs_run:
                         progress["epochs_dict"][predictor].append(epochs_run[predictor])
 
-                # get the actual price for the next day the model tried to predict by incrementing the calendar by one day
-                actual_price = get_actual_price(current_date, api, symbol)
-                # get the percent difference between prediction and actual
+                actual_price = get_actual_price(current_date, master_df, calendar)
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
-
                 correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
-
-                print(f"date {current_date} predicted {predicted_price} current {current_price} actual {actual_price} dir {correct_dir}", flush=True)
+                print(f"Symbol:{symbol} Date:{current_date} Predicted:{sr2(predicted_price)} " 
+                    f"Current:{sr2(current_price)} Actual:{sr2(actual_price)} Direction:{correct_dir}", flush=True)
                 progress["percent_away_list"].append(p_diff)
                 progress["correct_direction_list"].append(correct_dir)
 
                 day_took = (time.perf_counter() - time_s)
-                print("Day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) + " took " 
-                + str(round(day_took / 60, 2)) + " minutes.", flush=True)
+                print(f"""Day {progress["days_done"]} of {progress["total_days"]} took """ 
+                    f"""{r2(day_took / 60)} minutes or {r2(day_took)} seconds.\n""", flush=True)
 
                 progress["current_money"] = update_money(progress["current_money"], predicted_price, 
                     current_price, actual_price)
@@ -101,11 +108,9 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 for predictor in params["ENSEMBLE"]:
                     if "nn" in predictor: 
                         nn_name = get_model_name(params[predictor])
-                        # print(f"""params[predictor]["SAVE_PRED"] before {params[predictor]["SAVE_PRED"]}""")
                         for sym in params[predictor]["SAVE_PRED"].copy():
                             if sym != symbol:
                                 del params[predictor]["SAVE_PRED"][sym]
-                        # print(f"""params[predictor]["SAVE_PRED"] after {params[predictor]["SAVE_PRED"]}""")
                         save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", params[predictor]["SAVE_PRED"])
 
             print("Percent away: " + str(progress["percent_away_list"]))
@@ -118,8 +123,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                     avg_e[predictor] = mean(progress["epochs_dict"][predictor])
             hold_money = r2(test_money * (current_price / starting_day_price))
 
-            data, train, valid, test = load_3D_data(symbol, comparator_params, current_date, shuffle=False, scale=False, to_print=False)
-            comparator_results_excel(data, tune_days, directory_dict["tuning"], symbol)
+            comparator_results_excel(sub_df, tune_days, symbol)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
                 progress["tune_day"], progress["time_so_far"], progress["current_money"], hold_money)
@@ -129,22 +133,23 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
             if os.path.isfile(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt"):
                 os.remove(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt")
 
-            delete_files_in_folder(directory_dict["model"] + "/" + params["SAVE_FOLDER"])
+            if len(os.listdir(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")) != 0:
+                delete_files_in_folder(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")
 
+            print(f"The name for the test was {get_test_name(params)}")
 
         except KeyboardInterrupt:
-                    print("I acknowledge that you want this to stop.")
-                    print("Thy will be done.")
-                    sys.exit(-1)
-
+            keyboard_interrupt()
         except Exception:
             error_handler(symbol, Exception)
 
+    make_tuning_sheet(get_test_name(params))
 
 if __name__ == "__main__":
     check_directories()
     params = {
     "ENSEMBLE": ["nn1"],
+    # "ENSEMBLE": ["ADA1", "KNN1", "RFORE1"],
     "TRADING": False,
     "SAVE_FOLDER": "tune4",
     "nn1" : { 
@@ -161,9 +166,60 @@ if __name__ == "__main__":
         "EPOCHS": 2000,
         "PATIENCE": 100,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
         "TEST_VAR": "c",
         "SAVE_PRED": {}
+        },
+    "nn2" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "UNITS": 256,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "DTREE1" : {
+            "FEATURE_COLUMNS": ["c"],
+            "MAX_DEPTH": 5,
+            "MIN_SAMP_LEAF": 1,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c"
+        },
+    "RFORE1" : {
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "N_ESTIMATORS": 100,
+            "MAX_DEPTH": 10,
+            "MIN_SAMP_LEAF": 3,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c"
+        },
+    "KNN1" : {
+        "FEATURE_COLUMNS": ["c"],
+        "N_NEIGHBORS": 10,
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
+    },
+    "ADA1" : {
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "N_ESTIMATORS": 100,
+            "MAX_DEPTH": 10000,
+            "MIN_SAMP_LEAF": 1,
+            "LOOKUP_STEP":1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c"
         }
     }
 

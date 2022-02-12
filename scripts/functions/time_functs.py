@@ -1,11 +1,12 @@
 from config.api_key import paper_api_key_id, paper_api_secret_key
 from config.environ import time_zone
-from functions.error_functs import  net_error_handler
+from functions.error_functs import  net_error_handler, keyboard_interrupt 
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import platform
 import time
 import datetime
+import copy
 
 def get_start_end():
     operating_sys = platform.system()
@@ -111,27 +112,6 @@ def modify_timestamp(days_changed, stamp):
 
 def get_year_month_day(datetiObj):
     return datetiObj.year, datetiObj.month, datetiObj.day
-
-def increment_calendar(current_date, api, symbol):
-    date_changed = False
-    while not date_changed:    
-        try:
-            calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
-            while calendar.date != current_date + datetime.timedelta(1):
-                print(f"Skipping {current_date + datetime.timedelta(1)} because it was not a market day.")
-                current_date = current_date + datetime.timedelta(1)
-
-            print("Moving forward one day in time: ")
-            
-            current_date = current_date + datetime.timedelta(1)
-            date_changed = True
-                
-        except Exception:
-            if date_changed:
-                current_date = current_date - datetime.timedelta(1)
-            net_error_handler(symbol, Exception)
-
-    return current_date
     
 def make_Timestamp(old_date):
     year = old_date.year
@@ -143,25 +123,50 @@ def make_Timestamp(old_date):
 
     return new_date
 
-def get_actual_price(current_date, api, symbol):
-    no_price = True
-    while no_price:
-        try:
-            calendar = api.get_calendar(start=current_date + datetime.timedelta(1), end=current_date + datetime.timedelta(1))[0]
-            one_day_in_future = make_Timestamp(calendar.date + datetime.timedelta(1))
-            barset = api.get_barset(symbols=symbol, timeframe="day", limit=1, until=one_day_in_future)
-            for symbol, bars in barset.items():
-                for bar in bars:
-                    actual_price = bar.c
-            no_price = False
-
-        except Exception:
-            net_error_handler(symbol, Exception)
-
-    return actual_price
-
 def read_date_string(date):
     new_date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
     return new_date.date()
 
+def get_actual_price(current_date, df, cal):
+    df_sub = copy.deepcopy(df)
+    cd_copy = copy.copy(current_date)
+    # print(f"cd copy before {cd_copy}")
+    cd_copy = increment_calendar(cd_copy, cal)
+    # print(f"cd copy after inc {cd_copy}")
+    df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+    if type(df_sub.index[0]) == type(""):
+        # print("both?")
+        df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+        return (df_sub.loc[get_past_date_string(cd_copy)]["c"])
+    else:
+        # print(f"current date {current_date}")
+        # print(type(df_sub.index[0]))
+        # print(f"{get_past_date_string(cd_copy)}")
+        # print(f"""here {df_sub.loc[get_past_date_string(cd_copy)]["c"]}""")
+        return df_sub.loc[get_past_date_string(cd_copy)]["c"][0]
+
+    
+
+def get_calendar(current_date, api, symbol):
+    got_cal= False
+    while not got_cal:    
+        try:
+            calendar = api.get_calendar(start=current_date, end=get_current_datetime())
+            got_cal = True
+
+        except KeyboardInterrupt:
+            keyboard_interrupt()
+        except Exception:
+            net_error_handler(symbol, Exception)
+        
+    return calendar
+
+def increment_calendar(current_date, calendar):
+    for day, ele in enumerate(calendar):
+        if calendar[day].date.date() == current_date:
+            current_date = calendar[day + 1].date.date()
+            return current_date
+
+    current_date = calendar[0].date.date()
+    return current_date
