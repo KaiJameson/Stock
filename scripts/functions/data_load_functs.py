@@ -22,6 +22,7 @@ import time
 import copy
 import requests
 import os
+import datetime
 
 
 
@@ -33,7 +34,7 @@ def alpaca_date_converter(df):
 
 def modify_dataframe(features, df):
     base_features = ["o", "c", "l", "h", "v"]
-    removable_features = ["o", "l", "h", "v", "tc", "vwap", "adj_c", "div", "split"]
+    removable_features = ["o", "l", "h", "m", "v", "tc", "vwap", "div", "split"]
     for feature in features:
         # print(f"we got feature {feature}")
         if feature not in base_features:
@@ -46,7 +47,7 @@ def modify_dataframe(features, df):
         if feature not in features and feature in list(df.columns):
             df = df.drop(columns=[feature])
 
-    pd.set_option("display.max_columns", None)
+    # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
     print(df.head(1))
     print(df.tail(1))
@@ -64,7 +65,7 @@ def scale_data(df, result):
     result["column_scaler"] = column_scaler
     return result
 
-def get_alpaca_df(symbol, limit=1000, to_print=True):
+def get_alpacaV2_df(symbol, limit=1000, to_print=True):
     api = get_api()
     no_connection = True
     end = get_current_datetime()
@@ -93,10 +94,7 @@ def get_alpha_df(symbol, output_size):
         "h": {},
         "l": {},
         "c": {},
-        "adj_c": {},
         "v": {},
-        "div": {},
-        "split": {}
     }
     # print(f"""{directory_dict["data"]}/{symbol}.txt""")
     if os.path.isfile(f"""{directory_dict["data"]}/{symbol}.txt"""):
@@ -122,7 +120,7 @@ def get_alpha_df(symbol, output_size):
     return df
 
 def download_alpha_df(symbol, output_size):
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize={output_size}&apikey={alpha_key}"
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize={output_size}&apikey={alpha_key}"
     no_connection = True
     while no_connection:
         try:
@@ -134,10 +132,10 @@ def download_alpha_df(symbol, output_size):
             net_error_handler(symbol, Exception)
 
     data = r.json()
+    # print(data)
     df = pd.DataFrame(data["Time Series (Daily)"], dtype=np.float32)
     df = df.transpose()
-    df = df.rename(columns={"1. open": "o", "2. high": "h", "3. low": "l", "4. close": "c", "5. adjusted close": "adj_c",
-        "6. volume": "v", "7. dividend amount": "div","8. split coefficient": "split"})
+    df = df.rename(columns={"1. open": "o", "2. high": "h", "3. low": "l", "4. close": "c", "5. volume": "v"})
     # print(df.head(1))
     # print(df.tail(1))
     df_dict = df.to_dict()
@@ -146,22 +144,23 @@ def download_alpha_df(symbol, output_size):
     return df
 
 def get_proper_df(symbol, limit, option):
-    if option == "training":
+    if option == "alp":
         df = get_alpha_df(symbol, "full")
-    elif option == "running":
-        df = get_alpaca_df(symbol, limit, to_print=True)
+    elif option == "V2":
+        df = get_alpacaV2_df(symbol, limit, to_print=True)
 
     return df
 
 def load_all_data(params, df):
     data_dict = {}
-    req_2d = ["DTREE1", "RFORE1", "KNN1"]
+    req_2d = ["DTREE", "RFORE", "KNN", "ADA"]
 
     for predictor in params["ENSEMBLE"]:
-        if predictor in req_2d:
+        in_req_2d = [bool(i) for i in req_2d if i in predictor]
+        if len(in_req_2d) > 0:
             result = load_2D_data(params[predictor], df, tensorify=False)
             data_dict[predictor] = result
-        elif "nn" in predictor:
+        if "nn" in predictor:
             if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
                 result, train, valid, test = load_2D_data(params[predictor], df, tensorify=True)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
@@ -290,7 +289,24 @@ def df_subset(current_date, df):
     df_sub = copy.deepcopy(df)
     if type(df_sub.index[0]) == type(""):
         df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+    else:
+        test2 = df_sub.index[0]
+        df_sub.index = pd.to_datetime(df_sub.index, unit="D")
+        test1 = df_sub.index[0]
+        df_sub.index = df_sub.index.tz_localize(None)
+        df_sub.index = df_sub.index.normalize()
+        test = df_sub.index[0]
+        # print(df_sub.index.to_pydatetime()[0])
+        # print(type(df_sub.index.to_pydatetime()[0]))
+        # tmp = df_sub.index
+        # tmp2 = tmp.to_pydatetime()
+        # print(tmp2)
+        # df_sub.index = tmp2
+    # print(f"og df_sub index {type(test2)} {test2}")
+    # print(f" test {test == df_sub.index[0]} {test1 == df_sub.index[0]} {test2 == df_sub.index[0]}")
+    # print(f"really {type(df_sub.index[0])} {df_sub.index[0]}")
     df_sub = df_sub[df_sub.index <= get_past_date_string(current_date)]
+    # print(f"df_sub {df_sub}")
     
     return df_sub
 

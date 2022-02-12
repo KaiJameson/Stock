@@ -90,13 +90,11 @@ def runtime_predict_excel(symbols, pred_curr_list):
     run_pre_text += "\n"
 
     for symbol in symbols:   
-        # run_pre_text += str(round(pred_curr_list[symbol]["predicted"], 2)) + "\t"
-        run_pre_text += sr2(pred_curr_list[symbol]["predicted"]) + "\t"
+        run_pre_text += sr2(pred_curr_list[symbol]["current"]) + "\t"
     run_pre_text += "\n"
 
     for symbol in symbols:
-        # run_pre_text += str(round(pred_curr_list[symbol]["current"], 2)) + "\t"
-        run_pre_text += sr2(pred_curr_list[symbol]["current"]) + "\t"
+        run_pre_text += sr2(pred_curr_list[symbol]["predicted"]) + "\t"
 
     f = open(directory_dict["runtime_predict"] + "/" + date_string + ".txt", "a+")
     f.write(run_pre_text)
@@ -105,9 +103,6 @@ def runtime_predict_excel(symbols, pred_curr_list):
 def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, percent_away):
     date_string = get_current_date_string()
     f = open(directory_dict["load_run_results"] + "/" + date_string + ".txt", "a")
-    # f.write(symbol + "\t" + str(round(train_acc * 100, 2)) + "\t" + str(round(valid_acc * 100, 2)) + "\t" 
-    # + str(round(test_acc * 100, 2)) + "\t" + str(round(from_real, 2)) + "\t" + str(round(percent_away, 2)) 
-    # + "\n")
     f.write(f"{symbol}\t{r1002(train_acc)}\t{r1002(valid_acc)}\t{r1002(test_acc)}\t"
         f"{r2(from_real)}\t{r2(percent_away)}")
     f.close()
@@ -200,7 +195,6 @@ def print_model_params(params, predictor, avg_e):
     print(f"The model used an average of {r2(avg_e)} epochs.\n")
 
 def comparator_results_excel(df, run_days, stock):
-    # directory_string = f"{directory}/{stock}-comparison.txt"
     directory_string = f"""{directory_dict["comparator_results"]}/{stock}-comparison.txt"""
     if not os.path.isfile(directory_string):
         f = open(directory_string, "a")

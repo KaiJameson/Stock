@@ -58,7 +58,11 @@ def get_rfore_name(rf_params):
         f"""-msl{rf_params["MIN_SAMP_LEAF"]}""")
 
 def get_knn_name(knn_params):
-    return f"""nei{knn_params["N_NEIGHBORS"]}"""
+    return f"""{knn_params["FEATURE_COLUMNS"]}nei{knn_params["N_NEIGHBORS"]}"""
+
+def get_ada_name(ada_params):
+    return (f"""{ada_params["FEATURE_COLUMNS"]}-md{ada_params["MAX_DEPTH"]}-est{ada_params["N_ESTIMATORS"]}"""
+        f"""-msl{ada_params["MIN_SAMP_LEAF"]}""")
 
 def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
@@ -77,6 +81,8 @@ def get_test_name(params):
             test_name += get_rfore_name(params[predictor])
         elif "KNN" in predictor:
             test_name += get_knn_name(params[predictor])
+        elif "ADA" in predictor:
+            test_name += get_ada_name(params[predictor])
 
     if len(test_name) > 200:
         test_name = test_name[:200]

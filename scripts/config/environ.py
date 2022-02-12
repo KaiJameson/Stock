@@ -5,7 +5,7 @@ from tensorflow.keras.layers import LSTM
 
 directory_dict = {
     "backtest":          "../backtest",
-    "comparator_results" "../tuning/comparators"
+    "comparator_results":"../tuning_info/comparators",
     "config":            "../config",
     "data":              "../data", 
     "day_summary":       "../excel/day_summary",
@@ -23,26 +23,6 @@ directory_dict = {
     "tune_summary":      "../tuning_info/summary",
     "tuning":            "../tuning_info",
     "save_predicts":     "../predictions"
-}
-
-load_params = {
-    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-    "LIMIT": 500,
-    "N_STEPS": 100,
-    "BATCH_SIZE": 1024,
-    "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "TEST_VAR": "c"
-}
-
-comparator_params = {
-    "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-    "LIMIT": 2000,
-    "N_STEPS": 100,
-    "BATCH_SIZE": 1024,
-    "LOOKUP_STEP": 1,
-    "TEST_SIZE": 0.2,
-    "TEST_VAR": "c"
 }
 
 
@@ -98,7 +78,7 @@ defaults = {
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
-        "EPOCHS": 10,
+        "EPOCHS": 2000,
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
@@ -115,7 +95,7 @@ defaults = {
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
-        "EPOCHS": 10,
+        "EPOCHS": 2000,
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],

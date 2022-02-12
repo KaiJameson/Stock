@@ -68,7 +68,7 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
 if __name__ == "__main__":
 
     params = {
-        "ENSEMBLE": ["KNN1"],
+        "ENSEMBLE": ["DTREE1"],
         "TRADING": False,
         "SAVE_FOLDER": "tune4",
         "nn1" : { 
@@ -91,24 +91,33 @@ if __name__ == "__main__":
         },
         "DTREE1" : {
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-            "MAX_DEPTH": 99,
+            "MAX_DEPTH": 5,
             "MIN_SAMP_LEAF": 1,
             "LOOKUP_STEP": 1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
         },
         "RFORE1" : {
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-            "N_ESTIMATORS": 100,
-            "MAX_DEPTH": 99,
+            "FEATURE_COLUMNS": ["c", "vwap"],
+            "N_ESTIMATORS": 1000,
+            "MAX_DEPTH": 10000,
             "MIN_SAMP_LEAF": 1,
             "LOOKUP_STEP": 1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
         },
         "KNN1" : {
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             "N_NEIGHBORS": 5,
+            "LOOKUP_STEP":1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c"
+        },
+        "ADA1" : {
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "N_ESTIMATORS": 100,
+            "MAX_DEPTH": 10000,
+            "MIN_SAMP_LEAF": 1,
             "LOOKUP_STEP":1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
@@ -133,10 +142,6 @@ if __name__ == "__main__":
     # print(len(hello))
     # print(type(hello))
 
-    pd.set_option("display.max_columns", None)
-
-    
-
     # symbol = "VIXY"
     # output_size = "full"
     # s = time.perf_counter()
@@ -154,31 +159,19 @@ if __name__ == "__main__":
     
     # print(f" took {time.perf_counter() - s} to get dataframe in proper order")
     # # print(df_dict)
-    
-    # s = time.perf_counter()
-    # read_saved_contents("../tmp.txt", load_dictionary)
-    # df = pd.DataFrame(load_dictionary)
-    # print(f"loading takes {time.perf_counter() - s}")
-    
-    # POTENTIAL STRUCTURE FOR DATA SAVING/LOADING CODE
-    # check for a saved data file
-    #   if saved file exists load it into dataframe
-    #     
-    # if not pull for current use and save it at the same time
-    #  
-    # check to see that all calendar testing days are in df
-    #
 
-    features = ["sc", "so", "sl", "sh", "m", "sv", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", "pears_cor",
-        "mon_flow_ind", "willR", "std_dev", "min", "max", "commod_chan_ind", "para_SAR", "para_SAR_ext", "rate_of_change", "ht_dcperiod", "ht_trendmode",
-        "ht_dcphase", "ht_inphase", "quadrature", "ht_sine", "ht_leadsine", "ht_trendline", "mom", "abs_price_osc", "KAMA", "typ_price", "ult_osc", "chai_line",
-        "chai_osc", "norm_avg_true_range", "median_price", "var", "aroon_down", "aroon_up", "aroon_osc", "bal_of_pow", "chande_mom_osc", "MACD", "MACD_signal",
-        "MACD_hist", "con_MACD", "con_MACD_signal", "con_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "min_dir_ind", "min_dir_mov", "plus_dir_ind",
+    all_features = ["o", "l", "h", "c", "m", "v", "sc", "so", "sl", "sh", "sm", "sv", "7MA", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", 
+        "lin_reg_int", "lin_reg_slope", "pears_cor", "mon_flow_ind", "willR", "std_dev", "min", "max", "commod_chan_ind", "para_SAR", "para_SAR_ext", "rate_of_change", 
+        "ht_dcperiod", "ht_trendmode", "ht_dcphase", "ht_inphase", "quadrature", "ht_sine", "ht_leadsine", "ht_trendline", "mom", "abs_price_osc", "KAMA", "typ_price", 
+        "ult_osc", "chai_line", "chai_osc", "norm_avg_true_range", "median_price", "var", "aroon_down", "aroon_up", "aroon_osc", "bal_of_pow", "chande_mom_osc", "MACD", 
+        "MACD_signal", "MACD_hist", "con_MACD", "con_MACD_signal", "con_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "min_dir_ind", "min_dir_mov", "plus_dir_ind",
         "plus_dir_mov", "per_price_osc", "stoch_fast_k", "stoch_fast_d", "stoch_rel_stren_k", "stoch_rel_stren_d", "stoch_slowk", "stoch_slowd", "TRIX",
         "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_dir_mov_ind", "true_range", "avg_price",
         "weig_c_price", "beta", "TSF", "day_of_week"]
 
-
+    direct_value_features = ["o", "l", "h", "c", "m", "sc", "so", "sl", "sh", "sm", "7MA", "up_band", "low_band", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", 
+                "min", "max", "ht_trendline",  "KAMA", "typ_price", "median_price", "var", "TRIX", "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", 
+                "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_price", "weig_c_price", "TSF"]
 
     
 
@@ -196,12 +189,18 @@ if __name__ == "__main__":
         return saved_models
 
 
+    # year = 2019
+    # month = 12
+    # day = 1
+    # how_damn_long_to_run_for = 500
  
-    # tuning(tune_year, tune_month, tune_day, 250, params)
+    year = 2020
+    month = 5
+    day = 17
+    how_damn_long_to_run_for = 250
 
-    # year = 2021
-    # month = 5
-    # day = 15
+    tuning(year, month, day, how_damn_long_to_run_for, params)
+
     # current_date = get_past_datetime(year, month, day)
     # print(f"year {year} month {month} day {day}")
 

@@ -87,41 +87,41 @@ def update_money(current_money, predicted_price, current_price, actual_price):
     return round(current_money, 2)
 
 def lin_reg_comparator(df, timeperiod, run_days):
-    df = df["df"]
+    # df = df["df"]
     df["lin_reg"] = ta.LINEARREG(df.c, timeperiod=timeperiod)
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "lin_reg", run_days)
 
     return avg_p, avg_d, current_money
 
 def MA_comparator(df, timeperiod, run_days):
-    df = df["df"]
+    # df = df["df"]
     df["7MA"] = df.c.rolling(window=timeperiod).mean()
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "7MA", run_days)
 
     return avg_p, avg_d, current_money
 
 def EMA_comparator(df, timeperiod, run_days):
-    df = df["df"]
+    # df = df["df"]
     df["EMA"] = ta.EMA(df.c, timeperiod=timeperiod)
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "EMA", run_days)
 
     return avg_p, avg_d, current_money
 
 def TSF_comparator(df, timeperiod, run_days):
-    df = df["df"]
+    # df = df["df"]
     df["TSF"] = ta.TSF(df.c, timeperiod=timeperiod)
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "TSF", run_days)
 
     return avg_p, avg_d, current_money
 
 def pre_c_comparator(df, run_days):
-    df = df["df"]
+    # df = df["df"]
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "c", run_days)
 
     return avg_p, avg_d, current_money
 
 def sav_gol_comparator(df, time_period, poly_order, run_days):
-    df = df["df"]
+    # df = df["df"]
     current_money = 10000
     percent_away_list = []
     correct_direction_list = []

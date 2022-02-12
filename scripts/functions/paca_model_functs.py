@@ -4,8 +4,7 @@ silence_tensorflow()
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.metrics import accuracy_score
-from config.api_key import (real_api_key_id, real_api_secret_key, paper_api_key_id, paper_api_secret_key,
-intrinio_sandbox_key, intrinio_production_key)
+from config.api_key import intrinio_sandbox_key
 from config.environ import (back_test_days, to_plot, test_money, stocks_traded, directory_dict)
 from functions.time_functs import get_time_string, get_past_datetime
 from functions.io_functs import make_runtime_price, plot_graph, write_nn_report

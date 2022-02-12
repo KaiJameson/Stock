@@ -17,7 +17,7 @@ def save_models(symbols):
     configure_gpu()
     for symbol in symbols:
         try:
-            df = get_proper_df(symbol, 0, "training")
+            df = get_proper_df(symbol, 0, "V2")
             data_dict = load_all_data(defaults, df)
             print(f"\n~~~ Now Training {symbol} ~~~")
             for predictor in defaults["ENSEMBLE"]:

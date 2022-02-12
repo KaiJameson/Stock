@@ -5,18 +5,18 @@ from functions.functions import delete_files_in_folder, check_model_folders, get
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from config.environ import (directory_dict, random_seed, save_logs,
-defaults, load_params)
+from config.environ import directory_dict, random_seed, save_logs, defaults
 from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_date_string
-from functions.functions import get_model_name, layer_name_converter
+from functions.functions import get_model_name, layer_name_converter, sr2
 from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, predict, return_real_predict
 from functions.data_load_functs import load_3D_data, load_2D_data
 from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.inspection import permutation_importance
 from statistics import mean
 import pandas as pd
 import talib as ta
@@ -132,7 +132,10 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             tree = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
                 min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
             tree.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-            print(f"""length of the data{len(data_dict[predictor]["X_train"])}""")
+            # imps = permutation_importance(tree, data_dict[predictor]["X_train"],
+            #     data_dict[predictor]["y_train"])["importances_mean"]
+            # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
+            #     print(f"{feature} has importance of {imps[i]}")
             tree_pred = tree.predict(data_dict[predictor]["X_test"])
             scale =data_dict[predictor]["column_scaler"]["future"]
             tree_pred = np.array(tree_pred)
@@ -141,7 +144,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
 
         elif "RFORE" in predictor:
             fore = RandomForestRegressor(n_estimators=params[predictor]["N_ESTIMATORS"],
-                max_depth=params[predictor]["MAX_DEPTH"], min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
+                max_depth=params[predictor]["MAX_DEPTH"], min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"], n_jobs=-1)
             fore.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
             fore_pred = fore.predict(data_dict[predictor]["X_test"])
             scale = data_dict[predictor]["column_scaler"]["future"]
@@ -150,13 +153,28 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
 
         elif "KNN" in predictor:
-            knn = KNeighborsRegressor(n_neighbors=params[predictor]["N_NEIGHBORS"])
+            knn = KNeighborsRegressor(n_neighbors=params[predictor]["N_NEIGHBORS"], n_jobs=-1)
             knn.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
             knn_pred = knn.predict(data_dict[predictor]["X_test"])
             scale = data_dict[predictor]["column_scaler"]["future"]
             knn_pred = np.array(knn_pred)
             knn_pred = knn_pred.reshape(1, -1)
             predicted_price = np.float32(scale.inverse_transform(knn_pred)[-1][-1])
+
+        elif "ADA" in predictor:
+            base = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
+                min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
+            ada = AdaBoostRegressor(base_estimator=base, n_estimators=params[predictor]["N_ESTIMATORS"])
+            ada.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
+            # imps = permutation_importance(ada, data_dict[predictor]["X_train"],
+            #     data_dict[predictor]["y_train"])["importances_mean"]
+            # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
+            #     print(f"{feature} has importance of {imps[i]}")
+            ada_pred = ada.predict(data_dict[predictor]["X_test"])
+            scale = data_dict[predictor]["column_scaler"]["future"]
+            ada_pred = np.array(ada_pred)
+            ada_pred = ada_pred.reshape(1, -1)
+            predicted_price = np.float32(scale.inverse_transform(ada_pred)[-1][-1])
 
         elif "nn" in predictor:
             if params["TRADING"]:
@@ -174,7 +192,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
 
     print(f"Ensemble prediction list: {ensemb_predict_list}")
     final_prediction = mean(ensemb_predict_list)
-    print(f"The final prediction: {final_prediction}")
+    print(f"The final prediction: {sr2(final_prediction)}")
     current_price = get_current_price(df)
 
     return final_prediction, current_price, epochs_dict

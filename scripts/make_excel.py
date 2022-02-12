@@ -1,19 +1,16 @@
 import sys
 from config.environ import directory_dict
 from config.symbols import real_test_symbols
-from functions.time_functs import get_past_date_string, increment_calendar, make_Timestamp, read_date_string, get_current_datetime
+from functions.time_functs import (get_past_date_string, increment_calendar, make_Timestamp, read_date_string, 
+    get_current_datetime, get_calendar)
 from functions.trade_functs import get_api
-from functions.time_functs import make_Timestamp
 from functions.functions import check_directories, get_correct_direction, r2
 from functions.io_functs import read_saved_contents
+from alpaca_trade_api.rest import TimeFrame
 import datetime
 import os
 
-# Option 3: read in multiple tuning files or backtest files
-# 
-#
-#
-#
+
 
 check_directories()
 
@@ -50,7 +47,7 @@ def get_user_input():
         else:
             print("You must give this program one of the three following options.")
             print("\"trade_perform date\" to create the trade performance excel sheet,")
-            print("\"PL date\" to create the profit less excel sheet,")
+            print("\"PL date\" to create the profit loss excel sheet,")
             print("\"tuning test_name\" to create the tuning excel sheet,")
             print("Please try again")
             sys.exit(-1)
@@ -98,15 +95,14 @@ def make_trade_perform_sheet(date, api):
     for i in range(len(predict)):
         predict[i] = float(predict[i])
 
-    date = increment_calendar(date, api, "NA")
-    end_date = make_Timestamp(date + datetime.timedelta(1))
+    calendar = get_calendar(date, api, "NA")
+    end_date = increment_calendar(date, calendar)
+
     actual_prices = []
     for symbol in symbols:
-        barset = api.get_barset(symbol, "day", limit=1, until=end_date)
+        df = api.get_bars(symbol, start=end_date, timeframe=TimeFrame.Day, limit=1).df
         current_price = 0
-        for symbol, bars in barset.items():
-            for bar in bars:
-                current_price = bar.c
+        current_price = df["close"][0]
         actual_prices.append(current_price)
 
     for i in range(len(runtime)):
@@ -162,15 +158,14 @@ def make_PL_sheet(date, api):
     for i in range(len(predict)):
         predict[i] = float(predict[i])
 
-    date = increment_calendar(date, api, "NA")
-    end_date = make_Timestamp(date + datetime.timedelta(1))
+    calendar = get_calendar(date, api, "NA")
+    end_date = increment_calendar(date, calendar)
+
     actual_prices = []
     for symbol in symbols:
-        barset = api.get_barset(symbol, "day", limit=1, until=end_date)
+        df = api.get_bars(symbol, start=end_date, timeframe=TimeFrame.Day, limit=1).df
         current_price = 0
-        for symbol, bars in barset.items():
-            for bar in bars:
-                current_price = bar.c
+        current_price = df["close"][0]
         actual_prices.append(current_price)
 
     for i in range(len(runtime)):
@@ -194,7 +189,8 @@ def make_PL_sheet(date, api):
 
 def make_tuning_sheet(test_name):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
-    total_time = 0
+    tpa = tcd = te = tm = tt = 0
+
     for symbol in real_test_symbols:
         extraction_dict = {
             "percent_away": 0.0,
@@ -209,19 +205,31 @@ def make_tuning_sheet(test_name):
             extraction_dict = read_saved_contents(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt""", extraction_dict)
             tune_text += (f"""{symbol}\t{extraction_dict["percent_away"]}\t{extraction_dict["correct_direction"]}\t"""
                           f"""{extraction_dict["epochs"]}\t{extraction_dict["total_money"]}\n""") 
-            total_time += extraction_dict["time_so_far"]
-            print(extraction_dict)
+            tpa += extraction_dict["percent_away"]
+            tcd += extraction_dict["correct_direction"]
+            te += extraction_dict["epochs"]
+            tm += extraction_dict["total_money"]
+            tt += extraction_dict["time_so_far"]
         else:
             print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
             print(f"Are you feeling lucky yet?")
+            print(f"Program will now exit to prevent writing incomplete values.")
+            return
             
-    tune_text += (f"\nTesting all of the days took {r2(total_time / 3600)} hours or {int(total_time // 3600)}:"
-        f"{int((total_time / 3600 - (total_time // 3600)) * 60)} minutes.\n")
+    tune_text += (f"    \t{r2(tpa/len(real_test_symbols))}\t{r2(tcd/len(real_test_symbols))}"
+        f"\t{r2(te/len(real_test_symbols))}\t{r2(tm/len(real_test_symbols))}\n")
+
+    tune_text += (f"\nTesting all of the days took {r2(tt / 3600)} hours or {int(tt // 3600)}:"
+        f"{int((tt / 3600 - (tt // 3600)) * 60)} minutes.\n")
     f = open(f"""{directory_dict["tune_summary"]}/{test_name}.txt""", "a")
     f.write(tune_text)
     f.close()
     print("~~~Task Complete~~~")
 
-get_user_input()
+
+if __name__ == "__main__":
+    check_directories()
+
+    get_user_input()
 
