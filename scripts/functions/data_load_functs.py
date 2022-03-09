@@ -49,8 +49,8 @@ def modify_dataframe(features, df):
 
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
-    print(df.head(1))
-    print(df.tail(1))
+    print(df.head(5))
+    print(df.tail(5))
     # print(df)
 
     return df
