@@ -20,6 +20,7 @@ check_directories()
 def load_trade(symbols, params, real_mon):
     configure_gpu()
 
+
     owned = getOwnedStocks(real_mon)
 
     pred_curr_list = {}
@@ -30,7 +31,9 @@ def load_trade(symbols, params, real_mon):
             
             ss = time.perf_counter()
             s = time.perf_counter()
-            df = get_proper_df(symbol, 9999, "V2")
+
+            df = get_proper_df(symbol, params["LIMIT"], "V2")
+            # df = get_proper_df(symbol, 9999, "V2")
             data_dict = load_all_data(defaults, df)
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()

@@ -101,6 +101,7 @@ defaults = {
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
         "TEST_VAR": "c",
         "SAVE_PRED": {}
-        }
+        },
+    "LIMIT": 4000
     }
 

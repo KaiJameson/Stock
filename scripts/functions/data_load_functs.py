@@ -254,16 +254,10 @@ def load_2D_data(params, df=None, shuffle=True, scale=True, tensorify=False, to_
         return result
 
 def split_data(X, y, test_size, shuffle, result):
-    # print(f"""before split {len(X)}""")
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=2, random_state=42, 
         shuffle=False)
-    # print(f"""len train{len(result["X_train"])}  len test {len(result["X_test"])}""")
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(result["X_train"], result["y_train"],
         test_size=test_size, random_state=42, shuffle=shuffle)
-    # print(f"""len train{len(result["X_train"])} len valid {len(result["X_valid"])} len test {len(result["X_test"])}""")
-    # print(result["X_test"])
-    # print(f"""result["y_test"] {result["y_test"]}""")
-
     return result
 
 def make_tensor_slices(params, result):
