@@ -3,7 +3,9 @@ from config.environ import stocks_traded
 from config.symbols import trading_real_money
 from functions.io_functs import make_runtime_price
 from functions.error_functs import error_handler
+from functions.time_functs import get_current_datetime, get_past_datetime
 import alpaca_trade_api as tradeapi
+from alpaca_trade_api.rest import TimeFrame
 
 
 def get_api():
@@ -33,19 +35,25 @@ def getOwnedStocks(real_mon):
 def buy_all_at_once(symbols, owned, price_list, real_mon):
     api = get_toggleable_api(real_mon)
     clock = api.get_clock()
-    if not clock.is_open:
-        print("\nThe market is closed right now, go home. You're drunk.")
-        return
+    # if not clock.is_open:
+    #     print("\nThe market is closed right now, go home. You're drunk.")
+    #     return
 
     buy_list = []
     sold_list = {}
+    end = get_current_datetime()
+    start = get_current_datetime()
+
     for symbol in symbols:
         try:
-            barset = api.get_barset(symbol, "day", limit=1)
-            current_price = 0
-            for symbol, bars in barset.items():
-                for bar in bars:
-                    current_price = bar.c
+            df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+            current_price = df["close"][0]
+            # print(current_price)
+
+            # for symbol, bars in barset.items():
+            #     for bar in bars:
+            #         current_price = bar.c
+
             if current_price < price_list[symbol]["predicted"]:
                 if symbol not in owned:
                     buy_list.append(symbol)
@@ -53,7 +61,7 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
             else:
                 if symbol in owned:
                     qty = owned.pop(symbol)
-
+                    print(f"symbol {symbol} qty {qty} ")
                     sell = api.submit_order(
                         symbol=symbol,
                         qty=qty,
@@ -106,6 +114,10 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
                 continue
             
             else:
+                df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+                current_price = df["close"][0]
+                # print(current_price)
+
                 current_price = 0
                 barset = api.get_barset(symbol, "day", limit=1)
                 for symbol, bars in barset.items():

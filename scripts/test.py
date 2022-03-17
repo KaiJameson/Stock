@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from tensorflow_addons.layers import ESN
 from iexfinance.stocks import Stock, get_historical_data
+from sklearn.model_selection import KFold
 import requests
 import copy
 
@@ -194,37 +195,12 @@ if __name__ == "__main__":
     # day = 1
     # how_damn_long_to_run_for = 500
  
-    year = 2020
-    month = 5
-    day = 17
-    how_damn_long_to_run_for = 250
+    # year = 2020
+    # month = 5
+    # day = 17
+    # how_damn_long_to_run_for = 250
 
-    tuning(year, month, day, how_damn_long_to_run_for, params)
-
-    # current_date = get_past_datetime(year, month, day)
-    # print(f"year {year} month {month} day {day}")
-
-    # df, blah, bal, alalal = load_3D_data("AMKR", params["nn1"], current_date,  to_print=False)
-    # df, train, valid, test = load_3D_data("AGYS", params["nn1"], scale=False, shuffle=False, to_print=True)
-
-    # s = time.perf_counter()
-    # df2D = load_2D_data("AGYS", params["KNN1"], end_date=current_date, shuffle=True, scale=True, to_print=False)
-    # knn = KNeighborsRegressor(n_neighbors=5)
-    # print(f"df2d took {time.perf_counter() - s}")
-    # s = time.perf_counter()
-    # knn.fit(df2D["X_train"], df2D["y_train"])
-    # print(f"fit took {time.perf_counter() - s}")
-    # print(f"""the last 250 days? {len(df2D["X_valid"][418:])}length of whole thing{len(df2D["X_valid"])}""")
-    # print(f"""params{knn.get_params()}""")
-    # print(f"""score {knn.score(df2D["X_valid"], df2D["y_valid"])}""")
-
-    # print(len(df("X_test")))
-
-    # comparator_results_excel(df, 250, directory_dict["tuning"], "AGYS")
-    # plot_graph(df["df"].c, df["df"].sc, "AGYS", 100, "c")
-    # print(f"AGYS: {sav_gol_comparator(df, 7, 3, 3000)}", flush=True)
-    # y_real, y_pred = return_real_predict()
-
+    # tuning(year, month, day, how_damn_long_to_run_for, params)
 
     # backtest_comparator(5, 9, "sav_gol", 3000)
     # fuck_me_symbols = ["AGYS", "AMKR","BG", "BGS", "CAKE", "CCJ", "DFS", "ELY", "FLEX", 
@@ -234,5 +210,124 @@ if __name__ == "__main__":
     #     print(symbol)
     #     print(f"{symbol}: {pre_c_comparator(df, 3000)}", flush=True)
 
+
+    params = {
+    # "ENSEMBLE": ["nn1", "nn2"],
+    # "ENSEMBLE": ["ADA1", "KNN1", "RFORE1"],
+    "ENSEMBLE": ["nn1"],
+    "TRADING": False,
+    "SAVE_FOLDER": "tune4",
+    "nn1" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "UNITS": 256,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    }
+
+    symbol = "AGYS"
+    predictor = "nn1"
+    scale = True
+    to_print = True
+
+
+    df = get_proper_df(symbol, params[predictor]["LIMIT"], "V2")
+    data_dict = load_all_data(params, df)
+
+
+    tt_df, result = preprocess_dfresult(params[predictor], df, scale=scale, to_print=to_print)
+    
+    # last `lookup_step` columns contains NaN in future column
+    # get them before droping NaNs
+    last_sequence = np.array(tt_df[params[predictor]["FEATURE_COLUMNS"]].tail(params[predictor]["LOOKUP_STEP"]))
+    # drop NaNs
+    tt_df.dropna(inplace=True)
+    sequence_data = []
+    sequences = deque(maxlen=params[predictor]["N_STEPS"])
+    for entry, target in zip(tt_df[params[predictor]["FEATURE_COLUMNS"]].values, tt_df["future"].values):
+        sequences.append(entry)
+        if len(sequences) == params[predictor]["N_STEPS"]:
+            sequence_data.append([np.array(sequences), target])
+    # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
+    # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
+    # this last_sequence will be used to predict in future dates that are not available in the dataset
+    last_sequence = list(sequences) + list(last_sequence)
+    # shift the last sequence by -1
+    last_sequence = np.array(pd.DataFrame(last_sequence).shift(-1).dropna())
+    # add to result
+    result["last_sequence"] = last_sequence
+    # print(last_sequence)
+    # construct the X"s and y"s
+    X, y = [], []
+    
+    for seq, target in sequence_data:
+        X.append(seq)
+        y.append(target)
+
+    X = np.array(X)
+    y = np.array(y)
+    # reshape X to fit the neural network
+    X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
+
+    kfold = KFold(n_splits=5, shuffle=True)
+    i = 0
+    for train, test in kfold.split(X, y):
+        print(f" IIIIIIIIIIIIIIII {i} \n\n ")
+        print(f"len of train {len(X[train])}")
+        print(f"len of test {len(y[test])}")
+        print(f"what we're selecting {test}")
+        i += 1
+
+        result = 
+
+        make_tensor_slices(params, result)
+
+        nn_params = params[predictor]
+        
+        check_model_folders(params["SAVE_FOLDER"], symbol)
+    
+        model_name = (symbol + "-" + get_model_name(nn_params))
+
+        # kfold = KFold(n_splits=5, shuffle=True)
+        # for train, test in kfold.split()
+        model = create_model(nn_params)
+
+        logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
+
+        checkpointer = ModelCheckpoint(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" 
+            + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+        
+        if save_logs:
+            tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch="200, 1200") 
+        else:
+            tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch=0)
+
+        early_stop = EarlyStopping(patience=nn_params["PATIENCE"])
+        
+        history = model.fit(data_dict["train"],
+            batch_size=nn_params["BATCH_SIZE"],
+            epochs=nn_params["EPOCHS"],
+            verbose=2,
+            validation_data=data_dict["valid"],
+            callbacks = [tboard_callback, checkpointer, early_stop]   
+        )
+
+        epochs_used = len(history.history["loss"])
+            
+        if not save_logs:
+            delete_files_in_folder(logs_dir)
+            os.rmdir(logs_dir)
 
 

@@ -13,6 +13,7 @@ from functions.paca_model_functs import create_model, get_accuracy, get_all_accu
 from functions.data_load_functs import load_3D_data, load_2D_data
 from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
+
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
@@ -48,6 +49,7 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
    
     model_name = (symbol + "-" + get_model_name(nn_params))
 
+    
     model = create_model(nn_params)
 
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]

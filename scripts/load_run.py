@@ -22,6 +22,7 @@ def load_trade(symbols, params, real_mon):
 
 
     owned = getOwnedStocks(real_mon)
+    print(owned)
 
     pred_curr_list = {}
 
@@ -33,7 +34,6 @@ def load_trade(symbols, params, real_mon):
             s = time.perf_counter()
 
             df = get_proper_df(symbol, params["LIMIT"], "V2")
-            # df = get_proper_df(symbol, 9999, "V2")
             data_dict = load_all_data(defaults, df)
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()
