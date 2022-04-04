@@ -33,16 +33,14 @@ def alpaca_date_converter(df):
 
 
 def modify_dataframe(features, df):
-    base_features = ["o", "c", "l", "h", "v"]
+    base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
     removable_features = ["o", "l", "h", "m", "v", "tc", "vwap", "div", "split"]
     for feature in features:
-        # print(f"we got feature {feature}")
         if feature not in base_features:
             if feature in techs_dict:
-                # print(f"we got feature {feature} here, yeah yeah")
                 techs_dict[feature]["function"](feature, df)
             else:
-                print("Feature is not in the technical indicators dictionary. That sucks, probably")
+                print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
     for feature in removable_features:
         if feature not in features and feature in list(df.columns):
             df = df.drop(columns=[feature])
@@ -175,6 +173,7 @@ def load_all_data(params, df):
 
 def preprocess_dfresult(params, df, scale, to_print):
     tt_df = copy.deepcopy(df)
+    tt_df = tt_df.replace(0.000000, 0.000000001)
     if to_print:
         print(f"""Included features: {params["FEATURE_COLUMNS"]}""")
 

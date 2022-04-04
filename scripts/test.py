@@ -212,29 +212,30 @@ if __name__ == "__main__":
 
 
     params = {
-    # "ENSEMBLE": ["nn1", "nn2"],
-    # "ENSEMBLE": ["ADA1", "KNN1", "RFORE1"],
-    "ENSEMBLE": ["nn1"],
-    "TRADING": False,
-    "SAVE_FOLDER": "tune4",
-    "nn1" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-        "UNITS": 256,
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 2000,
-        "PATIENCE": 200,
+        # "ENSEMBLE": ["nn1", "nn2"],
+        # "ENSEMBLE": ["ADA1", "KNN1", "RFORE1"],
+        "ENSEMBLE": ["nn1"],
+        "TRADING": False,
+        "SAVE_FOLDER": "tune4",
+        "nn1" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-        "TEST_VAR": "c",
-        "SAVE_PRED": {}
-        },
     }
 
     symbol = "AGYS"
@@ -280,8 +281,13 @@ if __name__ == "__main__":
     y = np.array(y)
     # reshape X to fit the neural network
     X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
+    print(len(X), len(y))
 
-    kfold = KFold(n_splits=5, shuffle=True)
+    num_splits = 5
+    
+    accuracies = []
+    # kfold = KFold(n_splits=num_splits, shuffle=True)
+    kfold = KFold(n_splits=num_splits, shuffle=False)
     i = 0
     for train, test in kfold.split(X, y):
         print(f" IIIIIIIIIIIIIIII {i} \n\n ")
@@ -290,9 +296,20 @@ if __name__ == "__main__":
         print(f"what we're selecting {test}")
         i += 1
 
-        result = 
+        train = Dataset.from_tensor_slices((X[train], y[train]))
+        valid = Dataset.from_tensor_slices((X[test], y[test]))
 
-        make_tensor_slices(params, result)
+        train = train.batch(params[predictor]["BATCH_SIZE"])
+        valid = valid.batch(params[predictor]["BATCH_SIZE"])
+
+        train = train.cache()
+        valid = valid.cache()
+
+        train = train.prefetch(buffer_size=AUTOTUNE)
+        valid = valid.prefetch(buffer_size=AUTOTUNE)
+
+        data_dict["train"] = train
+        data_dict["valid"] = valid
 
         nn_params = params[predictor]
         
@@ -300,8 +317,7 @@ if __name__ == "__main__":
     
         model_name = (symbol + "-" + get_model_name(nn_params))
 
-        # kfold = KFold(n_splits=5, shuffle=True)
-        # for train, test in kfold.split()
+    
         model = create_model(nn_params)
 
         logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
@@ -314,20 +330,32 @@ if __name__ == "__main__":
         else:
             tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch=0)
 
-        early_stop = EarlyStopping(patience=nn_params["PATIENCE"])
+        # early_stop = EarlyStopping(patience=nn_params["PATIENCE"])
         
         history = model.fit(data_dict["train"],
             batch_size=nn_params["BATCH_SIZE"],
             epochs=nn_params["EPOCHS"],
-            verbose=2,
-            validation_data=data_dict["valid"],
-            callbacks = [tboard_callback, checkpointer, early_stop]   
+            verbose=0,
+            # validation_data=data_dict["valid"],
+            callbacks = [tboard_callback, checkpointer]   
         )
+
+        print(result["column_scaler"])
+        y_real, y_pred = return_real_predict(model, X[test], y[test], result["column_scaler"]["c"])
+
+        # y_real = y[test]
+        # y_pred = model.predict(X[test])
+        acc = get_accuracy(y_pred, y_real, lookup_step=1)
+        print(r1002(acc))
+        accuracies.append(acc)
+        model.evaluate(valid)
 
         epochs_used = len(history.history["loss"])
             
         if not save_logs:
             delete_files_in_folder(logs_dir)
             os.rmdir(logs_dir)
-
+    
+    overall_acc = r1002(sum(accuracies) / num_splits)
+    print(overall_acc)
 

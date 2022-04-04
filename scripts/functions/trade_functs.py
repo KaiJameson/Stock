@@ -35,9 +35,9 @@ def getOwnedStocks(real_mon):
 def buy_all_at_once(symbols, owned, price_list, real_mon):
     api = get_toggleable_api(real_mon)
     clock = api.get_clock()
-    # if not clock.is_open:
-    #     print("\nThe market is closed right now, go home. You're drunk.")
-    #     return
+    if not clock.is_open:
+        print("\nThe market is closed right now, go home. You're drunk.")
+        return
 
     buy_list = []
     sold_list = {}
@@ -48,11 +48,6 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
         try:
             df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
             current_price = df["close"][0]
-            # print(current_price)
-
-            # for symbol, bars in barset.items():
-            #     for bar in bars:
-            #         current_price = bar.c
 
             if current_price < price_list[symbol]["predicted"]:
                 if symbol not in owned:
@@ -116,13 +111,7 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
             else:
                 df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
                 current_price = df["close"][0]
-                # print(current_price)
 
-                current_price = 0
-                barset = api.get_barset(symbol, "day", limit=1)
-                for symbol, bars in barset.items():
-                    for bar in bars:
-                        current_price = bar.c
                 buy_qty = (buy_power / stock_portion_adjuster) // current_price
 
                 if buy_qty == 0:

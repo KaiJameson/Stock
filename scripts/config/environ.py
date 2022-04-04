@@ -1,7 +1,7 @@
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 
-from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import LSTM, Dense
 
 directory_dict = {
     "backtest":          "../backtest",
@@ -65,7 +65,7 @@ make_config = False
 """
 
 defaults = {
-    "ENSEMBLE": ["nn1", "nn2"],
+    "ENSEMBLE": ["nn1", "nn2", "nn3", "sav_gol"],
     "TRADING": True,
     "SAVE_FOLDER": "trading",
     "nn1" : { 
@@ -73,15 +73,16 @@ defaults = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, LSTM)],
+        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
         "EPOCHS": 2000,
-        "PATIENCE": 100,
+        "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
@@ -89,19 +90,38 @@ defaults = {
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
         "EPOCHS": 2000,
-        "PATIENCE": 100,
+        "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
+    "nn3" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "UNITS": 256,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },    
     "LIMIT": 4000
     }
 
