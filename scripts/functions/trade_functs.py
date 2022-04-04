@@ -3,7 +3,9 @@ from config.environ import stocks_traded
 from config.symbols import trading_real_money
 from functions.io_functs import make_runtime_price
 from functions.error_functs import error_handler
+from functions.time_functs import get_current_datetime, get_past_datetime
 import alpaca_trade_api as tradeapi
+from alpaca_trade_api.rest import TimeFrame
 
 
 def get_api():
@@ -39,13 +41,14 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
 
     buy_list = []
     sold_list = {}
+    end = get_current_datetime()
+    start = get_current_datetime()
+
     for symbol in symbols:
         try:
-            barset = api.get_barset(symbol, "day", limit=1)
-            current_price = 0
-            for symbol, bars in barset.items():
-                for bar in bars:
-                    current_price = bar.c
+            df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+            current_price = df["close"][0]
+
             if current_price < price_list[symbol]["predicted"]:
                 if symbol not in owned:
                     buy_list.append(symbol)
@@ -53,7 +56,7 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
             else:
                 if symbol in owned:
                     qty = owned.pop(symbol)
-
+                    print(f"symbol {symbol} qty {qty} ")
                     sell = api.submit_order(
                         symbol=symbol,
                         qty=qty,
@@ -106,11 +109,9 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
                 continue
             
             else:
-                current_price = 0
-                barset = api.get_barset(symbol, "day", limit=1)
-                for symbol, bars in barset.items():
-                    for bar in bars:
-                        current_price = bar.c
+                df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+                current_price = df["close"][0]
+
                 buy_qty = (buy_power / stock_portion_adjuster) // current_price
 
                 if buy_qty == 0:

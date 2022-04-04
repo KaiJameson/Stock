@@ -4,13 +4,14 @@ from config.symbols import load_save_symbols, do_the_trades
 from config.environ import directory_dict, defaults
 from functions.functions import check_directories, r2
 from functions.trade_functs import getOwnedStocks, buy_all_at_once
-from functions.data_load_functs import get_proper_df, load_all_data
+from functions.data_load_functs import get_proper_df, load_all_data, modify_dataframe
 from functions.error_functs import error_handler, keyboard_interrupt
 from functions.io_functs import  make_load_run_excel, runtime_predict_excel
 from functions.time_functs import get_current_date_string
 from functions.trade_functs import get_toggleable_api
 from paca_model import configure_gpu, ensemble_predictor
 import tensorflow as tf
+import pandas as pd
 import psutil
 import time
 import sys
@@ -21,6 +22,7 @@ def load_trade(symbols, params, real_mon):
     configure_gpu()
 
     owned = getOwnedStocks(real_mon)
+    print(owned)
 
     pred_curr_list = {}
 
@@ -30,7 +32,9 @@ def load_trade(symbols, params, real_mon):
             
             ss = time.perf_counter()
             s = time.perf_counter()
-            df = get_proper_df(symbol, 9999, "V2")
+
+            df = get_proper_df(symbol, params["LIMIT"], "V2")
+            
             data_dict = load_all_data(defaults, df)
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()
@@ -47,6 +51,9 @@ def load_trade(symbols, params, real_mon):
         except KeyboardInterrupt:
             keyboard_interrupt()
         except Exception:
+            pd.set_option("display.max_columns", None)
+            pd.set_option("display.max_rows", None)
+            print(modify_dataframe(params["nn3"]["FEATURE_COLUMNS"], df))
             error_handler(symbol, Exception)
 
     if do_the_trades:

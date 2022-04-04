@@ -11,6 +11,18 @@ def df_savgol(name, df):
         df_m("m", df) 
     df[name] = savgol_filter(df[df_selector], 7, 3)
 
+def df_change_percent(name, df):
+    df_selector = name[2]
+    if df_selector not in list(df.columns):
+        df_m("m", df) 
+    df[name] = df[df_selector].pct_change()
+
+def df_differencer(name, df):
+    df_selector = name[1]
+    if df_selector not in list(df.columns):
+        df_m("m", df) 
+    df[name] = df[df_selector].diff()
+
 def df_7MA(name, df):
     df[name] = ta.SMA(df.c, timeperiod=7)
 
@@ -267,6 +279,18 @@ techs_dict = {
     "sh": {"function":df_savgol},
     "sm": {"function":df_savgol},
     "sv": {"function":df_savgol},
+    "pcc": {"function":df_change_percent},
+    "pco": {"function":df_change_percent},
+    "pcl": {"function":df_change_percent},
+    "pch": {"function":df_change_percent},
+    "pcm": {"function":df_change_percent},
+    "pcv": {"function":df_change_percent},
+    "dc": {"function":df_differencer},
+    "do": {"function":df_differencer},
+    "dl": {"function":df_differencer},
+    "dh": {"function":df_differencer},
+    "dm": {"function":df_differencer},
+    "dv": {"function":df_differencer},
     "7MA": {"function":df_7MA},
     "up_band": {"function":df_BBANDS},
     "low_band": {"function":df_BBANDS},

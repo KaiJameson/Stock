@@ -50,8 +50,8 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
         print(test_name)
         print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
-        # master_df = get_proper_df(symbol, "full", "alp")
-        master_df = get_proper_df(symbol, 9999, "V2")
+
+        master_df = get_proper_df(symbol, params["LIMIT"], "V2")
         tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
         starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
             - datetime.timedelta(1)), master_df, tmp_cal)
@@ -112,6 +112,8 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                             if sym != symbol:
                                 del params[predictor]["SAVE_PRED"][sym]
                         save_to_dictionary(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", params[predictor]["SAVE_PRED"])
+                del sub_df
+
 
             print("Percent away: " + str(progress["percent_away_list"]))
             print("Correct direction %: " + str(progress["correct_direction_list"]))
@@ -123,6 +125,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                     avg_e[predictor] = mean(progress["epochs_dict"][predictor])
             hold_money = r2(test_money * (current_price / starting_day_price))
 
+            sub_df = df_subset(current_date, master_df)
             comparator_results_excel(sub_df, tune_days, symbol)
             
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
@@ -137,6 +140,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 delete_files_in_folder(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")
 
             print(f"The name for the test was {get_test_name(params)}")
+            del sub_df, master_df
 
         except KeyboardInterrupt:
             keyboard_interrupt()
@@ -148,79 +152,351 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 if __name__ == "__main__":
     check_directories()
     params = {
-    "ENSEMBLE": ["nn1"],
-    # "ENSEMBLE": ["ADA1", "KNN1", "RFORE1"],
-    "TRADING": False,
-    "SAVE_FOLDER": "tune4",
-    "nn1" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 2000,
-        "PATIENCE": 100,
-        "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-        "TEST_VAR": "c",
-        "SAVE_PRED": {}
-        },
-    "nn2" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 2000,
-        "PATIENCE": 200,
-        "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-        "TEST_VAR": "c",
-        "SAVE_PRED": {}
-        },
-    "DTREE1" : {
+        # "ENSEMBLE": ["nn4", "nn8", "nn11", "nn14"],
+        # "ENSEMBLE": ["nn7"],
+        "ENSEMBLE": ["nn17"],
+        "TRADING": False,
+        "SAVE_FOLDER": "tune4",
+        "nn1" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 100,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn2" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn3" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn4" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn5" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 100,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn6" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn7" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn8" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn9" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["c", "so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn10" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["7MA", "so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn11" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn12" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["c", "pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn13" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["sc", "pcc"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn14" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn15" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, LSTM)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 100,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn16" : { 
+            "N_STEPS": 300,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "nn17" : { 
+            "N_STEPS": 50,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+            "UNITS": 256,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+            },
+        "DTREE1" : {
+                "FEATURE_COLUMNS": ["c"],
+                "MAX_DEPTH": 10,
+                "MIN_SAMP_LEAF": 1,
+                "LOOKUP_STEP": 1,
+                "TEST_SIZE": 1,
+                "TEST_VAR": "c"
+            },
+        "RFORE1" : {
+                "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+                "N_ESTIMATORS": 100,
+                "MAX_DEPTH": 10,
+                "MIN_SAMP_LEAF": 1,
+                "LOOKUP_STEP": 1,
+                "TEST_SIZE": 1,
+                "TEST_VAR": "c"
+            },
+        "KNN1" : {
             "FEATURE_COLUMNS": ["c"],
-            "MAX_DEPTH": 5,
-            "MIN_SAMP_LEAF": 1,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 1,
-            "TEST_VAR": "c"
-        },
-    "RFORE1" : {
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-            "N_ESTIMATORS": 100,
-            "MAX_DEPTH": 10,
-            "MIN_SAMP_LEAF": 3,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 1,
-            "TEST_VAR": "c"
-        },
-    "KNN1" : {
-        "FEATURE_COLUMNS": ["c"],
-        "N_NEIGHBORS": 10,
-        "LOOKUP_STEP":1,
-        "TEST_SIZE": 1,
-        "TEST_VAR": "c"
-    },
-    "ADA1" : {
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-            "N_ESTIMATORS": 100,
-            "MAX_DEPTH": 10000,
-            "MIN_SAMP_LEAF": 1,
+            "N_NEIGHBORS": 10,
             "LOOKUP_STEP":1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
-        }
+        },
+        "ADA1" : {
+                "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+                "N_ESTIMATORS": 100,
+                "MAX_DEPTH": 10000,
+                "MIN_SAMP_LEAF": 1,
+                "LOOKUP_STEP":1,
+                "TEST_SIZE": 1,
+                "TEST_VAR": "c"
+            },
+        "LIMIT": 4000,
     }
 
     tuning(tune_year, tune_month, tune_day, tune_days, params)

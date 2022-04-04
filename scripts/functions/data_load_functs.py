@@ -33,24 +33,22 @@ def alpaca_date_converter(df):
 
 
 def modify_dataframe(features, df):
-    base_features = ["o", "c", "l", "h", "v"]
+    base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
     removable_features = ["o", "l", "h", "m", "v", "tc", "vwap", "div", "split"]
     for feature in features:
-        # print(f"we got feature {feature}")
         if feature not in base_features:
             if feature in techs_dict:
-                # print(f"we got feature {feature} here, yeah yeah")
                 techs_dict[feature]["function"](feature, df)
             else:
-                print("Feature is not in the technical indicators dictionary. That sucks, probably")
+                print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
     for feature in removable_features:
         if feature not in features and feature in list(df.columns):
             df = df.drop(columns=[feature])
 
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
-    print(df.head(1))
-    print(df.tail(1))
+    print(df.head(2))
+    print(df.tail(2))
     # print(df)
 
     return df
@@ -175,6 +173,7 @@ def load_all_data(params, df):
 
 def preprocess_dfresult(params, df, scale, to_print):
     tt_df = copy.deepcopy(df)
+    tt_df = tt_df.replace(0.000000, 0.000000001)
     if to_print:
         print(f"""Included features: {params["FEATURE_COLUMNS"]}""")
 
@@ -254,16 +253,10 @@ def load_2D_data(params, df=None, shuffle=True, scale=True, tensorify=False, to_
         return result
 
 def split_data(X, y, test_size, shuffle, result):
-    # print(f"""before split {len(X)}""")
     result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=2, random_state=42, 
         shuffle=False)
-    # print(f"""len train{len(result["X_train"])}  len test {len(result["X_test"])}""")
     result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(result["X_train"], result["y_train"],
         test_size=test_size, random_state=42, shuffle=shuffle)
-    # print(f"""len train{len(result["X_train"])} len valid {len(result["X_valid"])} len test {len(result["X_test"])}""")
-    # print(result["X_test"])
-    # print(f"""result["y_test"] {result["y_test"]}""")
-
     return result
 
 def make_tensor_slices(params, result):

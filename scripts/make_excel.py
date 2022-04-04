@@ -55,7 +55,7 @@ def get_user_input():
     else:
         print("You gotta give some arguments buddy, pick one of the following:")
         print("\"trade_perform date\" to create the trade performance excel sheet,")
-        print("\"PL date\" to create the profit less excel sheet,")
+        print("\"PL date\" to create the profit loss excel sheet,")
         print("\"tuning test_name\" to create the tuning excel sheet,")
         print("Please try again")
         sys.exit(-1)
