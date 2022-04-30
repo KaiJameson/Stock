@@ -44,9 +44,8 @@ make_config = False
 # into the future.
 # TEST_SIZE = How much of the data will be split between validation
 # and testing. 0.2 is 20%.
-# N_LAYERS = How many hidden neural layers the model will have.
+# LAYERS = The Architechure of the model
 # CELL = Type of cell used in each layer.
-# UNITS = Number of neurons per layer.
 # DROPOUT = % dropout, cells that are dropped in that training batch
 # will not be used to make the output. 
 # BIDIRECTIONAL = Whether or not the LSTM cells" memory can flow 
@@ -73,7 +72,6 @@ defaults = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
@@ -91,7 +89,6 @@ defaults = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
@@ -109,7 +106,6 @@ defaults = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-        "UNITS": 256,
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",

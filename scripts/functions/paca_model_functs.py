@@ -81,10 +81,10 @@ def model_first_layer(model, layers, ind, n_steps, features):
     else:
         if next_layer_name == "Dense":
             model.add(layers[ind][1](layers[ind][0], return_sequences=False, 
-                input_shape=(None, n_steps)))
+                input_shape=(n_steps, len(features))))
         else:
             model.add(layers[ind][1](layers[ind][0], return_sequences=True, 
-                input_shape=(None, n_steps)))
+                input_shape=(n_steps, len(features))))
 
     return model
 
@@ -121,7 +121,7 @@ def predict(model, data, n_steps, test_var="c", classification=False, layer="LST
         if layer_name_converter(layer) != "Dense":
             last_sequence = data["last_sequence"][:n_steps]
             # reshape the last sequence
-            last_sequence = last_sequence.reshape((last_sequence.shape[1], last_sequence.shape[0]))
+            # last_sequence = last_sequence.reshape((last_sequence.shape[1], last_sequence.shape[0]))
             # expand dimension
             last_sequence = np.expand_dims(last_sequence, axis=0)
             # get the prediction (scaled from 0 to 1)

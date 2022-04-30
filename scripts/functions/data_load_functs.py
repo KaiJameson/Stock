@@ -70,9 +70,7 @@ def get_alpacaV2_df(symbol, limit=1000, to_print=True):
     start = get_past_datetime(2000, 1, 1)
     while no_connection:
         try:
-            # print(f"limit{limit} end{end} start{start}")
             s = time.perf_counter()
-            # df = get_alpaca_data(symbol, end_date, api, limit=limit)
             df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, 
                 limit=limit).df
             df = df.rename(columns={"open": "o", "high":"h", "low": "l", "close": "c",
@@ -149,22 +147,22 @@ def get_proper_df(symbol, limit, option):
 
     return df
 
-def load_all_data(params, df):
+def load_all_data(params, df, shuffle=True):
     data_dict = {}
     req_2d = ["DTREE", "RFORE", "KNN", "ADA"]
 
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]
         if len(in_req_2d) > 0:
-            result = load_2D_data(params[predictor], df, tensorify=False)
+            result = load_2D_data(params[predictor], df, shuffle, tensorify=False)
             data_dict[predictor] = result
         if "nn" in predictor:
             if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
-                result, train, valid, test = load_2D_data(params[predictor], df, tensorify=True)
+                result, train, valid, test = load_2D_data(params[predictor], df, shuffle, tensorify=True)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
-                result, train, valid, test = load_3D_data(params[predictor], df)
+                result, train, valid, test = load_3D_data(params[predictor], df, shuffle)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
                 # print(data_dict[predictor])
@@ -191,14 +189,12 @@ def preprocess_dfresult(params, df, scale, to_print):
 
     return tt_df, result
 
-def load_3D_data(params, df=None, shuffle=True, scale=True, to_print=True):
-    tt_df, result = preprocess_dfresult(params, df, scale=scale, to_print=to_print)
-    
+def construct_3D_np(tt_df, params, result):
     # last `lookup_step` columns contains NaN in future column
     # get them before droping NaNs
     last_sequence = np.array(tt_df[params["FEATURE_COLUMNS"]].tail(params["LOOKUP_STEP"]))
     # drop NaNs
-    tt_df.dropna(inplace=True)
+    tt_df = tt_df.dropna()
     sequence_data = []
     sequences = deque(maxlen=params["N_STEPS"])
     for entry, target in zip(tt_df[params["FEATURE_COLUMNS"]].values, tt_df["future"].values):
@@ -223,20 +219,58 @@ def load_3D_data(params, df=None, shuffle=True, scale=True, to_print=True):
 
     X = np.array(X)
     y = np.array(y)
+
+    return X, y
+
+def load_3D_data(params, df, shuffle=True, scale=True, to_print=True):
+    tt_df, result = preprocess_dfresult(params, df, scale=scale, to_print=to_print)
+    
+    # last `lookup_step` columns contains NaN in future column
+    # get them before droping NaNs
+    # last_sequence = np.array(tt_df[params["FEATURE_COLUMNS"]].tail(params["LOOKUP_STEP"]))
+    # # drop NaNs
+    # tt_df.dropna(inplace=True)
+    # sequence_data = []
+    # sequences = deque(maxlen=params["N_STEPS"])
+    # for entry, target in zip(tt_df[params["FEATURE_COLUMNS"]].values, tt_df["future"].values):
+    #     sequences.append(entry)
+    #     if len(sequences) == params["N_STEPS"]:
+    #         sequence_data.append([np.array(sequences), target])
+    # # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
+    # # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
+    # # this last_sequence will be used to predict in future dates that are not available in the dataset
+    # last_sequence = list(sequences) + list(last_sequence)
+    # # shift the last sequence by -1
+    # last_sequence = np.array(pd.DataFrame(last_sequence).shift(-1).dropna())
+    # # add to result
+    # result["last_sequence"] = last_sequence
+    # # print(last_sequence)
+    # # construct the X"s and y"s
+    # X, y = [], []
+    
+    # for seq, target in sequence_data:
+    #     X.append(seq)
+    #     y.append(target)
+
+    # X = np.array(X)
+    # y = np.array(y)
+    X, y = construct_3D_np(tt_df, params, result)
     # reshape X to fit the neural network
-    X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
+    # print(X.shape)
+    # X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
+    # print(X.shape)
 
     result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
 
     train, valid, test = make_tensor_slices(params, result)
-
     return result, train, valid, test
+   
 
 
-def load_2D_data(params, df=None, shuffle=True, scale=True, tensorify=False, to_print=True):
+def load_2D_data(params, df, shuffle=True, scale=True, tensorify=False, to_print=True):
     tt_df, result = preprocess_dfresult(params, df, scale, to_print)
 
-    tt_df.dropna(inplace=True)
+    tt_df = tt_df.dropna()
     y = tt_df["future"]
     tt_df = tt_df.drop(columns="future")
     X = tt_df.to_numpy()
