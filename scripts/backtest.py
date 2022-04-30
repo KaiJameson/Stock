@@ -139,7 +139,6 @@ if __name__ == "__main__":
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
         "LAYERS": [(256, LSTM), (256, LSTM)],
-        "UNITS": 256,
         "DROPOUT": 0.4,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",

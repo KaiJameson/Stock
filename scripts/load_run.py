@@ -97,8 +97,8 @@ def create_day_summary(symbols, params, pred_curr_list, sold_list, hold_list, bo
 
 
 def pause_running_training():
+    s = time.time()
     processes = {p.pid: p.info for p in psutil.process_iter(["name"])}
-    
     python_processes_pids = []
     pause_list = []
 
@@ -109,18 +109,17 @@ def pause_running_training():
     for pid in python_processes_pids:
         if any("batch" in string for string in psutil.Process(pid).cmdline()):
             pause_list.append(pid)
-        elif any("tuning" in string for string in psutil.Process(pid).cmdline()):
+        elif any("tuner" in string for string in psutil.Process(pid).cmdline()):
             pause_list.append(pid)
 
     for pid in pause_list:
         psutil.Process(pid).suspend()
 
+    print(f"Pausing python files took {time.time() - s}")
     return pause_list
 
 def resume_running_training(pause_list):
-    print("hello")
     for pid in pause_list:
-        print(pid)
         psutil.Process(pid).resume()
 
 if __name__ == "__main__":
