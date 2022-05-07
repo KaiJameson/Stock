@@ -136,15 +136,13 @@ def get_actual_price(current_date, df, cal):
     # print(f"cd copy after inc {cd_copy}")
     df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
     if type(df_sub.index[0]) == type(""):
-        # print("both?")
         df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
-        return (df_sub.loc[get_past_date_string(cd_copy)]["c"])
+        actual_price = df_sub.loc[get_past_date_string(cd_copy)]["c"]
     else:
-        # print(f"current date {current_date}")
-        # print(type(df_sub.index[0]))
-        # print(f"{get_past_date_string(cd_copy)}")
-        # print(f"""here {df_sub.loc[get_past_date_string(cd_copy)]["c"]}""")
-        return df_sub.loc[get_past_date_string(cd_copy)]["c"][0]
+        actual_price = df_sub.loc[get_past_date_string(cd_copy)]["c"][0]
+
+    del df_sub
+    return actual_price
 
     
 

@@ -74,7 +74,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 current_date = increment_calendar(current_date, calendar)
                 print(f"outside current date {current_date}")
                 sub_df = df_subset(current_date, master_df)
-                data_dict = load_all_data(params, sub_df, shuffle=False)
+                data_dict = load_all_data(params, sub_df, shuffle=True)
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) 
                     + " using folder: " + params["SAVE_FOLDER"] + ".\n")
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         # "ENSEMBLE": ["nn7"],
         "ENSEMBLE": ["nn8"],
         "TRADING": False,
-        "SAVE_FOLDER": "tune4",
+        "SAVE_FOLDER": "",
         "nn1" : { 
             "N_STEPS": 100,
             "LOOKUP_STEP": 1,

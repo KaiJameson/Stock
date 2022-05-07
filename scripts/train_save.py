@@ -5,13 +5,40 @@ from paca_model import configure_gpu
 from functions.functions import check_directories
 from functions.error_functs import error_handler, keyboard_interrupt
 from functions.data_load_functs import load_all_data, get_proper_df
+import psutil
 import sys
 import time
 
 
 
 
-check_directories()
+
+
+def pause_running_training():
+    s = time.time()
+    processes = {p.pid: p.info for p in psutil.process_iter(["name"])}
+    python_processes_pids = []
+    pause_list = []
+
+    for process in processes:
+        if processes[process]["name"] == "python.exe":
+            python_processes_pids.append(process)
+
+    for pid in python_processes_pids:
+        if any("batch" in string for string in psutil.Process(pid).cmdline()):
+            pause_list.append(pid)
+        elif any("tuner" in string for string in psutil.Process(pid).cmdline()):
+            pause_list.append(pid)
+
+    for pid in pause_list:
+        psutil.Process(pid).suspend()
+
+    print(f"Pausing python files took {time.time() - s}")
+    return pause_list
+
+def resume_running_training(pause_list):
+    for pid in pause_list:
+        psutil.Process(pid).resume()
 
 def save_models(symbols):
     configure_gpu()
@@ -30,9 +57,12 @@ def save_models(symbols):
             keyboard_interrupt()
         except Exception:
             error_handler(symbol, Exception)
-        
-s = time.perf_counter()
-save_models(load_save_symbols)
-end = (time.perf_counter() - s) / 60
-print("This took " + str(round(end , 2)) + " minutes to complete.")
+if __name__ == "__main__":
+    check_directories()        
+    s = time.perf_counter()
+    pause_list = pause_running_training()
+    save_models(load_save_symbols)
+    resume_running_training(pause_list)
+    end = (time.perf_counter() - s) / 60
+    print("This took " + str(round(end , 2)) + " minutes to complete.")
 

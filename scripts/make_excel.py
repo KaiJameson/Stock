@@ -12,8 +12,6 @@ import os
 
 
 
-check_directories()
-
 def get_user_input():
     api = get_api()
     if len(sys.argv) > 1:
