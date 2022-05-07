@@ -16,7 +16,7 @@ import psutil
 import time
 import sys
 
-check_directories()
+
 
 def load_trade(symbols, params, real_mon):
     configure_gpu()
@@ -123,6 +123,7 @@ def resume_running_training(pause_list):
         psutil.Process(pid).resume()
 
 if __name__ == "__main__":
+    check_directories()
     s = time.perf_counter()
     if len(sys.argv) > 1:
         if sys.argv[1] == "paper":

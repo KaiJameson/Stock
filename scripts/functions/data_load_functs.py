@@ -225,40 +225,7 @@ def construct_3D_np(tt_df, params, result):
 def load_3D_data(params, df, shuffle=True, scale=True, to_print=True):
     tt_df, result = preprocess_dfresult(params, df, scale=scale, to_print=to_print)
     
-    # last `lookup_step` columns contains NaN in future column
-    # get them before droping NaNs
-    # last_sequence = np.array(tt_df[params["FEATURE_COLUMNS"]].tail(params["LOOKUP_STEP"]))
-    # # drop NaNs
-    # tt_df.dropna(inplace=True)
-    # sequence_data = []
-    # sequences = deque(maxlen=params["N_STEPS"])
-    # for entry, target in zip(tt_df[params["FEATURE_COLUMNS"]].values, tt_df["future"].values):
-    #     sequences.append(entry)
-    #     if len(sequences) == params["N_STEPS"]:
-    #         sequence_data.append([np.array(sequences), target])
-    # # get the last sequence by appending the last `n_step` sequence with `lookup_step` sequence
-    # # for instance, if n_steps=50 and lookup_step=10, last_sequence should be of 59 (that is 50+10-1) length
-    # # this last_sequence will be used to predict in future dates that are not available in the dataset
-    # last_sequence = list(sequences) + list(last_sequence)
-    # # shift the last sequence by -1
-    # last_sequence = np.array(pd.DataFrame(last_sequence).shift(-1).dropna())
-    # # add to result
-    # result["last_sequence"] = last_sequence
-    # # print(last_sequence)
-    # # construct the X"s and y"s
-    # X, y = [], []
-    
-    # for seq, target in sequence_data:
-    #     X.append(seq)
-    #     y.append(target)
-
-    # X = np.array(X)
-    # y = np.array(y)
     X, y = construct_3D_np(tt_df, params, result)
-    # reshape X to fit the neural network
-    # print(X.shape)
-    # X = X.reshape((X.shape[0], X.shape[2], X.shape[1]))
-    # print(X.shape)
 
     result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
 
