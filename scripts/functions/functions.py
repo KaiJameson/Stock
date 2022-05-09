@@ -5,18 +5,13 @@ import os
 
 
 def check_directories():
-    print(directory_dict)
     for directory in directory_dict:
-        print(directory_dict[directory])
         sep = directory_dict[directory].split("/")
-        print(sep)
         while len(sep) > 2:
             sep = sep[:-1]
-            print(f"sep{sep}")
             current_dir = ("/".join(sep))
-            print(current_dir)
             if not os.path.isdir(current_dir):
-                os.mkdir(directory_dict[directory])    
+                os.mkdir(current_dir)    
         if not os.path.isdir(directory_dict[directory]):
             os.mkdir(directory_dict[directory])
 
