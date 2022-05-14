@@ -1,8 +1,9 @@
+from unittest import result
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from config.environ import directory_dict, test_money
-from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN
+from config.model_repository import models
 from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002, r2, get_model_name
 from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
@@ -14,13 +15,14 @@ from functions.time_functs import get_past_datetime, get_year_month_day
 from paca_model import ensemble_predictor, configure_gpu
 from make_excel import make_tuning_sheet
 from statistics import mean
+import pandas as pd
 import time
 import sys
 import os
 import datetime
 
 
-def tuning(tune_year, tune_month, tune_day, tune_days, params):
+def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
     api = get_api()
     configure_gpu()
         
@@ -28,6 +30,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
 
     print("\nStaring tuner.py using these following symbols: " + str(tune_symbols) + "\n")
 
+    output_list = []
     for symbol in tune_symbols:
         test_name = (symbol + "-" + get_test_name(params))
 
@@ -72,9 +75,9 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
             while progress["days_done"] <= progress["total_days"]:
                 time_s = time.perf_counter()
                 current_date = increment_calendar(current_date, calendar)
-                print(f"outside current date {current_date}")
+
                 sub_df = df_subset(current_date, master_df)
-                data_dict = load_all_data(params, sub_df, shuffle=True)
+                data_dict = load_all_data(params, sub_df)
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) 
                     + " using folder: " + params["SAVE_FOLDER"] + ".\n")
 
@@ -88,7 +91,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
                 p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
                 correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
                 print(f"Symbol:{symbol} Date:{current_date} Predicted:{sr2(predicted_price)} " 
-                    f"Current:{sr2(current_price)} Actual:{sr2(actual_price)} Direction:{correct_dir}", flush=True)
+                    f"Current:{sr2(current_price)} Actual:{sr2(actual_price)} Direction:{correct_dir}\n", flush=True)
                 progress["percent_away_list"].append(p_diff)
                 progress["correct_direction_list"].append(correct_dir)
 
@@ -128,10 +131,14 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
             sub_df = df_subset(current_date, master_df)
             comparator_results_excel(sub_df, tune_days, symbol)
             
+            
             print_backtest_results(params, progress["total_days"], avg_p, avg_d, avg_e, progress["tune_year"], progress["tune_month"], 
                 progress["tune_day"], progress["time_so_far"], progress["current_money"], hold_money)
             backtest_excel(directory_dict["tuning"], test_name, progress["tune_year"], progress["tune_month"], progress["tune_day"], 
                 params, avg_p, avg_d, avg_e, progress["time_so_far"], progress["total_days"], progress["current_money"], hold_money)
+
+            if output:
+                output_list.append([test_name, avg_p, avg_d, progress["time_so_far"], progress["current_money"]])
 
             if os.path.isfile(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt"):
                 os.remove(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt")
@@ -148,424 +155,27 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params):
             error_handler(symbol, Exception)
 
     make_tuning_sheet(get_test_name(params))
+    
+    if output:
+        result_df = pd.DataFrame(output_list, columns=["Model Name", "Average percent", "Average direction", 
+            "Time used", "Money Made"])
+        result_df["Average percent"] = pd.to_numeric(result_df["Average percent"]).astype("float64")
+        result_df["Average direction"] = pd.to_numeric(result_df["Average direction"]).astype("float64")
+        return [result_df["Model Name"][0], r2(result_df["Average percent"].mean()), r2(result_df["Average direction"].mean()),
+            r2(result_df["Time used"].sum()), r2(result_df["Money Made"].mean())]
 
 if __name__ == "__main__":
     check_directories()
     params = {
-        # "ENSEMBLE": ["nn4", "nn8", "nn11", "nn14"],
-        # "ENSEMBLE": ["nn7"],
-        "ENSEMBLE": ["nn8"],
+        "ENSEMBLE": ["nn23"],
         "TRADING": False,
         "SAVE_FOLDER": "",
-        "nn1" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, LSTM)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 100,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn2" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, LSTM)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn3" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, LSTM)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn4" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, LSTM)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn5" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, LSTM)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 100,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn6" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn7" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn8" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn9" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["c", "so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn10" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["7MA", "so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn11" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn12" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["c", "pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn13" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["sc", "pcc"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn14" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn15" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, LSTM)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 100,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn16" : { 
-            "N_STEPS": 300,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn17" : { 
-            "N_STEPS": 50,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn18" : { 
-            "N_STEPS": 20,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 100,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn19" : { 
-            "N_STEPS": 150,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn20" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["pcv", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn21" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(64, LSTM), (128, Dense), (256, Dense), (256, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["pcv", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "nn22" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(64, LSTM), (128, Dense), (256, Dense), (256, Dense)],
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-            },
-        "DTREE1" : {
-                "FEATURE_COLUMNS": ["c"],
-                "MAX_DEPTH": 10,
-                "MIN_SAMP_LEAF": 1,
-                "LOOKUP_STEP": 1,
-                "TEST_SIZE": 1,
-                "TEST_VAR": "c"
-            },
-        "RFORE1" : {
-                "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-                "N_ESTIMATORS": 100,
-                "MAX_DEPTH": 10,
-                "MIN_SAMP_LEAF": 1,
-                "LOOKUP_STEP": 1,
-                "TEST_SIZE": 1,
-                "TEST_VAR": "c"
-            },
-        "KNN1" : {
-            "FEATURE_COLUMNS": ["c"],
-            "N_NEIGHBORS": 10,
-            "LOOKUP_STEP":1,
-            "TEST_SIZE": 1,
-            "TEST_VAR": "c"
-        },
-        "ADA1" : {
-                "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
-                "N_ESTIMATORS": 100,
-                "MAX_DEPTH": 10000,
-                "MIN_SAMP_LEAF": 1,
-                "LOOKUP_STEP":1,
-                "TEST_SIZE": 1,
-                "TEST_VAR": "c"
-            },
         "LIMIT": 4000,
     }
+
+    for model in params["ENSEMBLE"]:
+        if model in models:
+            params[model] = models[model]
 
     tuning(tune_year, tune_month, tune_day, tune_days, params)
 

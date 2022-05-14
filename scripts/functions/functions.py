@@ -51,7 +51,8 @@ def delete_files_in_folder(directory):
 
 
 def get_model_name(nn_params):
-    return (f"""{nn_params["FEATURE_COLUMNS"]}-layers{layers_string(nn_params["LAYERS"])}-step"""
+    return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}-"""
+            f"""{nn_params["FEATURE_COLUMNS"]}-layers{layers_string(nn_params["LAYERS"])}-step"""
             f"""{nn_params["N_STEPS"]}-limit{nn_params["LIMIT"]}-epoch{nn_params["EPOCHS"]}""" 
             f"""-pat{nn_params["PATIENCE"]}-batch{nn_params["BATCH_SIZE"]}-drop{nn_params["DROPOUT"]}"""
             f"""-ts{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")

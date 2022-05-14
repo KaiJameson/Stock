@@ -47,6 +47,7 @@ def modify_dataframe(features, df):
 
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
+    pd.set_option('display.expand_frame_repr', False)
     print(df.head(2))
     print(df.tail(2))
     # print(df)
@@ -147,22 +148,23 @@ def get_proper_df(symbol, limit, option):
 
     return df
 
-def load_all_data(params, df, shuffle=True):
+def load_all_data(params, df):
     data_dict = {}
-    req_2d = ["DTREE", "RFORE", "KNN", "ADA"]
+    req_2d = ["DTREE", "RFORE", "KNN", "ADA", "XGB"]
 
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]
         if len(in_req_2d) > 0:
-            result = load_2D_data(params[predictor], df, shuffle, tensorify=False)
+            result = load_2D_data(params[predictor], df, shuffle=True, tensorify=False)
             data_dict[predictor] = result
         if "nn" in predictor:
             if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
-                result, train, valid, test = load_2D_data(params[predictor], df, shuffle, tensorify=True)
+                result, train, valid, test = load_2D_data(params[predictor], df, params[predictor]["SHUFFLE"],
+                    tensorify=True)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
-                result, train, valid, test = load_3D_data(params[predictor], df, shuffle)
+                result, train, valid, test = load_3D_data(params[predictor], df, params[predictor]["SHUFFLE"])
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
                 # print(data_dict[predictor])

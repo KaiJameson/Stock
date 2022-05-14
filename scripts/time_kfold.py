@@ -3,46 +3,20 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStoppi
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from config.environ import save_logs, directory_dict
+from config.symbols import real_test_symbols
+from config.model_repository import models
 from functions.data_load_functs import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
 from functions.functions import check_directories, check_model_folders, get_model_name, delete_files_in_folder, r1002
 from functions.paca_model_functs import create_model, get_accuracy, return_real_predict
 from functions.time_functs import get_time_string
 from paca_model import nn_train_save
-import qlib
 import os
 
 
-for predictor in testing_list:
-    for symbol in something:
-        params = {
-            # "ENSEMBLE": ["nn1", "nn2"],
-            # "ENSEMBLE": ["ADA1", "KNN1", "RFORE1"],
-            "ENSEMBLE": ["nn1"],
-            "TRADING": False,
-            "SAVE_FOLDER": "tune4",
-            "nn1" : { 
-                "N_STEPS": 5,
-                "LOOKUP_STEP": 1,
-                "TEST_SIZE": 0.2,
-                "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-                "DROPOUT": .4,
-                "BIDIRECTIONAL": False,
-                "LOSS": "huber_loss",
-                "OPTIMIZER": "adam",
-                "BATCH_SIZE": 1024,
-                "EPOCHS": 2000,
-                "PATIENCE": 200,
-                "LIMIT": 4000,
-                "FEATURE_COLUMNS": ["o", "l", "c"],
-                "TEST_VAR": "c",
-                "SAVE_PRED": {}
-                },
-            "LIMIT": 4000,
-        }
-
-        symbol = "AGYS"
-        predictor = "nn1"
-        scale = False
+def time_kfold(params):
+    for symbol in real_test_symbols:
+        predictor = params["ENSEMBLE"]
+        scale = True
         to_print = True
 
 
@@ -133,3 +107,18 @@ for predictor in testing_list:
 
         overall_acc = r1002(sum(accuracies) / num_splits)
         print(overall_acc)
+
+if __name__ == "__main__":
+    check_directories()
+    params = {
+        "ENSEMBLE":[],
+        "TRADING": False,
+        "SAVE_FOLDER": "",
+        "LIMIT": 4000,
+    }
+
+    for model in models:
+        if "nn" in model:
+            params["ENSEMBLE"] = list(model)
+            params[model] = models[model]
+            time_kfold(params)
