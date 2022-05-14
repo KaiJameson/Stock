@@ -81,6 +81,7 @@ defaults = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+        "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
@@ -98,6 +99,7 @@ defaults = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+        "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
@@ -115,9 +117,10 @@ defaults = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+        "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },    
     "LIMIT": 4000
-    }
+}
 

@@ -7,21 +7,21 @@ def df_m(name, df):
 
 def df_savgol(name, df):
     df_selector = name[1:]
-    print(f"{df_selector}")
+    # print(f"{df_selector}")
     if df_selector == "m":
         df_m("m", df) 
     df[name] = savgol_filter(df[df_selector], 7, 3)
 
 def df_change_percent(name, df):
     df_selector = name[2:]
-    print(f"{df_selector}")
+    # print(f"{df_selector}")
     if df_selector == "m":
         df_m("m", df) 
     df[name] = df[df_selector].pct_change()
 
 def df_differencer(name, df):
     df_selector = name[1:]
-    print(f"{df_selector}")
+    # print(f"{df_selector}")
     if df_selector == "m":
         df_m("m", df) 
     df[name] = df[df_selector].diff(1)

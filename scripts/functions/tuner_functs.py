@@ -51,15 +51,7 @@ def change_params(index_dict, params):
 
 def get_user_input(tune_sym_dict, params):
     if len(sys.argv) > 1:
-        if sys.argv[1] == "tune1":
-            tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tune2":
-            tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tune3":
-            tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tune4":
-            tune_symbols = tune_sym_dict[sys.argv[1]]
-        elif sys.argv[1] == "tune5":
+        if sys.argv[1] in tune_sym_dict:
             tune_symbols = tune_sym_dict[sys.argv[1]]
         else:
             print("You must give this program an argument in the style of \"tune#\"")

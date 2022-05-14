@@ -9,10 +9,10 @@ from functions.error_functs import error_handler, keyboard_interrupt
 from functions.io_functs import  make_load_run_excel, runtime_predict_excel
 from functions.time_functs import get_current_date_string
 from functions.trade_functs import get_toggleable_api
+from functions.prcs_con_functs import pause_running_training, resume_running_training
 from paca_model import configure_gpu, ensemble_predictor
 import tensorflow as tf
 import pandas as pd
-import psutil
 import time
 import sys
 
@@ -51,9 +51,6 @@ def load_trade(symbols, params, real_mon):
         except KeyboardInterrupt:
             keyboard_interrupt()
         except Exception:
-            pd.set_option("display.max_columns", None)
-            pd.set_option("display.max_rows", None)
-            print(modify_dataframe(params["nn3"]["FEATURE_COLUMNS"], df))
             error_handler(symbol, Exception)
 
     if do_the_trades:
@@ -96,31 +93,6 @@ def create_day_summary(symbols, params, pred_curr_list, sold_list, hold_list, bo
     sum_f.close()
 
 
-def pause_running_training():
-    s = time.time()
-    processes = {p.pid: p.info for p in psutil.process_iter(["name"])}
-    python_processes_pids = []
-    pause_list = []
-
-    for process in processes:
-        if processes[process]["name"] == "python.exe":
-            python_processes_pids.append(process)
-
-    for pid in python_processes_pids:
-        if any("batch" in string for string in psutil.Process(pid).cmdline()):
-            pause_list.append(pid)
-        elif any("tuner" in string for string in psutil.Process(pid).cmdline()):
-            pause_list.append(pid)
-
-    for pid in pause_list:
-        psutil.Process(pid).suspend()
-
-    print(f"Pausing python files took {time.time() - s}")
-    return pause_list
-
-def resume_running_training(pause_list):
-    for pid in pause_list:
-        psutil.Process(pid).resume()
 
 if __name__ == "__main__":
     check_directories()
@@ -132,6 +104,7 @@ if __name__ == "__main__":
     else:
         print(f"~~~ Running load_run in real money mode ~~~")
         pause_list = pause_running_training()
+        print(pause_list)
         try:
             load_trade(load_save_symbols, defaults, True)
         except:
