@@ -1,4 +1,3 @@
-from unittest import result
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
@@ -9,16 +8,15 @@ from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price, get_calendar
 from functions.error_functs import error_handler, keyboard_interrupt
-from functions.tuner_functs import grab_index, change_params, get_user_input, update_money
-from functions.data_load_functs import load_3D_data, df_subset, get_proper_df, load_all_data
+from functions.tuner_functs import increment_and_predict, get_user_input
+from functions.compar_functs import update_money
+from functions.data_load_functs import df_subset, get_proper_df
 from functions.time_functs import get_past_datetime, get_year_month_day
-from paca_model import ensemble_predictor, configure_gpu
+from paca_model import configure_gpu
 from make_excel import make_tuning_sheet
 from statistics import mean
 import pandas as pd
 import time
-import sys
-import os
 import datetime
 
 
@@ -47,6 +45,25 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
             "epochs_dict": {}
         }
 
+        if os.path.isfile(directory_dict["tuning"] + "/" + test_name + ".txt"):
+            if output:
+                output_dict = {
+                    "percent_away": 0.0,
+                    "correct_direction": 0.0,
+                    "epochs": 0,
+                    "total_money": 0.0,
+                    "time_so_far": 0.0,
+                }
+
+                output_dict = read_saved_contents(f"""{directory_dict["tuning"]}/{test_name}.txt""", output_dict)
+                output_list.append([test_name, output_dict["percent_away"], output_dict["correct_direction"],
+                    output_dict["time_so_far"], output_dict["total_money"]])
+            else:
+                print("A fully completed file with the name " + test_name + " already exists.")
+                print("Exiting this instance of tuning now: ")
+            continue
+
+
         for predictor in params["ENSEMBLE"]:
             if "nn" in predictor:
                 progress["epochs_dict"][predictor] = []
@@ -59,10 +76,6 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
         starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
             - datetime.timedelta(1)), master_df, tmp_cal)
 
-        if os.path.isfile(directory_dict["tuning"] + "/" + test_name + ".txt"):
-            print("A fully completed file with the name " + test_name + " already exists.")
-            print("Exiting this instance of tuning now: ")
-            continue
     
         # check if we already have a save file, if we do, extract the info and run it
         if os.path.isfile(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt"):
@@ -74,15 +87,13 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
         try:
             while progress["days_done"] <= progress["total_days"]:
                 time_s = time.perf_counter()
-                current_date = increment_calendar(current_date, calendar)
 
-                sub_df = df_subset(current_date, master_df)
-                data_dict = load_all_data(params, sub_df)
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) 
                     + " using folder: " + params["SAVE_FOLDER"] + ".\n")
+                predicted_price, current_price, epochs_run, current_date, sub_df, data_dict = increment_and_predict(symbol, 
+                    params, current_date, calendar, master_df)
 
-                predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
-                    data_dict, sub_df)
+
                 if bool(epochs_run):
                     for predictor in epochs_run:
                         progress["epochs_dict"][predictor].append(epochs_run[predictor])
@@ -162,12 +173,12 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
         result_df["Average percent"] = pd.to_numeric(result_df["Average percent"]).astype("float64")
         result_df["Average direction"] = pd.to_numeric(result_df["Average direction"]).astype("float64")
         return [result_df["Model Name"][0], r2(result_df["Average percent"].mean()), r2(result_df["Average direction"].mean()),
-            r2(result_df["Time used"].sum()), r2(result_df["Money Made"].mean())]
+            r2(result_df["Time used"].sum() / 60), r2(result_df["Money Made"].mean())]
 
 if __name__ == "__main__":
     check_directories()
     params = {
-        "ENSEMBLE": ["nn23"],
+        "ENSEMBLE": ["nn11"],
         "TRADING": False,
         "SAVE_FOLDER": "",
         "LIMIT": 4000,

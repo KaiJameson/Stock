@@ -11,8 +11,6 @@ from functions.time_functs import get_current_date_string
 from functions.trade_functs import get_toggleable_api
 from functions.prcs_con_functs import pause_running_training, resume_running_training
 from paca_model import configure_gpu, ensemble_predictor
-import tensorflow as tf
-import pandas as pd
 import time
 import sys
 

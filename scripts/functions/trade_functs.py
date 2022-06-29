@@ -168,3 +168,6 @@ def get_stock_portion_adjuster(value_in_stocks, buy_list):
             stock_portion_adjuster = len(buy_list) / .60 # want 60%
 
     return stock_portion_adjuster
+
+def sim_trades(symbols, portfolio, pred_curr_list):
+    pass

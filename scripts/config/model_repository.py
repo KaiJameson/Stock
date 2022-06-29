@@ -491,14 +491,25 @@ exhaustive_search = {
         "TEST_VAR": "c"
         },
     "KNN" : {
-
+        "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
+            ["sc", "pcc"], ["c", "dc", "sc", "pcc"]],
+        "N_NEIGHBORS": [1, 2, 3, 4, 5, 7, 10, 20],
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
     },
     "ADA" : {
-
-    }
-
-
-
+        "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
+            ["sc", "pcc"], ["c", "dc", "sc", "pcc"]],
+        "N_ESTIMATORS": [5, 10, 50, 100, 1000],
+        "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
+        "MIN_SAMP_LEAF": [1, 3, 5, 10],
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
+    },
 
 
 }

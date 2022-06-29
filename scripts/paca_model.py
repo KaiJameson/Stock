@@ -1,4 +1,3 @@
-from scipy.sparse import data
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from functions.functions import delete_files_in_folder, check_model_folders, get_model_name
@@ -10,7 +9,6 @@ from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_date_string
 from functions.functions import get_model_name, layer_name_converter, sr2
 from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, predict, return_real_predict
-from functions.data_load_functs import load_3D_data, load_2D_data
 from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
@@ -22,13 +20,13 @@ import pandas as pd
 import talib as ta
 import numpy as np
 import socket
+import gc
 import random
 import os
-import time
-
 
 def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_dict={}):
     #description of all the parameters used is located inside environment.py
+    gc.collect()
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
 

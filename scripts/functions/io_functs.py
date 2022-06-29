@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from config.environ import test_money, directory_dict
 from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2, check_prediction_subfolders
 from functions.time_functs import get_current_date_string, get_time_string, get_past_date_string
-from functions.tuner_functs import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
+from functions.compar_functs import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
     EMA_comparator, pre_c_comparator, TSF_comparator)
 from statistics import mean
 import matplotlib.pyplot as plt
@@ -239,7 +239,7 @@ def read_saved_contents(file_path, return_dict):
             return_dict[key] = ast.literal_eval(file_contents[key])
         else:
             print("Unexpected type found in this file")
-    
+    del file_contents
     return return_dict
 
 def save_to_dictionary(file_path, dictionary):

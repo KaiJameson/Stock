@@ -1,4 +1,3 @@
-from email import iterators
 from tuner import tuning
 from config.symbols import tune_year, tune_month, tune_day, test_days
 from config.model_repository import exhaustive_search
@@ -7,11 +6,13 @@ from itertools import product
 import pandas as pd
 import sys
 import copy
+import time
 
 check_directories()
 
 
 if len(sys.argv) > 2:
+    s_time = time.perf_counter()
     test_days = 500
 
     params = {
@@ -58,6 +59,7 @@ if len(sys.argv) > 2:
     pd.set_option("display.max_columns", None)
     pd.set_option("display.max_rows", None)
     print(result_df)
+    print(f"Doing all of these tests took {(time.perf_counter() - s_time)} minutes")
 
     
 else:
