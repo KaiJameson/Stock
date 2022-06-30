@@ -8,7 +8,7 @@ from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price, get_calendar
 from functions.error_functs import error_handler, keyboard_interrupt
-from functions.tuner_functs import increment_and_predict, get_user_input
+from functions.tuner_functs import subset_and_predict, get_user_input
 from functions.compar_functs import update_money
 from functions.data_load_functs import df_subset, get_proper_df
 from functions.time_functs import get_past_datetime, get_year_month_day
@@ -18,6 +18,7 @@ from statistics import mean
 import pandas as pd
 import time
 import datetime
+import os
 
 
 def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
@@ -90,8 +91,10 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
 
                 print("\nCurrently on day " + str(progress["days_done"]) + " of " + str(progress["total_days"]) 
                     + " using folder: " + params["SAVE_FOLDER"] + ".\n")
-                predicted_price, current_price, epochs_run, current_date, sub_df, data_dict = increment_and_predict(symbol, 
-                    params, current_date, calendar, master_df)
+
+                current_date = increment_calendar(current_date, calendar)
+                predicted_price, current_price, epochs_run, sub_df, data_dict = subset_and_predict(symbol, 
+                    params, current_date, master_df)
 
 
                 if bool(epochs_run):
@@ -178,7 +181,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
 if __name__ == "__main__":
     check_directories()
     params = {
-        "ENSEMBLE": ["nn11"],
+        "ENSEMBLE": ["nn14"],
         "TRADING": False,
         "SAVE_FOLDER": "",
         "LIMIT": 4000,

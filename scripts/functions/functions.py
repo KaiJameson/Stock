@@ -51,11 +51,11 @@ def delete_files_in_folder(directory):
 
 
 def get_model_name(nn_params):
-    return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}-"""
-            f"""{nn_params["FEATURE_COLUMNS"]}-layers{layers_string(nn_params["LAYERS"])}-step"""
-            f"""{nn_params["N_STEPS"]}-limit{nn_params["LIMIT"]}-epoch{nn_params["EPOCHS"]}""" 
-            f"""-pat{nn_params["PATIENCE"]}-batch{nn_params["BATCH_SIZE"]}-drop{nn_params["DROPOUT"]}"""
-            f"""-ts{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")
+    return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}"""
+            f"""{nn_params["FEATURE_COLUMNS"]}{layers_string(nn_params["LAYERS"])}s"""
+            f"""{nn_params["N_STEPS"]}l{nn_params["LIMIT"]}e{nn_params["EPOCHS"]}""" 
+            f"""p{nn_params["PATIENCE"]}b{nn_params["BATCH_SIZE"]}d{nn_params["DROPOUT"]}"""
+            f"""t{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")
 
 def get_dtree_name(dt_params):
     return (f"""{dt_params["FEATURE_COLUMNS"]}-md{dt_params["MAX_DEPTH"]}-msl{dt_params["MIN_SAMP_LEAF"]}""")
@@ -75,13 +75,14 @@ def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
-            model_params = params[predictor]
-            test_name += (predictor + str(model_params["FEATURE_COLUMNS"]) 
-                + layers_string(model_params["LAYERS"]) + "s" + str(model_params["N_STEPS"]) 
-                + "l" + str(model_params["LIMIT"]) + "e" + str(model_params["EPOCHS"]) 
-                + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
-                + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"])
-                + model_params["TEST_VAR"])
+            # model_params = 
+            # test_name += (predictor + str(model_params["FEATURE_COLUMNS"]) 
+            #     + layers_string(model_params["LAYERS"]) + "s" + str(model_params["N_STEPS"]) 
+            #     + "l" + str(model_params["LIMIT"]) + "e" + str(model_params["EPOCHS"]) 
+            #     + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
+            #     + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"])
+            #     + model_params["TEST_VAR"])
+            test_name += get_model_name(params[predictor])
         elif "DTREE" in predictor:
             test_name += get_dtree_name(params[predictor])
         elif "RFORE" in predictor:

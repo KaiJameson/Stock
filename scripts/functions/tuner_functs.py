@@ -4,16 +4,14 @@ from paca_model import ensemble_predictor
 import sys
 import copy
 
-def increment_and_predict(symbol, params, current_date, calendar, master_df):
-    current_date = increment_calendar(current_date, calendar)
-
+def subset_and_predict(symbol, params, current_date, master_df, to_print=True):
     sub_df = df_subset(current_date, master_df)
-    data_dict = load_all_data(params, sub_df)
+    data_dict = load_all_data(params, sub_df, to_print)
 
     predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
                     data_dict, sub_df)
     
-    return predicted_price, current_price, epochs_run, current_date, data_dict, sub_df
+    return predicted_price, current_price, epochs_run, data_dict, sub_df
 
 
 def change_params(index_dict, params):
