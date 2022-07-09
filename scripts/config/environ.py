@@ -22,7 +22,8 @@ directory_dict = {
     "trade_perform":     "../excel/trade_perform",
     "tune_summary":      "../tuning_info/summary",
     "tuning":            "../tuning_info",
-    "save_predicts":     "../predictions"
+    "save_predicts":     "../predictions",
+    "sim_trades":        "../sim_trades",
 }
 
 

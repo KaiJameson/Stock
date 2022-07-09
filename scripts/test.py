@@ -20,6 +20,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from tensorflow_addons.layers import ESN
 from iexfinance.stocks import Stock, get_historical_data
 from sklearn.model_selection import KFold
+from xgboost import XGBRegressor
 import requests
 import copy
 
@@ -122,44 +123,56 @@ if __name__ == "__main__":
             "LOOKUP_STEP":1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
-        }
+        },
+        "XGB1" : {
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "LOOKUP_STEP":1,
+            "TEST_SIZE": .2,
+            "TEST_VAR": "c"
+
+        },
+        "LIMIT": 4000,
     }
  
 
 
-    # start = datetime.datetime(2006, 12, 29)
+    api = get_api()
 
-    # end = datetime.datetime(2021, 12, 10)
+    s = time.perf_counter()
+    # news = api.get_news("QCOM", limit=5000)
 
-    # os.environ["IEX_API_VERSION"] = "sandbox"
+    # print(news)
+    # print(news[0])
+    # for ele in news:
+    #     print(ele.author, ele.created_at)
+    # print(len(news))
 
-    # # aapl = Stock("AAPL", )
-    # s = time.perf_counter()
-    # # hello = get_historical_data("AAPL", start, end, output_format="pandas", token=iex_key)
-    # hello = get_historical_data("AGYS", start, end, output_format="pandas", token=iex_sandbox_key)
-    # print(f"it took {time.perf_counter() - s}")
+    master_df = get_proper_df("AGYS", params["LIMIT"], "V2")
+    the_df = load_2D_data(params["XGB1"], master_df)
+    print(the_df)
+    print(len(the_df["X_train"]), len(the_df["X_valid"]), len(the_df["X_test"]))
+    regressor = xgb.XGBRegressor(n_estimators=150, max_depth=100, max_leaves=10, learning_rate=0.05, gamma=0.0, n_jobs=-1, predictor="cpu_predictor")
+
+    
+    xgbModel = regressor.fit(the_df["X_train"], the_df["y_train"], eval_set=[(the_df["X_train"], the_df["y_train"]),
+    (the_df["X_valid"], the_df["y_valid"])], verbose=False)
+    print(regressor.evals_result())
+    print(the_df["X_test"])
+    print(regressor.predict(the_df["X_test"]))
+
+
+
+    print(time.perf_counter() - s, flush=True)
 
     # print(hello)
     # print(len(hello))
     # print(type(hello))
 
-    # symbol = "VIXY"
-    # output_size = "full"
-    # s = time.perf_counter()
-    # url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize={output_size}&apikey={alpha_key}"
-    # r = requests.get(url)
-    # data = r.json()
-    # # print(data)
-    # df = pd.DataFrame(data["Time Series (Daily)"])
-    # print(f"alpha vantage bro {time.perf_counter() - s}")
-    # s = time.perf_counter()
-    # df = pd.DataFrame(data["Time Series (Daily)"])
-    # df = df.transpose()
-    # print(f"len {len(df)}")
-    # print(df.head(100))
-    
-    # print(f" took {time.perf_counter() - s} to get dataframe in proper order")
-    # # print(df_dict)
+    #best so far for volitility 
+    # symbol = "UVXY"
+    # pd.set_option("display.max_columns", None)
+    # pd.set_option("display.max_rows", None)
+    # print(get_proper_df(symbol, 4000, "V2"))
 
     all_features = ["o", "l", "h", "c", "m", "v", "sc", "so", "sl", "sh", "sm", "sv", "7MA", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", 
         "lin_reg_int", "lin_reg_slope", "pears_cor", "mon_flow_ind", "willR", "std_dev", "min", "max", "commod_chan_ind", "para_SAR", "para_SAR_ext", "rate_of_change", 

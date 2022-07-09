@@ -6,6 +6,7 @@ from functions.error_functs import error_handler
 from functions.time_functs import get_current_datetime, get_past_datetime
 import alpaca_trade_api as tradeapi
 from alpaca_trade_api.rest import TimeFrame
+import time
 
 
 def get_api():
@@ -169,5 +170,61 @@ def get_stock_portion_adjuster(value_in_stocks, buy_list):
 
     return stock_portion_adjuster
 
-def sim_trades(symbols, portfolio, pred_curr_list):
-    pass
+
+def preport_no_rebal(tune_symbols, pred_curr_list, portfolio):
+    # sell block
+    buy_list = []
+    for symbol in tune_symbols:
+        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+            if symbol not in portfolio["owned"]:
+                buy_list.append(symbol)
+        else :
+            #sell
+            if symbol in portfolio["owned"]:
+                portfolio["cash"] += portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+                portfolio["owned"].pop(symbol)
+    
+    # calculate splits
+    value_in_stocks_before = round((1 - (portfolio["cash"] / portfolio["equity"])) * 100, 2)
+    stock_portion_adjuster = get_stock_portion_adjuster(value_in_stocks_before, buy_list)
+
+    # buy block
+    for symbol in buy_list:
+        # buy
+        buy_qty = (portfolio["cash"] / stock_portion_adjuster) // pred_curr_list[symbol]["current"]
+
+        if buy_qty == 0:
+            continue
+
+        portfolio["owned"][symbol] = {"buy_price": pred_curr_list[symbol]["current"], "qty": buy_qty}
+        portfolio["cash"] -= portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+
+    return portfolio
+
+def rebal_split(tune_symbols, pred_curr_list, portfolio):
+    # sell block
+    buy_list = []
+    for symbol in tune_symbols:
+        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+            buy_list.append(symbol)
+        
+        #sell
+        if symbol in portfolio["owned"]:
+            portfolio["cash"] += portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+            portfolio["owned"].pop(symbol)
+    
+    # calculate splits
+    stock_portion_adjuster = len(buy_list)
+
+    # buy block
+    for symbol in buy_list:
+        # buy
+        buy_qty = (portfolio["equity"] / stock_portion_adjuster) // pred_curr_list[symbol]["current"]
+
+        if buy_qty == 0:
+            continue
+
+        portfolio["owned"][symbol] = {"buy_price": pred_curr_list[symbol]["current"], "qty": buy_qty}
+        portfolio["cash"] -= portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+
+    return portfolio

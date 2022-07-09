@@ -157,8 +157,13 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
             if os.path.isfile(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt"):
                 os.remove(directory_dict["tuning"] + "/" + "SAVE-" + test_name + ".txt")
 
-            if len(os.listdir(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")) != 0:
-                delete_files_in_folder(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")
+            if os.path.isfile(f"{directory_dict['model']}/{params['SAVE_FOLDER']}"):
+                os.remove(f"{directory_dict['model']}/{params['SAVE_FOLDER']}")
+                
+            # if len(os.listdir(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")) != 0:
+            #     delete_files_in_folder(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")
+
+            
 
             print(f"The name for the test was {get_test_name(params)}")
             del sub_df, master_df
@@ -181,7 +186,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
 if __name__ == "__main__":
     check_directories()
     params = {
-        "ENSEMBLE": ["nn14"],
+        "ENSEMBLE": ["nn4"],
         "TRADING": False,
         "SAVE_FOLDER": "",
         "LIMIT": 4000,

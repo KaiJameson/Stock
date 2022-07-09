@@ -433,10 +433,28 @@ models = {
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
+    "nn25" : { 
+        "N_STEPS": 200,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
     "DTREE1" : {
-        "FEATURE_COLUMNS": ["c"],
-        "MAX_DEPTH": 10,
-        "MIN_SAMP_LEAF": 1,
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "MAX_DEPTH": 5,
+        "MIN_SAMP_LEAF": 3,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"

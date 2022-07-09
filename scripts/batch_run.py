@@ -1,6 +1,7 @@
 from tuner import tuning
 from config.symbols import tune_year, tune_month, tune_day, test_days
 from config.model_repository import exhaustive_search
+from config.environ import directory_dict
 from functions.functions import check_directories
 from itertools import product
 import pandas as pd
@@ -59,7 +60,9 @@ if len(sys.argv) > 2:
     pd.set_option("display.max_columns", None)
     pd.set_option("display.max_rows", None)
     print(result_df)
-    print(f"Doing all of these tests took {(time.perf_counter() - s_time)} minutes")
+
+    result_df.to_csv(f"{directory_dict['tune_summary']}/exhaustive_{params['ENSEMBLE'][0]}.txt", sep="\t")
+    print(f"Doing all of these tests took {(time.perf_counter() - s_time) / 60} minutes")
 
     
 else:

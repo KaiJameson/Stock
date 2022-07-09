@@ -7,7 +7,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import directory_dict, random_seed, save_logs, defaults
 from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_date_string
-from functions.functions import get_model_name, layer_name_converter, sr2
+from functions.functions import get_model_name, sr2
 from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, predict, return_real_predict
 from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
@@ -16,10 +16,8 @@ from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.inspection import permutation_importance
 from statistics import mean
-import pandas as pd
 import talib as ta
 import numpy as np
-import socket
 import gc
 import random
 import os
@@ -141,7 +139,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
             #     print(f"{feature} has importance of {imps[i]}")
             tree_pred = tree.predict(data_dict[predictor]["X_test"])
-            scale =data_dict[predictor]["column_scaler"]["future"]
+            scale = data_dict[predictor]["column_scaler"]["future"]
             tree_pred = np.array(tree_pred)
             tree_pred = tree_pred.reshape(1, -1)
             predicted_price = np.float32(scale.inverse_transform(tree_pred)[-1][-1])
@@ -175,9 +173,12 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
             #     print(f"{feature} has importance of {imps[i]}")
             ada_pred = ada.predict(data_dict[predictor]["X_test"])
+            # print(ada_pred)
             scale = data_dict[predictor]["column_scaler"]["future"]
             ada_pred = np.array(ada_pred)
+            # print(ada_pred)
             ada_pred = ada_pred.reshape(1, -1)
+            # print(ada_pred)
             predicted_price = np.float32(scale.inverse_transform(ada_pred)[-1][-1])
 
         elif "nn" in predictor:
@@ -203,6 +204,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
 
 
 def ensemble_accuracy(symbol, params, current_date, classification=False):
+    data = {}
     for predictor in params:
         if "nn" in predictor:
             pass
