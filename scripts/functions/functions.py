@@ -49,6 +49,32 @@ def delete_files_in_folder(directory):
     except Exception:
         error_handler("Deleting files ", Exception)
 
+def interpret_dict(dict):
+    s = ""
+    for i in dict:
+        s += f"{i}={dict[i]}"
+    return s
+
+def n_max_elements(names, prices, N):
+    final_list = []
+  
+    for i in range(0, N): 
+        if len(prices) == 0:
+            break
+
+        max1 = 0          
+        ind = 0
+        for j in range(len(prices)):     
+            if prices[j] > max1:
+                max1 = prices[j]
+                ind = j
+        
+        final_list.append(names[ind])
+        prices.remove(prices[ind]);
+        names.remove(names[ind])
+
+          
+    return final_list
 
 def get_model_name(nn_params):
     return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}"""
@@ -71,17 +97,17 @@ def get_ada_name(ada_params):
     return (f"""{ada_params["FEATURE_COLUMNS"]}-md{ada_params["MAX_DEPTH"]}-est{ada_params["N_ESTIMATORS"]}"""
         f"""-msl{ada_params["MIN_SAMP_LEAF"]}""")
 
+def get_xgb_name(xgb_params):
+    return (f"{xgb_params['FEATURE_COLUMNS']}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
+        f"-ml{xgb_params['MAX_LEAVES']}-g{xgb_params['GAMMA']}")
+
+def get_mlens_name(mlens_params):
+    return (f"TEMP_OH_GOD_PLEASE_FIX_ME!!!!!")
+
 def get_test_name(params):
     test_name = str(params["ENSEMBLE"])
     for predictor in params["ENSEMBLE"]:
         if "nn" in predictor:
-            # model_params = 
-            # test_name += (predictor + str(model_params["FEATURE_COLUMNS"]) 
-            #     + layers_string(model_params["LAYERS"]) + "s" + str(model_params["N_STEPS"]) 
-            #     + "l" + str(model_params["LIMIT"]) + "e" + str(model_params["EPOCHS"]) 
-            #     + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
-            #     + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"])
-            #     + model_params["TEST_VAR"])
             test_name += get_model_name(params[predictor])
         elif "DTREE" in predictor:
             test_name += get_dtree_name(params[predictor])
@@ -91,6 +117,12 @@ def get_test_name(params):
             test_name += get_knn_name(params[predictor])
         elif "ADA" in predictor:
             test_name += get_ada_name(params[predictor])
+        elif "XGB" in predictor:
+            test_name += get_xgb_name(params[predictor])
+        elif "MLENS" in predictor:
+            test_name += get_mlens_name(params[predictor])
+        else:
+            test_name += "TEMP_FIX_NAME"
 
     if len(test_name) > 200:
         test_name = test_name[:200]
@@ -133,6 +165,9 @@ def get_correct_direction(predicted_price, current_price, actual_price):
         return 0.5
     else:
         return 0.0
+
+def percent_diff(pri1, pri2):
+    return r2((abs(pri1 - pri2) / pri1) * 100)
 
 def percent_from_real(y_real, y_predict):
     the_diffs = []

@@ -5,19 +5,23 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import directory_dict, random_seed, save_logs, defaults
-from tensorflow.keras.layers import LSTM
 from functions.time_functs import get_time_string, get_past_date_string
 from functions.functions import get_model_name, sr2
-from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, predict, return_real_predict
+from functions.paca_model_functs import create_model, get_accuracy, get_current_price, predict, return_real_predict
 from functions.io_functs import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.inspection import permutation_importance
+from sklearn.svm import LinearSVR
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from mlens.ensemble import SuperLearner
 from statistics import mean
 import talib as ta
 import numpy as np
+import xgboost as xgb
 import gc
 import random
 import os
@@ -173,13 +177,38 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
             #     print(f"{feature} has importance of {imps[i]}")
             ada_pred = ada.predict(data_dict[predictor]["X_test"])
-            # print(ada_pred)
             scale = data_dict[predictor]["column_scaler"]["future"]
             ada_pred = np.array(ada_pred)
-            # print(ada_pred)
             ada_pred = ada_pred.reshape(1, -1)
-            # print(ada_pred)
             predicted_price = np.float32(scale.inverse_transform(ada_pred)[-1][-1])
+        
+        elif "XGB" in predictor:
+            regressor = xgb.XGBRegressor(n_estimators=params[predictor]["N_ESTIMATORS"], 
+                max_depth=params[predictor]["MAX_DEPTH"], max_leaves=params[predictor]["MAX_LEAVES"], 
+                learning_rate=.05, gamma=params[predictor]["GAMMA"], n_jobs=-1, predictor="cpu_predictor")
+
+            regressor.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"], 
+            eval_set=[(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])], verbose=False)
+            xgb_pred = regressor.predict(data_dict[predictor]["X_test"])
+            # print(xgb_pred)
+            scale = data_dict[predictor]["column_scaler"]["future"]
+            xgb_pred = np.array(xgb_pred)
+            # print(xgb_pred)
+            xgb_pred = xgb_pred.reshape(1, -1)
+            # print(xgb_pred)
+            predicted_price = np.float32(scale.inverse_transform(xgb_pred)[-1][-1])
+            
+        elif "MLENS" in predictor:
+            ensemble = SuperLearner(scorer=mean_squared_error, random_state=42)
+            ensemble.add([RandomForestRegressor(random_state=42), LinearSVR(loss="squared_epsilon_insensitive", dual=False)])
+            ensemble.add_meta(LinearRegression())
+            ensemble.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
+            fore_pred = ensemble.predict(data_dict[predictor]["X_test"])
+            scale = data_dict[predictor]["column_scaler"]["future"]
+            fore_pred = np.array(fore_pred)
+            fore_pred = fore_pred.reshape(1, -1)
+            predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
+                    
 
         elif "nn" in predictor:
             if params["TRADING"]:
@@ -193,6 +222,11 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
                     epochs_dict[predictor] = epochs_run
                     predicted_price = nn_load_predict(symbol, params, predictor, data_dict[predictor])
                     save_prediction(symbol, params, current_date, predictor, predicted_price, epochs_run)
+        # else:
+        #     print("\nPREDICTOR NOT RECOGNIZED")
+        #     print("GET YO SHIT TOGETHER\n")
+        #     sys.exit(-1)
+
         ensemb_predict_list.append(np.float32(predicted_price))
 
     print(f"Ensemble prediction list: {ensemb_predict_list}")

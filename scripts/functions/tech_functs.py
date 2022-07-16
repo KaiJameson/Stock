@@ -1,4 +1,4 @@
-
+from functions.voltil_functs import *
 from scipy.signal import savgol_filter
 import talib as ta
 
@@ -298,8 +298,8 @@ techs_dict = {
     "pch": {"function":df_change_percent},
     "pcm": {"function":df_change_percent},
     "pcv": {"function":df_change_percent},
-    "stc": {"function":df_change_percent},
-    "svwap": {"function":df_change_percent},
+    "pctc": {"function":df_change_percent},
+    "pcvwap": {"function":df_change_percent},
     "dc": {"function":df_differencer},
     "do": {"function":df_differencer},
     "dl": {"function":df_differencer},
@@ -308,6 +308,13 @@ techs_dict = {
     "dv": {"function":df_differencer},
     "dtc": {"function":df_differencer},
     "dvwap": {"function":df_differencer},
+    "garman_klass":  {"function":garman_klass},
+    "hodges_tompkins": {"function":hodges_tompkins},
+    "kurtosis": {"function":get_kurtosis},
+    "parkison": {"function":parkinson},
+    "rogers_stachell": {"function":rogers_stachell},
+    "skew": {"function":get_skew},
+    "yang_zhang" : {"function":yang_zhang},
     "7MA": {"function":df_7MA},
     "up_band": {"function":df_BBANDS},
     "low_band": {"function":df_BBANDS},

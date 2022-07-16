@@ -3,14 +3,14 @@ silence_tensorflow()
 from config.environ import test_money, directory_dict
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from config.model_repository import models
-from functions.trade_functs import get_api, preport_no_rebal, rebal_split
+from functions.trade_functs import get_api, more_than_X, preport_no_rebal, rebal_split, top_X, more_than_X
 from functions.time_functs import get_calendar, increment_calendar, get_actual_price
 from functions.error_functs import error_handler, keyboard_interrupt
 from functions.tuner_functs import subset_and_predict, get_user_input
 from functions.paca_model_functs import get_current_price
 from functions.data_load_functs import get_proper_df, df_subset
 from functions.time_functs import get_past_datetime
-from functions.functions import check_directories, r2
+from functions.functions import check_directories, r2, interpret_dict
 from paca_model import configure_gpu
 from statistics import mean
 import datetime
@@ -54,10 +54,6 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             
         print(starting_prices)
 
-        # tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, "AAPL")
-        # starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
-        #     - datetime.timedelta(1)), master_df_dict[symbol], tmp_cal)
-
         calendar = get_calendar(current_date, api, "AAPL")
 
         while days_done <= tune_days:
@@ -84,6 +80,10 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
                 portfolio = preport_no_rebal(tune_symbols, pred_curr_list, portfolio)
             elif params["TRADE_METHOD"] == "rebal_split":
                 portfolio = rebal_split(tune_symbols, pred_curr_list, portfolio)
+            elif params["TRADE_METHOD"] == "top_X":
+                portfolio = top_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
+            elif params["TRADE_METHOD"] == "more_than_X":
+                portfolio = more_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             else:
                 print(f"Don't have trading strategy {params['TRADE_METHOD']} implemented yet")
                 print(f"Sorry bud, try again next time")
@@ -111,7 +111,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     
     time_so_far = time.perf_counter() - time_s
 
-    print(f"\nTesting finished for ensemble {params['ENSEMBLE']} using trade method: {params['TRADE_METHOD']}")
+    print(f"\nTesting finished for ensemble {params['ENSEMBLE']} using trade method: {params['TRADE_METHOD']} with params {interpret_dict(params['TRADE_PARAMS'])}")
     print(f"The total value of the portfolio was {r2(portfolio['equity'])} at the end with {r2(portfolio['cash'])} in cash")
     print(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}\n"
         f"and holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}")
@@ -119,8 +119,9 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     print(f"Testing all of the days took {r2(time_so_far / 3600)} hours or {int(time_so_far // 3600)}:"
         f"{int((time_so_far / 3600 - (time_so_far // 3600)) * 60)} minutes.")
 
-    with open(f"{directory_dict['sim_trades']}/{params['ENSEMBLE']}-{params['TRADE_METHOD']}.txt", "a") as f:
-        f.write(f"\nTesting finished for ensemble {params['ENSEMBLE']} using trade method: {params['TRADE_METHOD']}\n")
+    print(interpret_dict(params['TRADE_PARAMS']))
+    with open(f"{directory_dict['sim_trades']}/{params['ENSEMBLE']}-{params['TRADE_METHOD']}-{interpret_dict(params['TRADE_PARAMS'])}.txt", "a") as f:
+        f.write(f"\nTesting finished for ensemble {params['ENSEMBLE']} using trade method: {params['TRADE_METHOD']} with params {interpret_dict(params['TRADE_PARAMS'])}\n")
         f.write(f"The total value of the portfolio was {r2(portfolio['equity'])} at the end with {r2(portfolio['cash'])} in cash\n")
         f.write(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}\n"
             f"and holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}\n")
@@ -129,12 +130,12 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             f"{int((time_so_far / 3600 - (time_so_far // 3600)) * 60)} minutes.\n")
 
 
-
 if __name__ == "__main__":
     check_directories()
     params = {
-        "ENSEMBLE": ["nn8"],
-        "TRADE_METHOD": "rebal_split",
+        "ENSEMBLE": ["nn8", "nn11", "nn14"],
+        "TRADE_METHOD": "top_X",
+        "TRADE_PARAMS": {"x": 3},
         "TRADING": False,
         "SAVE_FOLDER": "",
         "LIMIT": 4000,

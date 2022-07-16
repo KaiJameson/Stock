@@ -3,7 +3,7 @@ silence_tensorflow()
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from config.environ import directory_dict, test_money
 from config.model_repository import models
-from functions.functions import check_directories, delete_files_in_folder, get_correct_direction, get_test_name, sr2, sr1002, r2, get_model_name
+from functions.functions import check_directories, get_correct_direction, get_test_name, sr2, sr1002, r2, get_model_name
 from functions.trade_functs import get_api
 from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
 from functions.time_functs import increment_calendar, get_actual_price, get_calendar
@@ -159,10 +159,6 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
 
             if os.path.isfile(f"{directory_dict['model']}/{params['SAVE_FOLDER']}"):
                 os.remove(f"{directory_dict['model']}/{params['SAVE_FOLDER']}")
-                
-            # if len(os.listdir(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")) != 0:
-            #     delete_files_in_folder(f"""{directory_dict["model"]}/{params["SAVE_FOLDER"]}""")
-
             
 
             print(f"The name for the test was {get_test_name(params)}")
@@ -186,7 +182,8 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
 if __name__ == "__main__":
     check_directories()
     params = {
-        "ENSEMBLE": ["nn4"],
+        # "ENSEMBLE": ["nn4"],
+        "ENSEMBLE": ["MLENS1"],
         "TRADING": False,
         "SAVE_FOLDER": "",
         "LIMIT": 4000,
@@ -195,6 +192,7 @@ if __name__ == "__main__":
     for model in params["ENSEMBLE"]:
         if model in models:
             params[model] = models[model]
+    print(params)
 
     tuning(tune_year, tune_month, tune_day, tune_days, params)
 

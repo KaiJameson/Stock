@@ -1,3 +1,4 @@
+from matplotlib import ticker
 from config.environ import directory_dict
 from config.api_key import alpha_key
 from functions.time_functs import get_past_date_string
@@ -35,10 +36,23 @@ def alpaca_date_converter(df):
 def modify_dataframe(features, df, to_print):
     base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
     removable_features = ["o", "l", "h", "m", "v", "tc", "vwap", "div", "split"]
+
     for feature in features:
         if feature not in base_features:
             if feature in techs_dict:
                 techs_dict[feature]["function"](feature, df)
+            elif feature.startswith("tick_"):
+                feature_split = feature.split("_")
+                ticker_df = get_proper_df(feature_split[1], 4000, "V2")
+
+                if feature_split[2] not in base_features:
+                    if feature_split[2] in techs_dict:
+                        techs_dict[feature_split[2]]["function"](feature_split[2], ticker_df)
+                        df[feature] = ticker_df[feature_split[2]]
+                    else:
+                        print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
+                else:
+                    df[feature] = ticker_df[feature_split[2]]
             else:
                 print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
     for feature in removable_features:
@@ -151,8 +165,8 @@ def get_proper_df(symbol, limit, option):
 
 def load_all_data(params, df, to_print=True):
     data_dict = {}
-    req_2d = ["DTREE", "RFORE", "KNN", "ADA", "XGB"]
-
+    req_2d = ["DTREE", "RFORE", "KNN", "ADA", "XGB", "MLENS"]
+    
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]
         if len(in_req_2d) > 0:

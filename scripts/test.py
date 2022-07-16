@@ -1,4 +1,3 @@
-import math
 from config.environ import *
 from config.symbols import *
 from config.api_key import *
@@ -9,19 +8,26 @@ from functions.io_functs import *
 from functions.functions import *
 from functions.time_functs import *
 from functions.tech_functs import *
+from functions.voltil_functs import *
 from paca_model import *
 from load_run import *
 from tuner import tuning
 from statistics import mean
 from scipy.signal import cwt
+from sklearn.svm import LinearSVR
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 from tensorflow_addons.layers import ESN
 from iexfinance.stocks import Stock, get_historical_data
 from sklearn.model_selection import KFold
 from xgboost import XGBRegressor
+from mlens.ensemble import SuperLearner
+import math
 import requests
+
 import copy
 
 
@@ -70,7 +76,7 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
 if __name__ == "__main__":
 
     params = {
-        "ENSEMBLE": ["DTREE1"],
+        "ENSEMBLE": ["ADA1", "RFORE1", "XGB1", "nn1"],
         "TRADING": False,
         "SAVE_FOLDER": "tune4",
         "nn1" : { 
@@ -78,6 +84,7 @@ if __name__ == "__main__":
             "LOOKUP_STEP": 1,
             "TEST_SIZE": 0.2,
             "LAYERS": [(256, Dense), (256, Dense), (256, Dense), (256, Dense)],
+            "SHUFFLE": True,
             "DROPOUT": .4,
             "BIDIRECTIONAL": False,
             "LOSS": "huber_loss",
@@ -87,7 +94,7 @@ if __name__ == "__main__":
             "PATIENCE": 200,
             "SAVELOAD": True,
             "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["c", "o"],
+            "FEATURE_COLUMNS": ["c", "o", "l", "h", "m", "v"],
             "TEST_VAR": "c",
             "SAVE_PRED": {}
         },
@@ -126,10 +133,13 @@ if __name__ == "__main__":
         },
         "XGB1" : {
             "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "N_ESTIMATORS": 100,
+            "MAX_DEPTH": 1000,
+            "MAX_LEAVES": 1000,
+            "GAMMA": 0.0,
             "LOOKUP_STEP":1,
-            "TEST_SIZE": .2,
+            "TEST_SIZE": 1,
             "TEST_VAR": "c"
-
         },
         "LIMIT": 4000,
     }
@@ -146,32 +156,40 @@ if __name__ == "__main__":
     # for ele in news:
     #     print(ele.author, ele.created_at)
     # print(len(news))
+    predictor = "RFORE1"
 
-    master_df = get_proper_df("AGYS", params["LIMIT"], "V2")
-    the_df = load_2D_data(params["XGB1"], master_df)
-    print(the_df)
-    print(len(the_df["X_train"]), len(the_df["X_valid"]), len(the_df["X_test"]))
-    regressor = xgb.XGBRegressor(n_estimators=150, max_depth=100, max_leaves=10, learning_rate=0.05, gamma=0.0, n_jobs=-1, predictor="cpu_predictor")
+    df = get_proper_df("AGYS", 4000, "V2")
+    data_dict = load_all_data(params, df)
+    print(data_dict.keys())
 
+    ensemble = SuperLearner(scorer=mean_squared_error, random_state=42)
+
+    ensemble.add([RandomForestRegressor(random_state=42), LinearSVR(loss="squared_epsilon_insensitive", dual=False)])
+
+    ensemble.add_meta(LinearRegression())
+
+    ensemble.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
+    fore_pred = ensemble.predict(data_dict[predictor]["X_test"])
+    scale = data_dict[predictor]["column_scaler"]["future"]
+    fore_pred = np.array(fore_pred)
+    fore_pred = fore_pred.reshape(1, -1)
+    predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
+
+    print(predicted_price)
+
+    # pd.set_option("display.max_columns", None)
+    # pd.set_option("display.max_rows", None)
+    # print(df)
+    # print(data_dict["nn1"])
     
-    xgbModel = regressor.fit(the_df["X_train"], the_df["y_train"], eval_set=[(the_df["X_train"], the_df["y_train"]),
-    (the_df["X_valid"], the_df["y_valid"])], verbose=False)
-    print(regressor.evals_result())
-    print(the_df["X_test"])
-    print(regressor.predict(the_df["X_test"]))
-
+    
 
 
     print(time.perf_counter() - s, flush=True)
 
-    # print(hello)
-    # print(len(hello))
-    # print(type(hello))
-
     #best so far for volitility 
     # symbol = "UVXY"
-    # pd.set_option("display.max_columns", None)
-    # pd.set_option("display.max_rows", None)
+    
     # print(get_proper_df(symbol, 4000, "V2"))
 
     all_features = ["o", "l", "h", "c", "m", "v", "sc", "so", "sl", "sh", "sm", "sv", "7MA", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", 
