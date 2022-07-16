@@ -1,11 +1,11 @@
 import sys
 from config.environ import directory_dict
 from config.symbols import real_test_symbols
-from functions.time_functs import (get_past_date_string, increment_calendar, make_Timestamp, read_date_string, 
+from functions.time import (get_past_date_string, increment_calendar, make_Timestamp, read_date_string, 
     get_current_datetime, get_calendar)
-from functions.trade_functs import get_api
+from functions.trade import get_api
 from functions.functions import check_directories, get_correct_direction, r2
-from functions.io_functs import read_saved_contents
+from functions.io import read_saved_contents
 from alpaca_trade_api.rest import TimeFrame
 import datetime
 import os

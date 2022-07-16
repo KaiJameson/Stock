@@ -1,5 +1,5 @@
 from config.environ import *
-from functions.error_functs import error_handler
+from functions.error import error_handler
 import pandas as pd
 import os
 

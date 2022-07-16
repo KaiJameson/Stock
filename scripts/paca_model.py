@@ -5,10 +5,10 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from config.environ import directory_dict, random_seed, save_logs, defaults
-from functions.time_functs import get_time_string, get_past_date_string
+from functions.time import get_time_string, get_past_date_string
 from functions.functions import get_model_name, sr2
-from functions.paca_model_functs import create_model, get_accuracy, get_current_price, predict, return_real_predict
-from functions.io_functs import save_prediction, load_saved_predictions
+from functions.paca_model import create_model, get_accuracy, get_current_price, predict, return_real_predict
+from functions.io import save_prediction, load_saved_predictions
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
@@ -48,7 +48,6 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
    
     model_name = (symbol + "-" + get_model_name(nn_params))
 
-    
     model = create_model(nn_params)
 
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
@@ -193,9 +192,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             # print(xgb_pred)
             scale = data_dict[predictor]["column_scaler"]["future"]
             xgb_pred = np.array(xgb_pred)
-            # print(xgb_pred)
             xgb_pred = xgb_pred.reshape(1, -1)
-            # print(xgb_pred)
             predicted_price = np.float32(scale.inverse_transform(xgb_pred)[-1][-1])
             
         elif "MLENS" in predictor:

@@ -1,9 +1,9 @@
 from config.api_key import *
 from config.environ import stocks_traded
 from config.symbols import trading_real_money
-from functions.io_functs import make_runtime_price
-from functions.error_functs import error_handler
-from functions.time_functs import get_current_datetime
+from functions.io import make_runtime_price
+from functions.error import error_handler
+from functions.time import get_current_datetime
 from functions.functions import percent_diff, n_max_elements
 import alpaca_trade_api as tradeapi
 from alpaca_trade_api.rest import TimeFrame

@@ -5,10 +5,10 @@ from tensorflow.data.experimental import AUTOTUNE
 from config.environ import save_logs, directory_dict
 from config.symbols import real_test_symbols
 from config.model_repository import models
-from functions.data_load_functs import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
+from functions.data_load import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
 from functions.functions import check_directories, check_model_folders, get_model_name, delete_files_in_folder, r1002
-from functions.paca_model_functs import create_model, get_accuracy, return_real_predict
-from functions.time_functs import get_time_string
+from functions.paca_model import create_model, get_accuracy, return_real_predict
+from functions.time import get_time_string
 from paca_model import nn_train_save
 import os
 

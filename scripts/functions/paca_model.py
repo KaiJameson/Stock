@@ -6,10 +6,10 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.metrics import accuracy_score
 from config.api_key import intrinio_sandbox_key
 from config.environ import (back_test_days, to_plot, test_money, stocks_traded, directory_dict)
-from functions.time_functs import get_time_string, get_past_datetime
-from functions.io_functs import make_runtime_price, plot_graph, write_nn_report
-from functions.error_functs import error_handler
-from functions.data_load_functs import load_3D_data, load_2D_data
+from functions.time import get_time_string, get_past_datetime
+from functions.io import make_runtime_price, plot_graph, write_nn_report
+from functions.error import error_handler
+from functions.data_load import load_3D_data, load_2D_data
 from functions.functions import get_model_name, layer_name_converter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup

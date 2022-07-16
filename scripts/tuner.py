@@ -4,14 +4,14 @@ from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_
 from config.environ import directory_dict, test_money
 from config.model_repository import models
 from functions.functions import check_directories, get_correct_direction, get_test_name, sr2, sr1002, r2, get_model_name
-from functions.trade_functs import get_api
-from functions.io_functs import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
-from functions.time_functs import increment_calendar, get_actual_price, get_calendar
-from functions.error_functs import error_handler, keyboard_interrupt
-from functions.tuner_functs import subset_and_predict, get_user_input
-from functions.compar_functs import update_money
-from functions.data_load_functs import df_subset, get_proper_df
-from functions.time_functs import get_past_datetime, get_year_month_day
+from functions.trade import get_api
+from functions.io import  backtest_excel, save_to_dictionary, read_saved_contents, print_backtest_results, comparator_results_excel
+from functions.time import increment_calendar, get_actual_price, get_calendar
+from functions.error import error_handler, keyboard_interrupt
+from functions.tuner import subset_and_predict, get_user_input
+from functions.comparators import update_money
+from functions.data_load import df_subset, get_proper_df
+from functions.time import get_past_datetime, get_year_month_day
 from paca_model import configure_gpu
 from make_excel import make_tuning_sheet
 from statistics import mean

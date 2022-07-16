@@ -1,13 +1,13 @@
 from matplotlib import ticker
 from config.environ import directory_dict
 from config.api_key import alpha_key
-from functions.time_functs import get_past_date_string
-from functions.error_functs import  net_error_handler, keyboard_interrupt
-from functions.trade_functs import get_api
-from functions.time_functs import modify_timestamp, get_current_datetime, get_past_datetime
+from functions.time import get_past_date_string
+from functions.error import  net_error_handler, keyboard_interrupt
+from functions.trade import get_api
+from functions.time import modify_timestamp, get_current_datetime, get_past_datetime
 from functions.functions import layer_name_converter
-from functions.tech_functs import techs_dict
-from functions.io_functs import save_to_dictionary, read_saved_contents
+from functions.technical_indicators import techs_dict
+from functions.io import save_to_dictionary, read_saved_contents
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
 from sklearn import preprocessing

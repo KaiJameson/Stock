@@ -3,13 +3,13 @@ silence_tensorflow()
 from config.symbols import load_save_symbols, do_the_trades
 from config.environ import directory_dict, defaults
 from functions.functions import check_directories, r2
-from functions.trade_functs import getOwnedStocks, buy_all_at_once
-from functions.data_load_functs import get_proper_df, load_all_data, modify_dataframe
-from functions.error_functs import error_handler, keyboard_interrupt
-from functions.io_functs import  make_load_run_excel, runtime_predict_excel
-from functions.time_functs import get_current_date_string
-from functions.trade_functs import get_toggleable_api
-from functions.prcs_con_functs import pause_running_training, resume_running_training
+from functions.trade import getOwnedStocks, buy_all_at_once
+from functions.data_load import get_proper_df, load_all_data, modify_dataframe
+from functions.error import error_handler, keyboard_interrupt
+from functions.io import  make_load_run_excel, runtime_predict_excel
+from functions.time import get_current_date_string
+from functions.trade import get_toggleable_api
+from functions.prcs_con import pause_running_training, resume_running_training
 from paca_model import configure_gpu, ensemble_predictor
 import time
 import sys

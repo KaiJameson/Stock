@@ -1,5 +1,5 @@
-from functions.time_functs import increment_calendar
-from functions.data_load_functs import df_subset, load_all_data
+from functions.time import increment_calendar
+from functions.data_load import df_subset, load_all_data
 from paca_model import ensemble_predictor
 import sys
 import copy

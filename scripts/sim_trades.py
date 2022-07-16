@@ -3,13 +3,13 @@ silence_tensorflow()
 from config.environ import test_money, directory_dict
 from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
 from config.model_repository import models
-from functions.trade_functs import get_api, more_than_X, preport_no_rebal, rebal_split, top_X, more_than_X
-from functions.time_functs import get_calendar, increment_calendar, get_actual_price
-from functions.error_functs import error_handler, keyboard_interrupt
-from functions.tuner_functs import subset_and_predict, get_user_input
-from functions.paca_model_functs import get_current_price
-from functions.data_load_functs import get_proper_df, df_subset
-from functions.time_functs import get_past_datetime
+from functions.trade import get_api, more_than_X, preport_no_rebal, rebal_split, top_X, more_than_X
+from functions.time import get_calendar, increment_calendar, get_actual_price
+from functions.error import error_handler, keyboard_interrupt
+from functions.tuner import subset_and_predict, get_user_input
+from functions.paca_model import get_current_price
+from functions.data_load import get_proper_df, df_subset
+from functions.time import get_past_datetime
 from functions.functions import check_directories, r2, interpret_dict
 from paca_model import configure_gpu
 from statistics import mean

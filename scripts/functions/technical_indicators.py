@@ -1,4 +1,4 @@
-from functions.voltil_functs import *
+from functions.volitility import *
 from scipy.signal import savgol_filter
 import talib as ta
 
