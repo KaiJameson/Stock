@@ -459,6 +459,15 @@ models = {
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
         },
+    "XTREE1" : {
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+        "N_ESTIMATORS": 100,
+        "MAX_DEPTH": 10,
+        "MIN_SAMP_LEAF": 1,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
+        },
     "RFORE1" : {
         "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
         "N_ESTIMATORS": 100,
@@ -490,7 +499,6 @@ models = {
             "MAX_DEPTH": 1000,
             "MAX_LEAVES": 1000,
             "LEARNING_RATE": 0.05,
-            "GAMMA": 0.0,
             "LOOKUP_STEP":1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
@@ -552,7 +560,6 @@ exhaustive_search = {
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MAX_LEAVES": [10, 100, 1000],
-        "GAMMA": [0.0, 0.01, 0.05, .1],
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"

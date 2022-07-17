@@ -7,7 +7,7 @@ from functions.time import get_current_datetime
 from functions.functions import percent_diff, n_max_elements
 import alpaca_trade_api as tradeapi
 from alpaca_trade_api.rest import TimeFrame
-import time
+import random
 
 
 def get_api():
@@ -270,6 +270,34 @@ def more_than_X(tune_symbols, pred_curr_list, portfolio, trade_params):
             and percent_diff(pred_curr_list[symbol]["predicted"], 
             pred_curr_list[symbol]["current"]) > trade_params["x"]):
 
+            buy_list.append(symbol)
+        
+        #sell
+        if symbol in portfolio["owned"]:
+            portfolio["cash"] += portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+            portfolio["owned"].pop(symbol)
+    
+    # calculate splits
+    stock_portion_adjuster = len(buy_list)
+
+    # buy block
+    for symbol in buy_list:
+        # buy
+        buy_qty = (portfolio["equity"] / stock_portion_adjuster) // pred_curr_list[symbol]["current"]
+
+        if buy_qty == 0:
+            continue
+
+        portfolio["owned"][symbol] = {"buy_price": pred_curr_list[symbol]["current"], "qty": buy_qty}
+        portfolio["cash"] -= portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+
+    return portfolio
+
+def random_guess(tune_symbols, pred_curr_list, portfolio, trade_params):
+    # sell block
+    buy_list = []
+    for symbol in tune_symbols:
+        if random.randint(0, 1) == 1:
             buy_list.append(symbol)
         
         #sell

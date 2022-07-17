@@ -19,6 +19,7 @@ if len(sys.argv) > 2:
     params = {
         "ENSEMBLE":[],
         "TRADING": False,
+        "TUNE_FOLDER": directory_dict['batch_run'],
         "SAVE_FOLDER": "",
         "LIMIT": 4000,
     }
@@ -51,7 +52,7 @@ if len(sys.argv) > 2:
         for i, k in enumerate(indexes):
             params[params["ENSEMBLE"][0]][keys[i]] = param_lists[i][index_tuple[i]]
 
-        print(f"""Now starting test with adjustable params {params[params["ENSEMBLE"][0]]}""")
+        print(f"Now starting test with adjustable params {params[params['ENSEMBLE'][0]]}")
         test_output = tuning(tune_year, tune_month, tune_day, test_days, params, output=True)
         results.append(test_output)
 
@@ -61,12 +62,12 @@ if len(sys.argv) > 2:
     pd.set_option("display.max_rows", None)
     print(result_df)
 
-    result_df.to_csv(f"{directory_dict['tune_summary']}/exhaustive_{params['ENSEMBLE'][0]}.txt", sep="\t")
+    result_df.to_csv(f"{params['TUNE_FOLDER']}/summary/exhaustive_{params['ENSEMBLE'][0]}.txt", sep="\t")
     print(f"Doing all of these tests took {(time.perf_counter() - s_time) / 60} minutes")
 
     
 else:
-    print("You must give this program two arguments in the style of \"tune#\"")
+    print("You must give this program two arguments in the style of \"sym#\"")
     print("then \"model abbreviation\" So that it knows tests to run and what symbols to use.")
     print("Please try again")
     sys.exit(-1)

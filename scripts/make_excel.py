@@ -34,12 +34,13 @@ def get_user_input():
                 print("Please try again")
                 sys.exit(-1)
         elif sys.argv[1] == "tuning":
-            if len(sys.argv) > 2:
+            if len(sys.argv) > 3:
                 test_name = sys.argv[2]
+                folder = sys.argv[3]
                 print(f"\n~~~Running tuning with test: {test_name}~~~")
-                make_tuning_sheet(test_name)
+                make_tuning_sheet(test_name, folder)
             else:
-                print("Tuning requires another argument for the test name.")
+                print("Tuning requires another argument for the test name and a third for saved folder.")
                 print("Please try again")
                 sys.exit(-1)
         else:
@@ -185,7 +186,7 @@ def make_PL_sheet(date, api):
     pl_file.close()
     print("~~~Task Complete~~~")
 
-def make_tuning_sheet(test_name):
+def make_tuning_sheet(test_name, folder):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
     tpa = tcd = te = tm = tt = 0
 
@@ -198,18 +199,18 @@ def make_tuning_sheet(test_name):
             "time_so_far": 0.0
         }
 
-        if os.path.isfile(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt"""):
-            print(f"""Opening the juicy file {directory_dict["tuning"]}/{symbol}-{test_name}.txt now""", flush=True)
-            extraction_dict = read_saved_contents(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt""", extraction_dict)
-            tune_text += (f"""{symbol}\t{extraction_dict["percent_away"]}\t{extraction_dict["correct_direction"]}\t"""
-                          f"""{extraction_dict["epochs"]}\t{extraction_dict["total_money"]}\n""") 
+        if os.path.isfile(f"{folder}/{symbol}-{test_name}.txt"):
+            print(f"Opening the juicy file {folder}/{symbol}-{test_name}.txt now", flush=True)
+            extraction_dict = read_saved_contents(f"{folder}/{symbol}-{test_name}.txt", extraction_dict)
+            tune_text += (f"{symbol}\t{extraction_dict['percent_away']}\t{extraction_dict['correct_direction']}\t"
+                          f"{r2(extraction_dict['epochs'])}\t{extraction_dict['total_money']}\n") 
             tpa += extraction_dict["percent_away"]
             tcd += extraction_dict["correct_direction"]
             te += extraction_dict["epochs"]
             tm += extraction_dict["total_money"]
             tt += extraction_dict["time_so_far"]
         else:
-            print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
+            print(f"I am sorry to inform you that {folder}/{symbol}-{test_name}.txt")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
             print(f"Are you feeling lucky yet?")
             print(f"Program will now exit to prevent writing incomplete values.")
@@ -220,7 +221,7 @@ def make_tuning_sheet(test_name):
 
     tune_text += (f"\nTesting all of the days took {r2(tt / 3600)} hours or {int(tt // 3600)}:"
         f"{int((tt / 3600 - (tt // 3600)) * 60)} minutes.\n")
-    f = open(f"""{directory_dict["tune_summary"]}/{test_name}.txt""", "a")
+    f = open(f"{folder}/summary/{test_name}.txt", "a")
     f.write(tune_text)
     f.close()
     print("~~~Task Complete~~~")

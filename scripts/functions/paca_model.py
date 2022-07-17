@@ -318,4 +318,3 @@ def return_real_predict(model, X_data, y_data, column_scaler, classification=Fal
 def get_current_price(df):
     return df.c[-1]
 
-

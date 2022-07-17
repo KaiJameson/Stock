@@ -1,9 +1,9 @@
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from config.environ import test_money, directory_dict
-from config.symbols import tune_sym_dict, tune_year, tune_month, tune_day, tune_days
+from config.symbols import sym_dict, sim_trades_dict, tune_year, tune_month, tune_day, tune_days
 from config.model_repository import models
-from functions.trade import get_api, more_than_X, preport_no_rebal, rebal_split, top_X, more_than_X
+from functions.trade import get_api, more_than_X, preport_no_rebal, random_guess, rebal_split, top_X, more_than_X
 from functions.time import get_calendar, increment_calendar, get_actual_price
 from functions.error import error_handler, keyboard_interrupt
 from functions.tuner import subset_and_predict, get_user_input
@@ -26,7 +26,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     api = get_api()
     configure_gpu()
         
-    tune_symbols, params = get_user_input(tune_sym_dict, params)
+    tune_symbols, params = get_user_input(sym_dict, params)
 
     days_done = 1
 
@@ -84,6 +84,8 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
                 portfolio = top_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             elif params["TRADE_METHOD"] == "more_than_X":
                 portfolio = more_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
+            elif params['TRADE_METHOD'] == "random_guess":
+                portfolio = random_guess(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             else:
                 print(f"Don't have trading strategy {params['TRADE_METHOD']} implemented yet")
                 print(f"Sorry bud, try again next time")
@@ -111,7 +113,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     
     time_so_far = time.perf_counter() - time_s
 
-    print(f"\nTesting finished for ensemble {params['ENSEMBLE']} using trade method: {params['TRADE_METHOD']} with params {interpret_dict(params['TRADE_PARAMS'])}")
+    print(f"\nTesting finished for ensemble:{params['ENSEMBLE']} using trade method:{params['TRADE_METHOD']} with params:{interpret_dict(params['TRADE_PARAMS'])}")
     print(f"The total value of the portfolio was {r2(portfolio['equity'])} at the end with {r2(portfolio['cash'])} in cash")
     print(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}\n"
         f"and holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}")
@@ -121,7 +123,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
 
     print(interpret_dict(params['TRADE_PARAMS']))
     with open(f"{directory_dict['sim_trades']}/{params['ENSEMBLE']}-{params['TRADE_METHOD']}-{interpret_dict(params['TRADE_PARAMS'])}.txt", "a") as f:
-        f.write(f"\nTesting finished for ensemble {params['ENSEMBLE']} using trade method: {params['TRADE_METHOD']} with params {interpret_dict(params['TRADE_PARAMS'])}\n")
+        f.write(f"\nTesting finished for ensemble:{params['ENSEMBLE']} using trade method:{params['TRADE_METHOD']} with params:{interpret_dict(params['TRADE_PARAMS'])}\n")
         f.write(f"The total value of the portfolio was {r2(portfolio['equity'])} at the end with {r2(portfolio['cash'])} in cash\n")
         f.write(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}\n"
             f"and holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}\n")
@@ -132,18 +134,11 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
 
 if __name__ == "__main__":
     check_directories()
-    params = {
-        "ENSEMBLE": ["nn8", "nn11", "nn14"],
-        "TRADE_METHOD": "top_X",
-        "TRADE_PARAMS": {"x": 3},
-        "TRADING": False,
-        "SAVE_FOLDER": "",
-        "LIMIT": 4000,
-    }
+    
 
-    for model in params["ENSEMBLE"]:
+    for model in sim_trades_dict["ENSEMBLE"]:
         if model in models:
-            params[model] = models[model]
+            sim_trades_dict[model] = models[model]
 
-    simulate_trades(tune_year, tune_month, tune_day, tune_days, params)
+    simulate_trades(tune_year, tune_month, tune_day, tune_days, sim_trades_dict)
     

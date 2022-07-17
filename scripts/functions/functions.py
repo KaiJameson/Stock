@@ -1,6 +1,7 @@
 from config.environ import *
 from functions.error import error_handler
 import pandas as pd
+import random
 import os
 
 
@@ -76,6 +77,10 @@ def n_max_elements(names, prices, N):
           
     return final_list
 
+def get_random_folder():
+    return f"testing{random.randint(0, 99)}"
+    
+
 def get_model_name(nn_params):
     return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}"""
             f"""{nn_params["FEATURE_COLUMNS"]}{layers_string(nn_params["LAYERS"])}s"""
@@ -99,7 +104,7 @@ def get_ada_name(ada_params):
 
 def get_xgb_name(xgb_params):
     return (f"{xgb_params['FEATURE_COLUMNS']}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
-        f"-ml{xgb_params['MAX_LEAVES']}-g{xgb_params['GAMMA']}")
+        f"-ml{xgb_params['MAX_LEAVES']}")
 
 def get_mlens_name(mlens_params):
     return (f"TEMP_OH_GOD_PLEASE_FIX_ME!!!!!")

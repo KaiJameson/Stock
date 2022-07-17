@@ -1,5 +1,5 @@
-from functions.time import increment_calendar
 from functions.data_load import df_subset, load_all_data
+from functions.functions import get_random_folder
 from paca_model import ensemble_predictor
 import sys
 import copy
@@ -25,17 +25,17 @@ def change_params(index_dict, params):
 
     return new_params
 
-def get_user_input(tune_sym_dict, params):
+def get_user_input(sym_dict, params):
     if len(sys.argv) > 1:
-        if sys.argv[1] in tune_sym_dict:
-            tune_symbols = tune_sym_dict[sys.argv[1]]
+        if sys.argv[1] in sym_dict:
+            tune_symbols = sym_dict[sys.argv[1]]
         else:
-            print("You must give this program an argument in the style of \"tune#\"")
+            print("You must give this program an argument in the style of \"sym#\"")
             print("So that it knows what folder to save your models into.")
             print("Please try again")
             sys.exit(-1)
 
-        params["SAVE_FOLDER"] = sys.argv[1]
+        params["SAVE_FOLDER"] = get_random_folder()
         return tune_symbols, params
 
     else:

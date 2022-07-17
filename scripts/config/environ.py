@@ -5,6 +5,8 @@ from tensorflow.keras.layers import LSTM, Dense
 
 directory_dict = {
     "backtest":          "../backtest",
+    "batch_run":         "../batch_run",
+    "batch_run_summary": "../batch_run/summary",
     "comparator_results":"../tuning_info/comparators",
     "config":            "../config",
     "data":              "../data", 
