@@ -17,14 +17,14 @@ def check_directories():
             os.mkdir(directory_dict[directory])
 
 def check_model_folders(save_folder, symbol):
-    if not os.path.isdir(directory_dict["model"] + "/" + save_folder):
-        os.mkdir(directory_dict["model"] + "/" + save_folder)
-    if not os.path.isdir(directory_dict["reports"] + "/" + symbol):
-        os.mkdir(directory_dict["reports"] + "/" + symbol)
+    if not os.path.isdir(f"{directory_dict['model']}/{save_folder}"):
+        os.mkdir(f"{directory_dict['model']}/{save_folder}")
+    if not os.path.isdir(f"{directory_dict['reports']}/{symbol}"):
+        os.mkdir(f"{directory_dict['reports']}/{symbol}")
 
 def check_prediction_subfolders(nn_name):
-    if not os.path.isdir(f"""{directory_dict["save_predicts"]}/{nn_name}"""):
-        os.mkdir(f"""{directory_dict["save_predicts"]}/{nn_name}""")
+    if not os.path.isdir(f"{directory_dict['save_predicts']}/{nn_name}"):
+        os.mkdir(f"{directory_dict['save_predicts']}/{nn_name}")
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
@@ -82,40 +82,51 @@ def get_random_folder():
     
 
 def get_model_name(nn_params):
-    return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}"""
-            f"""{nn_params["FEATURE_COLUMNS"]}{layers_string(nn_params["LAYERS"])}s"""
-            f"""{nn_params["N_STEPS"]}l{nn_params["LIMIT"]}e{nn_params["EPOCHS"]}""" 
-            f"""p{nn_params["PATIENCE"]}b{nn_params["BATCH_SIZE"]}d{nn_params["DROPOUT"]}"""
-            f"""t{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")
+    return (f"sh{'T' if nn_params['SHUFFLE'] else 'F'}"
+            f"{nn_params['FEATURE_COLUMNS']}{layers_string(nn_params['LAYERS'])}s"
+            f"{nn_params['N_STEPS']}l{nn_params['LIMIT']}e{nn_params['EPOCHS']}"
+            f"p{nn_params['PATIENCE']}b{nn_params['BATCH_SIZE']}d{nn_params['DROPOUT']}"
+            f"t{nn_params['TEST_SIZE']}{nn_params['TEST_VAR']}")
+
 
 def get_dtree_name(dt_params):
-    return (f"""{dt_params["FEATURE_COLUMNS"]}-md{dt_params["MAX_DEPTH"]}-msl{dt_params["MIN_SAMP_LEAF"]}""")
+    return (f"{dt_params['FEATURE_COLUMNS']}-md{dt_params['MAX_DEPTH']}-msl{dt_params['MIN_SAMP_LEAF']}")
+
+def get_xtree_name(xt_params):
+    return (f"{xt_params['FEATURE_COLUMNS']}-md{xt_params['MAX_DEPTH']}-est{xt_params['N_ESTIMATORS']}"
+        f"-msl{xt_params['MIN_SAMP_LEAF']}")
 
 def get_rfore_name(rf_params):
-    return (f"""{rf_params["FEATURE_COLUMNS"]}-md{rf_params["MAX_DEPTH"]}-est{rf_params["N_ESTIMATORS"]}"""
-        f"""-msl{rf_params["MIN_SAMP_LEAF"]}""")
+    return (f"{rf_params['FEATURE_COLUMNS']}-md{rf_params['MAX_DEPTH']}-est{rf_params['N_ESTIMATORS']}"
+        f"-msl{rf_params['MIN_SAMP_LEAF']}")
 
 def get_knn_name(knn_params):
-    return f"""{knn_params["FEATURE_COLUMNS"]}nei{knn_params["N_NEIGHBORS"]}"""
+    return f"{knn_params['FEATURE_COLUMNS']}-nei{knn_params['N_NEIGHBORS']}-w{knn_params['WEIGHTS']}"
 
 def get_ada_name(ada_params):
-    return (f"""{ada_params["FEATURE_COLUMNS"]}-md{ada_params["MAX_DEPTH"]}-est{ada_params["N_ESTIMATORS"]}"""
-        f"""-msl{ada_params["MIN_SAMP_LEAF"]}""")
+    return (f"{ada_params['FEATURE_COLUMNS']}-md{ada_params['MAX_DEPTH']}-est{ada_params['N_ESTIMATORS']}"
+        f"-msl{ada_params['MIN_SAMP_LEAF']}")
 
 def get_xgb_name(xgb_params):
     return (f"{xgb_params['FEATURE_COLUMNS']}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
         f"-ml{xgb_params['MAX_LEAVES']}")
 
+def get_bagreg_name(bag_params):
+    return (f"{bag_params['FEATURE_COLUMNS']}-md{bag_params['MAX_DEPTH']}-est{bag_params['N_ESTIMATORS']}"
+        f"-msl{bag_params['MIN_SAMP_LEAF']}")
+
 def get_mlens_name(mlens_params):
     return (f"TEMP_OH_GOD_PLEASE_FIX_ME!!!!!")
 
 def get_test_name(params):
-    test_name = str(params["ENSEMBLE"])
-    for predictor in params["ENSEMBLE"]:
+    test_name = str(params['ENSEMBLE'])
+    for predictor in params['ENSEMBLE']:
         if "nn" in predictor:
             test_name += get_model_name(params[predictor])
         elif "DTREE" in predictor:
             test_name += get_dtree_name(params[predictor])
+        elif "XTREE" in predictor:
+            test_name += get_xtree_name(params[predictor])
         elif "RFORE" in predictor:
             test_name += get_rfore_name(params[predictor])
         elif "KNN" in predictor:
@@ -124,6 +135,8 @@ def get_test_name(params):
             test_name += get_ada_name(params[predictor])
         elif "XGB" in predictor:
             test_name += get_xgb_name(params[predictor])
+        elif "BAGREG" in predictor:
+            test_name += get_bagreg_name(params[predictor])
         elif "MLENS" in predictor:
             test_name += get_mlens_name(params[predictor])
         else:

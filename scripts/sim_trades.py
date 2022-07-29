@@ -3,7 +3,7 @@ silence_tensorflow()
 from config.environ import test_money, directory_dict
 from config.symbols import sym_dict, sim_trades_dict, tune_year, tune_month, tune_day, tune_days
 from config.model_repository import models
-from functions.trade import get_api, more_than_X, preport_no_rebal, random_guess, rebal_split, top_X, more_than_X
+from functions.trade import get_api, more_than_X, preport_no_rebal, random_guess, rebal_split, top_X, more_than_X, no_buy_if_less_than_X
 from functions.time import get_calendar, increment_calendar, get_actual_price
 from functions.error import error_handler, keyboard_interrupt
 from functions.tuner import subset_and_predict, get_user_input
@@ -86,6 +86,8 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
                 portfolio = more_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             elif params['TRADE_METHOD'] == "random_guess":
                 portfolio = random_guess(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
+            elif params['TRADE_METHOD'] == "no_buy_if_less_than_X":
+                portfolio = no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             else:
                 print(f"Don't have trading strategy {params['TRADE_METHOD']} implemented yet")
                 print(f"Sorry bud, try again next time")

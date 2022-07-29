@@ -1,6 +1,9 @@
 from functions.volitility import *
 from scipy.signal import savgol_filter
 import talib as ta
+import pandas as pd
+import pywt
+import matplotlib.pyplot as plt
 
 def df_m(name, df):
     df[name] = (df.l + df.h) / 2
@@ -277,9 +280,26 @@ def df_beta(name, df):
 def df_TSF(name, df):
     df[name] = ta.TSF(df.c, timeperiod=14)
 
+def df_wavelet_transform(name, df):
+    df_selector = name[2:]
+    std = np.nanstd(df[df_selector])
+
+    # thresh = .04 # smooths more than sav_gol
+    thresh = std/np.nanmax(df[df_selector]) # smooths more than above
+    thresh = thresh*np.nanmax(df[df_selector])
+    coeff = pywt.wavedec(df[df_selector], "db4", mode="smooth" )
+    coeff[1:] = (pywt.threshold(i, value=thresh, mode="soft") for i in coeff[1:])
+    reconstructed_signal = pywt.waverec(coeff, 'db4', mode="smooth")
+
+    df[name] = reconstructed_signal
+    
+
 def convert_date_values(name, df):	    
     df[name] = df.index	
     df[name] = df[name].dt.dayofweek
+
+def testing(name, df):
+    pass
 
 
 techs_dict = {
@@ -308,6 +328,14 @@ techs_dict = {
     "dv": {"function":df_differencer},
     "dtc": {"function":df_differencer},
     "dvwap": {"function":df_differencer},
+    "wtc": {"function":df_wavelet_transform},
+    "wto": {"function":df_wavelet_transform},
+    "wtl": {"function":df_wavelet_transform},
+    "wth": {"function":df_wavelet_transform},
+    "wtm": {"function":df_wavelet_transform},
+    "wtv": {"function":df_wavelet_transform},
+    "wttc": {"function":df_wavelet_transform},
+    "wtvwap": {"function":df_wavelet_transform},
     "garman_klass":  {"function":garman_klass},
     "hodges_tompkins": {"function":hodges_tompkins},
     "kurtosis": {"function":get_kurtosis},
@@ -393,6 +421,7 @@ techs_dict = {
     "avg_price": {"function":df_avg_price},
     "beta": {"function":df_beta},
     "TSF": {"function":df_TSF},
-    "day_of_week": {"function":convert_date_values}
+    "day_of_week": {"function":convert_date_values},
+    "testing": {"function":testing}
 }
 

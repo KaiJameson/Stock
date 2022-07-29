@@ -503,16 +503,25 @@ models = {
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
         },
+    "BAGREG1" : {
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "N_ESTIMATORS": 100,
+        "MAX_DEPTH": 10000,
+        "MIN_SAMP_LEAF": 1,
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
+        },
     "MLENS1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
-    }
+    },
 }
 
 exhaustive_search = {
-    "DTREE" : {
+    "DTREE" : { # 192
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
             ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
@@ -522,7 +531,7 @@ exhaustive_search = {
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
     },
-    "RFORE" : {
+    "XTREE" : { # 960
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
             ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
@@ -533,16 +542,28 @@ exhaustive_search = {
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
         },
-    "KNN" : {
+    "RFORE" : { # 960
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
             ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
-        "N_NEIGHBORS": [1, 2, 3, 4, 5, 7, 10, 20],
+        "N_ESTIMATORS": [5, 10, 50, 100, 1000],
+        "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
+        "MIN_SAMP_LEAF": [1, 3, 5, 10],
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
+        },
+    "KNN" : { # 80
+        "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
+            ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
+        "N_NEIGHBORS": [1, 2, 3, 4, 5, 7, 10, 20, 50, 100],
+        "WEIGHTS": ["uniform", "distance"],
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
     },
-    "ADA" : {
+    "ADA" : { # 960
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
             ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
@@ -553,7 +574,7 @@ exhaustive_search = {
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
     },
-    "XGB" : {
+    "XGB" : { # 720
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
             ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
@@ -561,6 +582,17 @@ exhaustive_search = {
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MAX_LEAVES": [10, 100, 1000],
         "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
+    },
+    "BAGREG" : { # 960
+        "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
+            ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
+        "N_ESTIMATORS": [5, 10, 50, 100, 1000],
+        "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
+        "MIN_SAMP_LEAF": [1, 3, 5, 10],
+        "LOOKUP_STEP": 1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
     },

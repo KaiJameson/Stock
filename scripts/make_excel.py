@@ -15,13 +15,13 @@ import os
 def get_user_input():
     api = get_api()
     if len(sys.argv) > 1:
-        if sys.argv[1] == "trade_perform":
+        if sys.argv[1] == "TP":
             if len(sys.argv) > 2:
                 date = read_date_string(sys.argv[2])
-                print(f"\n~~~Running trade_perform with date: {date}~~~")
+                print(f"\n~~~Running TP with date: {date}~~~")
                 make_trade_perform_sheet(date, api)
             else:
-                print("trade_perform requires another argument for the date.")
+                print("TP requires another argument for the date.")
                 print("Please try again")
                 sys.exit(-1)
         elif sys.argv[1] == "PL":
@@ -45,7 +45,7 @@ def get_user_input():
                 sys.exit(-1)
         else:
             print("You must give this program one of the three following options.")
-            print("\"trade_perform date\" to create the trade performance excel sheet,")
+            print("\"TP date\" to create the trade performance excel sheet,")
             print("\"PL date\" to create the profit loss excel sheet,")
             print("\"tuning test_name\" to create the tuning excel sheet,")
             print("Please try again")
@@ -53,7 +53,7 @@ def get_user_input():
 
     else:
         print("You gotta give some arguments buddy, pick one of the following:")
-        print("\"trade_perform date\" to create the trade performance excel sheet,")
+        print("\"TP date\" to create the trade performance excel sheet,")
         print("\"PL date\" to create the profit loss excel sheet,")
         print("\"tuning test_name\" to create the tuning excel sheet,")
         print("Please try again")

@@ -293,7 +293,7 @@ def more_than_X(tune_symbols, pred_curr_list, portfolio, trade_params):
 
     return portfolio
 
-def random_guess(tune_symbols, pred_curr_list, portfolio, trade_params):
+def random_guess(tune_symbols, pred_curr_list, portfolio):
     # sell block
     buy_list = []
     for symbol in tune_symbols:
@@ -305,6 +305,40 @@ def random_guess(tune_symbols, pred_curr_list, portfolio, trade_params):
             portfolio["cash"] += portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
             portfolio["owned"].pop(symbol)
     
+    # calculate splits
+    stock_portion_adjuster = len(buy_list)
+
+    # buy block
+    for symbol in buy_list:
+        # buy
+        buy_qty = (portfolio["equity"] / stock_portion_adjuster) // pred_curr_list[symbol]["current"]
+
+        if buy_qty == 0:
+            continue
+
+        portfolio["owned"][symbol] = {"buy_price": pred_curr_list[symbol]["current"], "qty": buy_qty}
+        portfolio["cash"] -= portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+
+    return portfolio
+
+def no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, trade_params):
+    # sell block
+    buy_list = []
+    for symbol in tune_symbols:
+        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+            buy_list.append(symbol)
+        
+        #sell
+        if symbol in portfolio["owned"]:
+            portfolio["cash"] += portfolio["owned"][symbol]["qty"] * pred_curr_list[symbol]["current"]
+            portfolio["owned"].pop(symbol)
+    
+    # Exit if less than X stocks predicted to rise
+    print(f"\n{len(buy_list)}\n")
+    if len(buy_list) < trade_params["x"]:
+        return portfolio
+
+
     # calculate splits
     stock_portion_adjuster = len(buy_list)
 

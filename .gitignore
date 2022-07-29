@@ -4,6 +4,7 @@ __pycache__
 logs/
 results/
 backtest/
+batch_run/
 plots/
 information/
 old/
@@ -18,6 +19,7 @@ load_run_results/
 tax/
 env/
 predictions/
+sim_trades/
 requirements.txt
 error_file.txt
 scripts/config/symbols.py

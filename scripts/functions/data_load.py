@@ -8,8 +8,8 @@ from functions.time import modify_timestamp, get_current_datetime, get_past_date
 from functions.functions import layer_name_converter
 from functions.technical_indicators import techs_dict
 from functions.io import save_to_dictionary, read_saved_contents
-from tensorflow.data import Dataset
-from tensorflow.data.experimental import AUTOTUNE
+from tensorflow.python.data import Dataset
+from tensorflow.python.data.experimental import AUTOTUNE
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from scipy.signal import savgol_filter, cwt
@@ -165,7 +165,7 @@ def get_proper_df(symbol, limit, option):
 
 def load_all_data(params, df, to_print=True):
     data_dict = {}
-    req_2d = ["DTREE", "RFORE", "KNN", "ADA", "XGB", "MLENS"]
+    req_2d = ["DTREE", "XTREE", "BAGREG", "RFORE", "KNN", "ADA", "XGB", "MLENS"]
     
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]

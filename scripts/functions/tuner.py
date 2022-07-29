@@ -31,7 +31,7 @@ def get_user_input(sym_dict, params):
             tune_symbols = sym_dict[sys.argv[1]]
         else:
             print("You must give this program an argument in the style of \"sym#\"")
-            print("So that it knows what folder to save your models into.")
+            print("So that it knows what symbols to use.")
             print("Please try again")
             sys.exit(-1)
 
