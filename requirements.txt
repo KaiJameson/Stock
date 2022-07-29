@@ -1,0 +1,15 @@
+# Pip install requirements to run all of the script files
+alpaca-trade-api=2.3.0
+beautifulsoup4=4.9.3
+intrinio-sdk=3.8.0
+matplotlib=3.3.4
+mlens=0.2.3
+nltk=3.5
+numpy=1.19.2
+pandas=1.2.2
+scikit-learn=1.0.1
+TA-Lib=0.4.19
+tensorboard=2.7.0
+tensorflow=2.7.0
+xgboost=1.3.3
+

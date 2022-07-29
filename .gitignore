@@ -20,7 +20,6 @@ tax/
 env/
 predictions/
 sim_trades/
-requirements.txt
 error_file.txt
 scripts/config/symbols.py
 */tax_info.csv
