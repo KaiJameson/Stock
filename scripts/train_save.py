@@ -3,9 +3,9 @@ from config.symbols import load_save_symbols
 from config.environ import defaults
 from paca_model import configure_gpu
 from functions.functions import check_directories
-from functions.error_functs import error_handler, keyboard_interrupt
-from functions.data_load_functs import load_all_data, get_proper_df
-from functions.prcs_con_functs import pause_running_training, resume_running_training
+from functions.error import error_handler, keyboard_interrupt
+from functions.data_load import load_all_data, get_proper_df
+from functions.prcs_con import pause_running_training, resume_running_training
 import sys
 import time
 

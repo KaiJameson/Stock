@@ -1,14 +1,15 @@
+from matplotlib import ticker
 from config.environ import directory_dict
 from config.api_key import alpha_key
-from functions.time_functs import get_past_date_string
-from functions.error_functs import  net_error_handler, keyboard_interrupt
-from functions.trade_functs import get_api
-from functions.time_functs import modify_timestamp, get_current_datetime, get_past_datetime
+from functions.time import get_past_date_string
+from functions.error import  net_error_handler, keyboard_interrupt
+from functions.trade import get_api
+from functions.time import modify_timestamp, get_current_datetime, get_past_datetime
 from functions.functions import layer_name_converter
-from functions.tech_functs import techs_dict
-from functions.io_functs import save_to_dictionary, read_saved_contents
-from tensorflow.data import Dataset
-from tensorflow.data.experimental import AUTOTUNE
+from functions.technical_indicators import techs_dict
+from functions.io import save_to_dictionary, read_saved_contents
+from tensorflow.python.data import Dataset
+from tensorflow.python.data.experimental import AUTOTUNE
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from scipy.signal import savgol_filter, cwt
@@ -32,13 +33,26 @@ def alpaca_date_converter(df):
     return df
 
 
-def modify_dataframe(features, df):
+def modify_dataframe(features, df, to_print):
     base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
     removable_features = ["o", "l", "h", "m", "v", "tc", "vwap", "div", "split"]
+
     for feature in features:
         if feature not in base_features:
             if feature in techs_dict:
                 techs_dict[feature]["function"](feature, df)
+            elif feature.startswith("tick_"):
+                feature_split = feature.split("_")
+                ticker_df = get_proper_df(feature_split[1], 4000, "V2")
+
+                if feature_split[2] not in base_features:
+                    if feature_split[2] in techs_dict:
+                        techs_dict[feature_split[2]]["function"](feature_split[2], ticker_df)
+                        df[feature] = ticker_df[feature_split[2]]
+                    else:
+                        print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
+                else:
+                    df[feature] = ticker_df[feature_split[2]]
             else:
                 print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
     for feature in removable_features:
@@ -48,9 +62,10 @@ def modify_dataframe(features, df):
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
     pd.set_option('display.expand_frame_repr', False)
-    print(df.head(2))
-    print(df.tail(2))
-    # print(df)
+    if to_print:
+        print(df.head(2))
+        print(df.tail(2))
+        # print(df)
 
     return df
 
@@ -148,23 +163,24 @@ def get_proper_df(symbol, limit, option):
 
     return df
 
-def load_all_data(params, df):
+def load_all_data(params, df, to_print=True):
     data_dict = {}
-    req_2d = ["DTREE", "RFORE", "KNN", "ADA", "XGB"]
-
+    req_2d = ["DTREE", "XTREE", "BAGREG", "RFORE", "KNN", "ADA", "XGB", "MLENS"]
+    
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]
         if len(in_req_2d) > 0:
-            result = load_2D_data(params[predictor], df, shuffle=True, tensorify=False)
+            result = load_2D_data(params[predictor], df, shuffle=True, tensorify=False, to_print=to_print)
             data_dict[predictor] = result
         if "nn" in predictor:
             if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
                 result, train, valid, test = load_2D_data(params[predictor], df, params[predictor]["SHUFFLE"],
-                    tensorify=True)
+                    tensorify=True, to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
-                result, train, valid, test = load_3D_data(params[predictor], df, params[predictor]["SHUFFLE"])
+                result, train, valid, test = load_3D_data(params[predictor], df, params[predictor]["SHUFFLE"],
+                to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
                 # print(data_dict[predictor])
@@ -177,7 +193,7 @@ def preprocess_dfresult(params, df, scale, to_print):
     if to_print:
         print(f"""Included features: {params["FEATURE_COLUMNS"]}""")
 
-    tt_df = modify_dataframe(params["FEATURE_COLUMNS"], tt_df)
+    tt_df = modify_dataframe(params["FEATURE_COLUMNS"], tt_df, to_print)
     for col in params["FEATURE_COLUMNS"]:
         assert col in tt_df.columns, f"'{col}' does not exist in the dataframe."
 
@@ -286,23 +302,11 @@ def df_subset(current_date, df):
     if type(df_sub.index[0]) == type(""):
         df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
     else:
-        test2 = df_sub.index[0]
         df_sub.index = pd.to_datetime(df_sub.index, unit="D")
-        test1 = df_sub.index[0]
         df_sub.index = df_sub.index.tz_localize(None)
         df_sub.index = df_sub.index.normalize()
-        test = df_sub.index[0]
-        # print(df_sub.index.to_pydatetime()[0])
-        # print(type(df_sub.index.to_pydatetime()[0]))
-        # tmp = df_sub.index
-        # tmp2 = tmp.to_pydatetime()
-        # print(tmp2)
-        # df_sub.index = tmp2
-    # print(f"og df_sub index {type(test2)} {test2}")
-    # print(f" test {test == df_sub.index[0]} {test1 == df_sub.index[0]} {test2 == df_sub.index[0]}")
-    # print(f"really {type(df_sub.index[0])} {df_sub.index[0]}")
+
     df_sub = df_sub[df_sub.index <= get_past_date_string(current_date)]
-    # print(f"df_sub {df_sub}")
     
     return df_sub
 

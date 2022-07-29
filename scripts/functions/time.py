@@ -1,6 +1,6 @@
 from config.api_key import paper_api_key_id, paper_api_secret_key
 from config.environ import time_zone
-from functions.error_functs import  net_error_handler, keyboard_interrupt 
+from functions.error import  net_error_handler, keyboard_interrupt 
 import alpaca_trade_api as tradeapi
 import pandas as pd
 import platform

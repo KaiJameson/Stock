@@ -1,6 +1,7 @@
 from config.environ import *
-from functions.error_functs import error_handler
+from functions.error import error_handler
 import pandas as pd
+import random
 import os
 
 
@@ -16,14 +17,14 @@ def check_directories():
             os.mkdir(directory_dict[directory])
 
 def check_model_folders(save_folder, symbol):
-    if not os.path.isdir(directory_dict["model"] + "/" + save_folder):
-        os.mkdir(directory_dict["model"] + "/" + save_folder)
-    if not os.path.isdir(directory_dict["reports"] + "/" + symbol):
-        os.mkdir(directory_dict["reports"] + "/" + symbol)
+    if not os.path.isdir(f"{directory_dict['model']}/{save_folder}"):
+        os.mkdir(f"{directory_dict['model']}/{save_folder}")
+    if not os.path.isdir(f"{directory_dict['reports']}/{symbol}"):
+        os.mkdir(f"{directory_dict['reports']}/{symbol}")
 
 def check_prediction_subfolders(nn_name):
-    if not os.path.isdir(f"""{directory_dict["save_predicts"]}/{nn_name}"""):
-        os.mkdir(f"""{directory_dict["save_predicts"]}/{nn_name}""")
+    if not os.path.isdir(f"{directory_dict['save_predicts']}/{nn_name}"):
+        os.mkdir(f"{directory_dict['save_predicts']}/{nn_name}")
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):
@@ -49,47 +50,97 @@ def delete_files_in_folder(directory):
     except Exception:
         error_handler("Deleting files ", Exception)
 
+def interpret_dict(dict):
+    s = ""
+    for i in dict:
+        s += f"{i}={dict[i]}"
+    return s
+
+def n_max_elements(names, prices, N):
+    final_list = []
+  
+    for i in range(0, N): 
+        if len(prices) == 0:
+            break
+
+        max1 = 0          
+        ind = 0
+        for j in range(len(prices)):     
+            if prices[j] > max1:
+                max1 = prices[j]
+                ind = j
+        
+        final_list.append(names[ind])
+        prices.remove(prices[ind]);
+        names.remove(names[ind])
+
+          
+    return final_list
+
+def get_random_folder():
+    return f"testing{random.randint(0, 99)}"
+    
 
 def get_model_name(nn_params):
-    return (f"""sh{"T" if nn_params["SHUFFLE"] else "F"}-"""
-            f"""{nn_params["FEATURE_COLUMNS"]}-layers{layers_string(nn_params["LAYERS"])}-step"""
-            f"""{nn_params["N_STEPS"]}-limit{nn_params["LIMIT"]}-epoch{nn_params["EPOCHS"]}""" 
-            f"""-pat{nn_params["PATIENCE"]}-batch{nn_params["BATCH_SIZE"]}-drop{nn_params["DROPOUT"]}"""
-            f"""-ts{nn_params["TEST_SIZE"]}{nn_params["TEST_VAR"]}""")
+    return (f"sh{'T' if nn_params['SHUFFLE'] else 'F'}"
+            f"{nn_params['FEATURE_COLUMNS']}{layers_string(nn_params['LAYERS'])}s"
+            f"{nn_params['N_STEPS']}l{nn_params['LIMIT']}e{nn_params['EPOCHS']}"
+            f"p{nn_params['PATIENCE']}b{nn_params['BATCH_SIZE']}d{nn_params['DROPOUT']}"
+            f"t{nn_params['TEST_SIZE']}{nn_params['TEST_VAR']}")
+
 
 def get_dtree_name(dt_params):
-    return (f"""{dt_params["FEATURE_COLUMNS"]}-md{dt_params["MAX_DEPTH"]}-msl{dt_params["MIN_SAMP_LEAF"]}""")
+    return (f"{dt_params['FEATURE_COLUMNS']}-md{dt_params['MAX_DEPTH']}-msl{dt_params['MIN_SAMP_LEAF']}")
+
+def get_xtree_name(xt_params):
+    return (f"{xt_params['FEATURE_COLUMNS']}-md{xt_params['MAX_DEPTH']}-est{xt_params['N_ESTIMATORS']}"
+        f"-msl{xt_params['MIN_SAMP_LEAF']}")
 
 def get_rfore_name(rf_params):
-    return (f"""{rf_params["FEATURE_COLUMNS"]}-md{rf_params["MAX_DEPTH"]}-est{rf_params["N_ESTIMATORS"]}"""
-        f"""-msl{rf_params["MIN_SAMP_LEAF"]}""")
+    return (f"{rf_params['FEATURE_COLUMNS']}-md{rf_params['MAX_DEPTH']}-est{rf_params['N_ESTIMATORS']}"
+        f"-msl{rf_params['MIN_SAMP_LEAF']}")
 
 def get_knn_name(knn_params):
-    return f"""{knn_params["FEATURE_COLUMNS"]}nei{knn_params["N_NEIGHBORS"]}"""
+    return f"{knn_params['FEATURE_COLUMNS']}-nei{knn_params['N_NEIGHBORS']}-w{knn_params['WEIGHTS']}"
 
 def get_ada_name(ada_params):
-    return (f"""{ada_params["FEATURE_COLUMNS"]}-md{ada_params["MAX_DEPTH"]}-est{ada_params["N_ESTIMATORS"]}"""
-        f"""-msl{ada_params["MIN_SAMP_LEAF"]}""")
+    return (f"{ada_params['FEATURE_COLUMNS']}-md{ada_params['MAX_DEPTH']}-est{ada_params['N_ESTIMATORS']}"
+        f"-msl{ada_params['MIN_SAMP_LEAF']}")
+
+def get_xgb_name(xgb_params):
+    return (f"{xgb_params['FEATURE_COLUMNS']}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
+        f"-ml{xgb_params['MAX_LEAVES']}")
+
+def get_bagreg_name(bag_params):
+    return (f"{bag_params['FEATURE_COLUMNS']}-md{bag_params['MAX_DEPTH']}-est{bag_params['N_ESTIMATORS']}"
+        f"-msl{bag_params['MIN_SAMP_LEAF']}")
+
+def get_mlens_name(mlens_params):
+    return (f"TEMP_OH_GOD_PLEASE_FIX_ME!!!!!")
 
 def get_test_name(params):
-    test_name = str(params["ENSEMBLE"])
-    for predictor in params["ENSEMBLE"]:
+    test_name = str(params['ENSEMBLE'])
+    for predictor in params['ENSEMBLE']:
         if "nn" in predictor:
-            model_params = params[predictor]
-            test_name += (predictor + str(model_params["FEATURE_COLUMNS"]) 
-                + layers_string(model_params["LAYERS"]) + "s" + str(model_params["N_STEPS"]) 
-                + "l" + str(model_params["LIMIT"]) + "e" + str(model_params["EPOCHS"]) 
-                + "p" + str(model_params["PATIENCE"]) + "b" + str(model_params["BATCH_SIZE"]) 
-                + "d" + str(model_params["DROPOUT"]) + "t" + str(model_params["TEST_SIZE"])
-                + model_params["TEST_VAR"])
+            test_name += get_model_name(params[predictor])
         elif "DTREE" in predictor:
             test_name += get_dtree_name(params[predictor])
+        elif "XTREE" in predictor:
+            test_name += get_xtree_name(params[predictor])
         elif "RFORE" in predictor:
             test_name += get_rfore_name(params[predictor])
         elif "KNN" in predictor:
             test_name += get_knn_name(params[predictor])
         elif "ADA" in predictor:
             test_name += get_ada_name(params[predictor])
+        elif "XGB" in predictor:
+            test_name += get_xgb_name(params[predictor])
+        elif "BAGREG" in predictor:
+            test_name += get_bagreg_name(params[predictor])
+        elif "MLENS" in predictor:
+            test_name += get_mlens_name(params[predictor])
+        else:
+            test_name += "TEMP_FIX_NAME"
 
     if len(test_name) > 200:
         test_name = test_name[:200]
@@ -132,6 +183,9 @@ def get_correct_direction(predicted_price, current_price, actual_price):
         return 0.5
     else:
         return 0.0
+
+def percent_diff(pri1, pri2):
+    return r2((abs(pri1 - pri2) / pri1) * 100)
 
 def percent_from_real(y_real, y_predict):
     the_diffs = []

@@ -14,7 +14,7 @@ def pause_running_training():
     for pid in python_processes_pids:
         if any("batch" in string for string in psutil.Process(pid).cmdline()):
             pause_list.append(pid)
-        elif any("tuner" in string for string in psutil.Process(pid).cmdline()):
+        elif any("sym" in string for string in psutil.Process(pid).cmdline()):
             pause_list.append(pid)
 
     for pid in pause_list:

@@ -1,21 +1,25 @@
-from sklearn.model_selection import TimeSeriesSplit
+from config.silen_ten import silence_tensorflow
+silence_tensorflow()
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
-from tensorflow.data import Dataset
-from tensorflow.data.experimental import AUTOTUNE
+from tensorflow.python.data import Dataset
+from tensorflow.python.data.experimental import AUTOTUNE
+from sklearn.model_selection import TimeSeriesSplit
 from config.environ import save_logs, directory_dict
 from config.symbols import real_test_symbols
 from config.model_repository import models
-from functions.data_load_functs import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
+from functions.data_load import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
 from functions.functions import check_directories, check_model_folders, get_model_name, delete_files_in_folder, r1002
-from functions.paca_model_functs import create_model, get_accuracy, return_real_predict
-from functions.time_functs import get_time_string
-from paca_model import nn_train_save
+from functions.paca_model import create_model, get_accuracy, return_real_predict
+from functions.time import get_time_string
+from paca_model import configure_gpu
 import os
 
 
 def time_kfold(params):
+    configure_gpu()
+
     for symbol in real_test_symbols:
-        predictor = params["ENSEMBLE"]
+        predictor = params["ENSEMBLE"][0]
         scale = True
         to_print = True
 
@@ -26,10 +30,10 @@ def time_kfold(params):
 
         tt_df, result = preprocess_dfresult(params[predictor], df, scale=scale, to_print=to_print)
 
-        X, y = construct_3D_np(tt_df, params, result)
+        X, y = construct_3D_np(tt_df, params[predictor], result)
         print(len(X), len(y))
 
-        num_splits = 5
+        num_splits = 10
 
         accuracies = []
         # kfold = KFold(n_splits=num_splits, shuffle=True)
@@ -57,7 +61,7 @@ def time_kfold(params):
             data_dict["train"] = train
             data_dict["valid"] = valid
 
-            epochs = nn_train_save(symbol, params, predictor=predictor)
+            # epochs = nn_train_save(symbol, params, predictor=predictor)
             nn_params = params[predictor]
             
             check_model_folders(params["SAVE_FOLDER"], symbol)
@@ -111,14 +115,19 @@ def time_kfold(params):
 if __name__ == "__main__":
     check_directories()
     params = {
-        "ENSEMBLE":[],
+        "ENSEMBLE": ["nn8"],
         "TRADING": False,
         "SAVE_FOLDER": "",
         "LIMIT": 4000,
     }
 
-    for model in models:
-        if "nn" in model:
-            params["ENSEMBLE"] = list(model)
+    for model in params["ENSEMBLE"]:
+        if model in models:
             params[model] = models[model]
-            time_kfold(params)
+
+    print(params)
+
+    time_kfold(params)
+
+    
+            

@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 from config.environ import test_money, directory_dict
 from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2, check_prediction_subfolders
-from functions.time_functs import get_current_date_string, get_time_string, get_past_date_string
-from functions.tuner_functs import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
+from functions.time import get_current_date_string, get_time_string, get_past_date_string
+from functions.comparators import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
     EMA_comparator, pre_c_comparator, TSF_comparator)
 from statistics import mean
 import matplotlib.pyplot as plt
@@ -107,29 +107,27 @@ def make_load_run_excel(symbol, train_acc, valid_acc, test_acc, from_real, perce
         f"{r2(from_real)}\t{r2(percent_away)}")
     f.close()
 
-def backtest_excel(directory, test_name, test_year, test_month, test_day, params, avg_p, 
-    avg_d, avg_e, time_so_far, total_days, current_money, hold_money):
+def backtest_excel(params, progress, avg_p, avg_d, avg_e, hold_money, test_name):
 
-    file = open(directory + "/" + test_name + ".txt", "a")
+    file = open(f"{params['TUNE_FOLDER']}/{test_name}.txt", "a")
 
-    file.write("Testing finished for ensemble: " + str(params["ENSEMBLE"]) + "\n")
-    file.write("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent\n")
-    file.write("and it predicted the correct direction " + avg_d + " percent of the time.\n")
+    file.write(f"\nTesting finished for ensemble: {params['ENSEMBLE']}\n")
+    file.write(f"Using {progress['total_days']} days, predictions were off by {avg_p} percent\n")
+    file.write(f"and it predicted the correct direction {avg_d} percent of the time\n")
     overall_epochs = []
     all_epochs = 0
-    for predictor in params["ENSEMBLE"]:
+    for predictor in params['ENSEMBLE']:
         if "nn" in predictor:
             overall_epochs.append(avg_e[predictor])
     if overall_epochs:
         all_epochs = mean(overall_epochs)
         file.write(f"The models (if any) used {r2(all_epochs)}.\n")
 
-    if current_money != None:
-        file.write("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.\n")
-    file.write("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
-    str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.\n")
-    file.write(f"The end day was: {test_month}-{test_day}-{test_year}.\n\n")
-    file.write(f"The neural net models used were :\n")
+    if progress['current_money'] != None:
+        file.write(f"If it was trading for real it would have made {progress['current_money']} as compared to {hold_money} if you held it.\n")
+    file.write(f"Testing all of the days took {r2(progress['time_so_far'] / 3600)} hours or {int(progress['time_so_far'] // 3600)}:"
+        f"{int((progress['time_so_far'] / 3600 - (progress['time_so_far'] // 3600)) * 60)} minutes.\n")
+    file.write(f"The end day was: {progress['tune_month']}-{progress['tune_day']}-{progress['tune_year']}\n")
 
     nn_tested = False
     for predictor in params["ENSEMBLE"]:
@@ -139,42 +137,42 @@ def backtest_excel(directory, test_name, test_year, test_month, test_day, params
     if not nn_tested:
         file.write("NONE\n")
 
-    if current_money != None:
+    if progress['current_money'] != None:
         file.write(f"percent_away|{avg_p}\n")
         file.write(f"correct_direction|{avg_d}\n")
         file.write(f"epochs|{all_epochs}\n")
-        file.write(f"total_money|{current_money}\n")
-        file.write(f"time_so_far|{time_so_far}\n")
+        file.write(f"total_money|{progress['current_money']}\n")
+        file.write(f"time_so_far|{progress['time_so_far']}\n")
 
     file.close()
 
 def write_model_params(file, params, predictor, avg_e):
-    file.write("Model " + predictor + get_model_name(params))
-    file.write("\nParameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",\n")
-    file.write("Layers: " + layers_string(params["LAYERS"]) + "Test Size: " + str(params["TEST_SIZE"]) + ",\n") 
-    file.write("Dropout: " + str(params["DROPOUT"]) + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",\n")
-    file.write("Loss: " + params["LOSS"] + ", Optimizer: " + params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",\n")
-    file.write("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".\n")
-    file.write("Feature Columns: " + str(params["FEATURE_COLUMNS"]) + "\n")
+    file.write(f"Model {predictor}{get_model_name(params)}\n")
+    file.write(f"Parameters: N_steps: {params['N_STEPS']}, Lookup Step: {params['LOOKUP_STEP']}, Test Size: {params['TEST_SIZE']},\n")
+    file.write(f"Layers: {layers_string(params['LAYERS'])}, Test Size: {params['TEST_SIZE']},\n")
+    file.write(f"Dropout: {params['DROPOUT']}, Bidirectional: {params['BIDIRECTIONAL']},\n")
+    file.write(f"Loss: {params['LOSS']}, Optimizer: {params['OPTIMIZER']}, Batch_size: {params['BATCH_SIZE']},\n")
+    file.write(f"Epochs: {params['EPOCHS']}, Patience: {params['PATIENCE']}, Limit: {params['LIMIT']}.\n")
+    file.write(f"Feature Columns: {params['FEATURE_COLUMNS']}\n")
     file.write(f"The model used an average of {r2(avg_e)} epochs.\n\n")
     
-def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month, day, time_so_far, current_money, hold_money):
-    print("\nTesting finished for ensemble: " + str(params["ENSEMBLE"]))
-    print("Using " + str(total_days) + " days, predictions were off by " + avg_p + " percent")
-    print("and it predicted the correct direction " + avg_d + " percent of the time ")
+def print_backtest_results(params, progress, avg_p, avg_d, avg_e, hold_money):
+    print(f"\nTesting finished for ensemble: {params['ENSEMBLE']}")
+    print(f"Using {progress['total_days']} days, predictions were off by {avg_p} percent")
+    print(f"and it predicted the correct direction {avg_d} percent of the time ")
     overall_epochs = []
-    for predictor in params["ENSEMBLE"]:
+    for predictor in params['ENSEMBLE']:
         if "nn" in predictor:
             overall_epochs.append(avg_e[predictor])
     if overall_epochs:
         all_epochs = mean(overall_epochs)
-        print(f"The models` (if any) used {r2(all_epochs)}.")
+        print(f"The models (if any) used {r2(all_epochs)}.")
 
-    if current_money != None:
-        print("If it was trading for real it would have made " + str(current_money) + " as compared to " + str(hold_money) + " if you held it.")
-    print("Testing all of the days took " + str(round(time_so_far / 3600, 2)) + " hours or " + str(int(time_so_far // 3600)) + ":" + 
-    str(int((time_so_far / 3600 - (time_so_far // 3600)) * 60)) + " minutes.")
-    print("The end day was: " + str(month) + "-" + str(day) + "-" + str(year) + "\n")
+    if progress['current_money'] != None:
+        print(f"If it was trading for real it would have made {progress['current_money']} as compared to {hold_money} if you held it.")
+    print(f"Testing all of the days took {r2(progress['time_so_far'] / 3600)} hours or {int(progress['time_so_far'] // 3600)}:"
+        f"{int((progress['time_so_far'] / 3600 - (progress['time_so_far'] // 3600)) * 60)} minutes.")
+    print(f"The end day was: {progress['tune_month']}-{progress['tune_day']}-{progress['tune_year']}\n")
 
     nn_tested = False
     for predictor in params["ENSEMBLE"]:
@@ -185,17 +183,17 @@ def print_backtest_results(params, total_days, avg_p, avg_d, avg_e, year, month,
         print("NONE\n")
 
 def print_model_params(params, predictor, avg_e):
-    print("Model " + predictor + get_model_name(params))
-    print("Parameters: N_steps: " + str(params["N_STEPS"]) + ", Lookup Step:" + str(params["LOOKUP_STEP"]) + ", Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("Layers: " + layers_string(params["LAYERS"]) + "," + "Test Size: " + str(params["TEST_SIZE"]) + ",")
-    print("Dropout: " + str(params["DROPOUT"])  + ", Bidirectional: " + str(params["BIDIRECTIONAL"]) + ",")
-    print("Loss: " + params["LOSS"] + ", Optimizer: " +  params["OPTIMIZER"] + ", Batch_size: " + str(params["BATCH_SIZE"]) + ",")
-    print("Epochs: " + str(params["EPOCHS"]) + ", Patience: " + str(params["PATIENCE"]) + ", Limit: " + str(params["LIMIT"]) + ".")
-    print("Feature Columns: " + str(params["FEATURE_COLUMNS"]))
+    print(f"Model {predictor}{get_model_name(params)}")
+    print(f"Parameters: N_steps: {params['N_STEPS']}, Lookup Step: {params['LOOKUP_STEP']}, Test Size: {params['TEST_SIZE']},")
+    print(f"Layers: {layers_string(params['LAYERS'])}, Test Size: {params['TEST_SIZE']},")
+    print(f"Dropout: {params['DROPOUT']}, Bidirectional: {params['BIDIRECTIONAL']},")
+    print(f"Loss: {params['LOSS']}, Optimizer: {params['OPTIMIZER']}, Batch_size: {params['BATCH_SIZE']},")
+    print(f"Epochs: {params['EPOCHS']}, Patience: {params['PATIENCE']}, Limit: {params['LIMIT']}.")
+    print(f"Feature Columns: {params['FEATURE_COLUMNS']}")
     print(f"The model used an average of {r2(avg_e)} epochs.\n")
 
 def comparator_results_excel(df, run_days, stock):
-    directory_string = f"""{directory_dict["comparator_results"]}/{stock}-comparison.txt"""
+    directory_string = f"{directory_dict['comparator_results']}/{stock}-comparison.txt"
     if not os.path.isfile(directory_string):
         f = open(directory_string, "a")
     else:
@@ -239,7 +237,7 @@ def read_saved_contents(file_path, return_dict):
             return_dict[key] = ast.literal_eval(file_contents[key])
         else:
             print("Unexpected type found in this file")
-    
+    del file_contents
     return return_dict
 
 def save_to_dictionary(file_path, dictionary):
@@ -321,20 +319,20 @@ def load_saved_predictions(symbol, params, current_date, predictor):
     nn_params = params[predictor]
     nn_name = get_model_name(nn_params)
     s_current_date = get_past_date_string(current_date)
-    if nn_params["SAVE_PRED"][symbol][s_current_date]:
-        prediction = nn_params["SAVE_PRED"][symbol][s_current_date]["prediction"]
-        epochs = nn_params["SAVE_PRED"][symbol][s_current_date]["epochs"]
+    if nn_params['SAVE_PRED'][symbol][s_current_date]:
+        prediction = nn_params['SAVE_PRED'][symbol][s_current_date]['prediction']
+        epochs = nn_params['SAVE_PRED'][symbol][s_current_date]['epochs']
         return prediction, epochs
 
     check_prediction_subfolders(nn_name)
-    if os.path.isfile(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt"""):
-        nn_params["SAVE_PRED"] = read_saved_contents(f"""{directory_dict["save_predicts"]}/{nn_name}/{symbol}.txt""", nn_params["SAVE_PRED"])
+    if os.path.isfile(f"{directory_dict['save_predicts']}/{nn_name}/{symbol}.txt"):
+        nn_params['SAVE_PRED'] = read_saved_contents(f"{directory_dict['save_predicts']}/{nn_name}/{symbol}.txt", nn_params['SAVE_PRED'])
     else:
         return None
 
-    if s_current_date in nn_params["SAVE_PRED"][symbol]:
-        prediction = nn_params["SAVE_PRED"][symbol][s_current_date]["prediction"]
-        epochs = nn_params["SAVE_PRED"][symbol][s_current_date]["epochs"]
+    if s_current_date in nn_params['SAVE_PRED'][symbol]:
+        prediction = nn_params['SAVE_PRED'][symbol][s_current_date]['prediction']
+        epochs = nn_params['SAVE_PRED'][symbol][s_current_date]['epochs']
         return prediction, epochs
     else:
         return None
@@ -343,10 +341,10 @@ def save_prediction(symbol, params, current_date, predictor, prediction, epochs)
     nn_params = params[predictor]
     s_current_date = get_past_date_string(current_date)
     
-    if s_current_date not in nn_params["SAVE_PRED"][symbol]:
-        nn_params["SAVE_PRED"][symbol][s_current_date] = {"prediction": prediction, "epochs":epochs}
-    elif nn_params["SAVE_PRED"][symbol][s_current_date] == {}:
-        nn_params["SAVE_PRED"][symbol][s_current_date] = {"prediction": prediction, "epochs":epochs}
+    if s_current_date not in nn_params['SAVE_PRED'][symbol]:
+        nn_params['SAVE_PRED'][symbol][s_current_date] = {'prediction': prediction, 'epochs':epochs}
+    elif nn_params['SAVE_PRED'][symbol][s_current_date] == {}:
+        nn_params['SAVE_PRED'][symbol][s_current_date] = {'prediction': prediction, 'epochs':epochs}
     else:
         return
 

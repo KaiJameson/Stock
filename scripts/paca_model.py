@@ -1,34 +1,36 @@
-from scipy.sparse import data
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from functions.functions import delete_files_in_folder, check_model_folders, get_model_name
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-from config.environ import directory_dict, random_seed, save_logs, defaults
-from tensorflow.keras.layers import LSTM
-from functions.time_functs import get_time_string, get_past_date_string
-from functions.functions import get_model_name, layer_name_converter, sr2
-from functions.paca_model_functs import create_model, get_accuracy, get_all_accuracies, get_current_price, predict, return_real_predict
-from functions.data_load_functs import load_3D_data, load_2D_data
-from functions.io_functs import save_prediction, load_saved_predictions
+from config.environ import directory_dict, random_seed, save_logs, defaults, random_seed
+from functions.time import get_time_string, get_past_date_string
+from functions.functions import get_model_name, sr2
+from functions.paca_model import create_model, get_accuracy, get_current_price, predict, return_real_predict
+from functions.io import save_prediction, load_saved_predictions
+from functions.all_2D_models import DTREE, RFORE, KNN, ADA, XGB, XTREE, BAGREG
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.inspection import permutation_importance
+from sklearn.svm import LinearSVR
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from mlens.ensemble import SuperLearner
 from statistics import mean
-import pandas as pd
 import talib as ta
 import numpy as np
-import socket
+import xgboost as xgb
+import sys
+import gc
 import random
 import os
-import time
-
 
 def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_dict={}):
     #description of all the parameters used is located inside environment.py
+    gc.collect()
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
 
@@ -48,7 +50,6 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
    
     model_name = (symbol + "-" + get_model_name(nn_params))
 
-    
     model = create_model(nn_params)
 
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
@@ -132,56 +133,32 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             df["EMA"] = ta.EMA(df.c, timeperiod=5)
             predicted_price = np.float32(df["EMA"][len(df.c) - 1])
 
-        #TODO see if we can implement the tech_dict to resolve the above in one section
-
         elif "DTREE" in predictor:
-            tree = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
-                min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
-            tree.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-            # imps = permutation_importance(tree, data_dict[predictor]["X_train"],
-            #     data_dict[predictor]["y_train"])["importances_mean"]
-            # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
-            #     print(f"{feature} has importance of {imps[i]}")
-            tree_pred = tree.predict(data_dict[predictor]["X_test"])
-            scale =data_dict[predictor]["column_scaler"]["future"]
-            tree_pred = np.array(tree_pred)
-            tree_pred = tree_pred.reshape(1, -1)
-            predicted_price = np.float32(scale.inverse_transform(tree_pred)[-1][-1])
-
+            predicted_price = DTREE(params, predictor, data_dict)
+        elif "XTREE" in predictor:
+            predicted_price = XTREE(params, predictor, data_dict)
         elif "RFORE" in predictor:
-            fore = RandomForestRegressor(n_estimators=params[predictor]["N_ESTIMATORS"],
-                max_depth=params[predictor]["MAX_DEPTH"], min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"], n_jobs=-1)
-            fore.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-            fore_pred = fore.predict(data_dict[predictor]["X_test"])
+            predicted_price = RFORE(params, predictor, data_dict)
+        elif "KNN" in predictor:
+            predicted_price = KNN(params, predictor, data_dict)
+        elif "ADA" in predictor:
+            predicted_price = ADA(params, predictor, data_dict)
+        elif "XGB" in predictor:
+            predicted_price = XGB(params, predictor, data_dict)
+        elif "BAGREG" in predictor:
+            predicted_price = BAGREG(params, predictor, data_dict)
+            
+        elif "MLENS" in predictor:
+            ensemble = SuperLearner(scorer=mean_squared_error, random_state=random_seed)
+            ensemble.add([RandomForestRegressor(random_state=42), LinearSVR(loss="squared_epsilon_insensitive", dual=False)])
+            ensemble.add_meta(LinearRegression())
+            ensemble.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
+            fore_pred = ensemble.predict(data_dict[predictor]["X_test"])
             scale = data_dict[predictor]["column_scaler"]["future"]
             fore_pred = np.array(fore_pred)
             fore_pred = fore_pred.reshape(1, -1)
             predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
-
-        elif "KNN" in predictor:
-            knn = KNeighborsRegressor(n_neighbors=params[predictor]["N_NEIGHBORS"], n_jobs=-1)
-            knn.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-            knn_pred = knn.predict(data_dict[predictor]["X_test"])
-            scale = data_dict[predictor]["column_scaler"]["future"]
-            knn_pred = np.array(knn_pred)
-            knn_pred = knn_pred.reshape(1, -1)
-            predicted_price = np.float32(scale.inverse_transform(knn_pred)[-1][-1])
-
-        elif "ADA" in predictor:
-            base = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
-                min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"])
-            ada = AdaBoostRegressor(base_estimator=base, n_estimators=params[predictor]["N_ESTIMATORS"])
-            ada.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-            # imps = permutation_importance(ada, data_dict[predictor]["X_train"],
-            #     data_dict[predictor]["y_train"])["importances_mean"]
-            # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
-            #     print(f"{feature} has importance of {imps[i]}")
-            ada_pred = ada.predict(data_dict[predictor]["X_test"])
-            scale = data_dict[predictor]["column_scaler"]["future"]
-            ada_pred = np.array(ada_pred)
-            ada_pred = ada_pred.reshape(1, -1)
-            predicted_price = np.float32(scale.inverse_transform(ada_pred)[-1][-1])
-
+                    
         elif "nn" in predictor:
             if params["TRADING"]:
                 predicted_price = nn_load_predict(symbol, params, predictor, data_dict[predictor])
@@ -194,6 +171,11 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
                     epochs_dict[predictor] = epochs_run
                     predicted_price = nn_load_predict(symbol, params, predictor, data_dict[predictor])
                     save_prediction(symbol, params, current_date, predictor, predicted_price, epochs_run)
+        else:
+            print("\nPREDICTOR NOT RECOGNIZED")
+            print("GET YO SHIT TOGETHER\n")
+            sys.exit(-1)
+
         ensemb_predict_list.append(np.float32(predicted_price))
 
     print(f"Ensemble prediction list: {ensemb_predict_list}")
@@ -205,6 +187,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
 
 
 def ensemble_accuracy(symbol, params, current_date, classification=False):
+    data = {}
     for predictor in params:
         if "nn" in predictor:
             pass

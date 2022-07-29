@@ -1,22 +1,25 @@
-from email import iterators
 from tuner import tuning
 from config.symbols import tune_year, tune_month, tune_day, test_days
 from config.model_repository import exhaustive_search
+from config.environ import directory_dict
 from functions.functions import check_directories
 from itertools import product
 import pandas as pd
 import sys
 import copy
+import time
 
 check_directories()
 
 
 if len(sys.argv) > 2:
+    s_time = time.perf_counter()
     test_days = 500
 
     params = {
         "ENSEMBLE":[],
         "TRADING": False,
+        "TUNE_FOLDER": directory_dict['batch_run'],
         "SAVE_FOLDER": "",
         "LIMIT": 4000,
     }
@@ -49,7 +52,7 @@ if len(sys.argv) > 2:
         for i, k in enumerate(indexes):
             params[params["ENSEMBLE"][0]][keys[i]] = param_lists[i][index_tuple[i]]
 
-        print(f"""Now starting test with adjustable params {params[params["ENSEMBLE"][0]]}""")
+        print(f"Now starting test with adjustable params {params[params['ENSEMBLE'][0]]}")
         test_output = tuning(tune_year, tune_month, tune_day, test_days, params, output=True)
         results.append(test_output)
 
@@ -59,9 +62,12 @@ if len(sys.argv) > 2:
     pd.set_option("display.max_rows", None)
     print(result_df)
 
+    result_df.to_csv(f"{params['TUNE_FOLDER']}/summary/exhaustive_{params['ENSEMBLE'][0]}.txt", sep="\t")
+    print(f"Doing all of these tests took {(time.perf_counter() - s_time) / 60} minutes")
+
     
 else:
-    print("You must give this program two arguments in the style of \"tune#\"")
+    print("You must give this program two arguments in the style of \"sym#\"")
     print("then \"model abbreviation\" So that it knows tests to run and what symbols to use.")
     print("Please try again")
     sys.exit(-1)

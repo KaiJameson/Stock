@@ -1,11 +1,11 @@
 import sys
 from config.environ import directory_dict
 from config.symbols import real_test_symbols
-from functions.time_functs import (get_past_date_string, increment_calendar, make_Timestamp, read_date_string, 
+from functions.time import (get_past_date_string, increment_calendar, make_Timestamp, read_date_string, 
     get_current_datetime, get_calendar)
-from functions.trade_functs import get_api
+from functions.trade import get_api
 from functions.functions import check_directories, get_correct_direction, r2
-from functions.io_functs import read_saved_contents
+from functions.io import read_saved_contents
 from alpaca_trade_api.rest import TimeFrame
 import datetime
 import os
@@ -15,13 +15,13 @@ import os
 def get_user_input():
     api = get_api()
     if len(sys.argv) > 1:
-        if sys.argv[1] == "trade_perform":
+        if sys.argv[1] == "TP":
             if len(sys.argv) > 2:
                 date = read_date_string(sys.argv[2])
-                print(f"\n~~~Running trade_perform with date: {date}~~~")
+                print(f"\n~~~Running TP with date: {date}~~~")
                 make_trade_perform_sheet(date, api)
             else:
-                print("trade_perform requires another argument for the date.")
+                print("TP requires another argument for the date.")
                 print("Please try again")
                 sys.exit(-1)
         elif sys.argv[1] == "PL":
@@ -34,17 +34,18 @@ def get_user_input():
                 print("Please try again")
                 sys.exit(-1)
         elif sys.argv[1] == "tuning":
-            if len(sys.argv) > 2:
+            if len(sys.argv) > 3:
                 test_name = sys.argv[2]
+                folder = sys.argv[3]
                 print(f"\n~~~Running tuning with test: {test_name}~~~")
-                make_tuning_sheet(test_name)
+                make_tuning_sheet(test_name, folder)
             else:
-                print("Tuning requires another argument for the test name.")
+                print("Tuning requires another argument for the test name and a third for saved folder.")
                 print("Please try again")
                 sys.exit(-1)
         else:
             print("You must give this program one of the three following options.")
-            print("\"trade_perform date\" to create the trade performance excel sheet,")
+            print("\"TP date\" to create the trade performance excel sheet,")
             print("\"PL date\" to create the profit loss excel sheet,")
             print("\"tuning test_name\" to create the tuning excel sheet,")
             print("Please try again")
@@ -52,7 +53,7 @@ def get_user_input():
 
     else:
         print("You gotta give some arguments buddy, pick one of the following:")
-        print("\"trade_perform date\" to create the trade performance excel sheet,")
+        print("\"TP date\" to create the trade performance excel sheet,")
         print("\"PL date\" to create the profit loss excel sheet,")
         print("\"tuning test_name\" to create the tuning excel sheet,")
         print("Please try again")
@@ -185,7 +186,7 @@ def make_PL_sheet(date, api):
     pl_file.close()
     print("~~~Task Complete~~~")
 
-def make_tuning_sheet(test_name):
+def make_tuning_sheet(test_name, folder):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
     tpa = tcd = te = tm = tt = 0
 
@@ -198,18 +199,18 @@ def make_tuning_sheet(test_name):
             "time_so_far": 0.0
         }
 
-        if os.path.isfile(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt"""):
-            print(f"""Opening the juicy file {directory_dict["tuning"]}/{symbol}-{test_name}.txt now""", flush=True)
-            extraction_dict = read_saved_contents(f"""{directory_dict["tuning"]}/{symbol}-{test_name}.txt""", extraction_dict)
-            tune_text += (f"""{symbol}\t{extraction_dict["percent_away"]}\t{extraction_dict["correct_direction"]}\t"""
-                          f"""{extraction_dict["epochs"]}\t{extraction_dict["total_money"]}\n""") 
+        if os.path.isfile(f"{folder}/{symbol}-{test_name}.txt"):
+            print(f"Opening the juicy file {folder}/{symbol}-{test_name}.txt now", flush=True)
+            extraction_dict = read_saved_contents(f"{folder}/{symbol}-{test_name}.txt", extraction_dict)
+            tune_text += (f"{symbol}\t{extraction_dict['percent_away']}\t{extraction_dict['correct_direction']}\t"
+                          f"{r2(extraction_dict['epochs'])}\t{extraction_dict['total_money']}\n") 
             tpa += extraction_dict["percent_away"]
             tcd += extraction_dict["correct_direction"]
             te += extraction_dict["epochs"]
             tm += extraction_dict["total_money"]
             tt += extraction_dict["time_so_far"]
         else:
-            print(f"""I am sorry to inform you that {directory_dict["tuning"]}/{symbol}-{test_name}.txt""")
+            print(f"I am sorry to inform you that {folder}/{symbol}-{test_name}.txt")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
             print(f"Are you feeling lucky yet?")
             print(f"Program will now exit to prevent writing incomplete values.")
@@ -220,7 +221,7 @@ def make_tuning_sheet(test_name):
 
     tune_text += (f"\nTesting all of the days took {r2(tt / 3600)} hours or {int(tt // 3600)}:"
         f"{int((tt / 3600 - (tt // 3600)) * 60)} minutes.\n")
-    f = open(f"""{directory_dict["tune_summary"]}/{test_name}.txt""", "a")
+    f = open(f"{folder}/summary/{test_name}.txt", "a")
     f.write(tune_text)
     f.close()
     print("~~~Task Complete~~~")
