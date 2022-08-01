@@ -163,12 +163,12 @@ def layers_string(layers):
 def layer_name_converter(layer):
     # print(layer, flush=True)
     string = ""
-    
-    if str(layer[1]) == "<class 'keras.layers.recurrent_v2.LSTM'>":
+                     
+    if str(layer[1]) == "<class 'keras.layers.rnn.lstm.LSTM'>":
         string += "LSTM"
-    elif str(layer[1]) == "<class 'keras.layers.recurrent.SimpleRNN'>":
+    elif str(layer[1]) == "<class 'keras.layers.rnn.SimpleRNN'>":
         string += "SRNN"
-    elif str(layer[1]) == "<class 'keras.layers.recurrent_v2.GRU'>":
+    elif str(layer[1]) == "<class 'keras.layers.rnn.GRU'>":
         string += "GRU"
     elif str(layer[1]) == "<class 'keras.layers.core.dense.Dense'>":
         string += "Dense"

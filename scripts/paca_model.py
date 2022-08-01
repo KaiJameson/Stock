@@ -3,7 +3,7 @@ silence_tensorflow()
 from functions.functions import delete_files_in_folder, check_model_folders, get_model_name
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
+from tensorflow.keras import mixed_precision
 from config.environ import directory_dict, random_seed, save_logs, defaults, random_seed
 from functions.time import get_time_string, get_past_date_string
 from functions.functions import get_model_name, sr2
@@ -34,6 +34,8 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
 
+    # policy = mixed_precision.Policy("mixed_float16")
+    # mixed_precision.set_global_policy(policy)
     options = {"shape_optimization": True}
     tf.config.optimizer.set_experimental_options(options)
     os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2, --tf_xla_cpu_global_jit" # turns on xla and cpu xla
