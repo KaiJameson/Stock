@@ -9,7 +9,7 @@ from functions.time import get_time_string, get_past_date_string
 from functions.functions import get_model_name, sr2
 from functions.paca_model import create_model, get_accuracy, get_current_price, predict, return_real_predict
 from functions.io import save_prediction, load_saved_predictions
-from functions.all_2D_models import DTREE, RFORE, KNN, ADA, XGB, XTREE, BAGREG
+from functions.all_2D_models import DTREE, RFORE, KNN, ADA, XGB, XTREE, BAGREG, MLP
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
@@ -147,6 +147,8 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             predicted_price = XGB(params, predictor, data_dict)
         elif "BAGREG" in predictor:
             predicted_price = BAGREG(params, predictor, data_dict)
+        elif "MLP" in predictor:
+            predicted_price = MLP(params, predictor, data_dict)
             
         elif "MLENS" in predictor:
             ensemble = SuperLearner(scorer=mean_squared_error, random_state=random_seed)

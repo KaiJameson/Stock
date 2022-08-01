@@ -1,4 +1,5 @@
 from pandas import DataFrame
+from sklearn.neural_network import MLPRegressor
 from config.environ import *
 from config.symbols import *
 from config.api_key import *
@@ -10,6 +11,7 @@ from functions.functions import *
 from functions.time import *
 from functions.technical_indicators import *
 from functions.volitility import *
+from functions.all_2D_models import *
 from paca_model import *
 from load_run import *
 from tuner import tuning
@@ -81,7 +83,7 @@ def backtest_comparator(start_day, end_day, comparator, run_days):
 if __name__ == "__main__":
 
     params = {
-        "ENSEMBLE": ["KNN1", "RFORE1"],
+        "ENSEMBLE": ["MLP1", "RFORE1"],
         "TRADING": False,
         "SAVE_FOLDER": "tune4",
         "nn1" : { 
@@ -146,6 +148,17 @@ if __name__ == "__main__":
             "TEST_SIZE": 1,
             "TEST_VAR": "c"
         },
+        "MLP1" : {
+            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            "LAYERS": (1),
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 69,
+            "LOOKUP_STEP":1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c"
+        },
+
         "LIMIT": 4000,
     }
  
@@ -154,6 +167,24 @@ if __name__ == "__main__":
     api = get_api()
 
     s = time.perf_counter()
+    # MLP WORKING SECTION
+    symbol = "AGYS"
+
+    df = get_proper_df(symbol, 4000, "V2")
+    df = modify_dataframe(params["MLP1"]["FEATURE_COLUMNS"], df, True)
+    data_dict = load_all_data(params, df)
+
+    if params['MLP1']['EARLY_STOP'] == False:
+        mlp = MLPRegressor(params['MLP1']['LAYERS'], shuffle=False, n_iter_no_change=params['MLP1']['PATIENCE'],
+            verbose=True)
+    else:
+        mlp = MLPRegressor(params['MLP1']['LAYERS'], early_stopping=True, validation_fraction=params['MLP1']['VALIDATION_FRACTION'],
+            n_iter_no_change=params['MLP1']['PATIENCE'], shuffle=False, verbose=True)
+    mlp.fit(data_dict['MLP1']["X_train"], data_dict['MLP1']["y_train"])
+    mlp_pred = mlp.predict(data_dict['MLP1']["X_test"])
+    predicted_price = rescale_2D_preds("MLP1", data_dict, mlp_pred)
+    print(predicted_price)
+
     # NEWS WORKING SECTION
     # news = api.get_news("QCOM", limit=5000)
 
@@ -313,26 +344,26 @@ if __name__ == "__main__":
 
     # GET ACCOUNT ACTIVITIES
 
-    api = get_api()
+    # api = get_api()
 
-    port_history = api.get_portfolio_history()
-    get_act = api.get_activities(page_size=100)
+    # port_history = api.get_portfolio_history()
+    # get_act = api.get_activities(page_size=100)
 
     # print(len(port_history))
     # print(len(get_act))
     # print(port_history[-1])
-    # print(get_act[-1])
+    # print(get_act)
+    # print(type(get_act[-1]))
     
-    print(get_act)
 
     # help = port_history.df
     # print(help)
     
 
-    import json
-    f = open("alpaca_sucks_porfolio_history.json", "w")
-    f.write(str(port_history))
-    f.close()
+    # import json
+    # f = open("alpaca_sucks_porfolio_history.json", "w")
+    # f.write(str(port_history))
+    # f.close()
 
 
     print(time.perf_counter() - s, flush=True)

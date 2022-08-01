@@ -118,6 +118,10 @@ def get_bagreg_name(bag_params):
 def get_mlens_name(mlens_params):
     return (f"TEMP_OH_GOD_PLEASE_FIX_ME!!!!!")
 
+def get_mlp_name(mlp_params):
+    return (f"{mlp_params['FEATURE_COLUMNS']}-l{mlp_params['LAYERS']}-stp{mlp_params['EARLY_STOP']}"
+        f"-p{mlp_params['PATIENCE']}")
+
 def get_test_name(params):
     test_name = str(params['ENSEMBLE'])
     for predictor in params['ENSEMBLE']:
@@ -139,6 +143,8 @@ def get_test_name(params):
             test_name += get_bagreg_name(params[predictor])
         elif "MLENS" in predictor:
             test_name += get_mlens_name(params[predictor])
+        elif "MLP" in predictor:
+            test_name += get_mlp_name(params[predictor])
         else:
             test_name += "TEMP_FIX_NAME"
 
