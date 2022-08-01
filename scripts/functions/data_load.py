@@ -165,7 +165,7 @@ def get_proper_df(symbol, limit, option):
 
 def load_all_data(params, df, to_print=True):
     data_dict = {}
-    req_2d = ["DTREE", "XTREE", "BAGREG", "RFORE", "KNN", "ADA", "XGB", "MLENS"]
+    req_2d = ["DTREE", "XTREE", "BAGREG", "RFORE", "KNN", "ADA", "XGB", "MLENS", "MLP"]
     
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]

@@ -3,13 +3,13 @@ silence_tensorflow()
 from functions.functions import delete_files_in_folder, check_model_folders, get_model_name
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
+from tensorflow.keras import mixed_precision
 from config.environ import directory_dict, random_seed, save_logs, defaults, random_seed
 from functions.time import get_time_string, get_past_date_string
 from functions.functions import get_model_name, sr2
 from functions.paca_model import create_model, get_accuracy, get_current_price, predict, return_real_predict
 from functions.io import save_prediction, load_saved_predictions
-from functions.all_2D_models import DTREE, RFORE, KNN, ADA, XGB, XTREE, BAGREG
+from functions.all_2D_models import DTREE, RFORE, KNN, ADA, XGB, XTREE, BAGREG, MLP
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
@@ -34,6 +34,8 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
     tf.keras.backend.clear_session()
     tf.keras.backend.reset_uids()
 
+    # policy = mixed_precision.Policy("mixed_float16")
+    # mixed_precision.set_global_policy(policy)
     options = {"shape_optimization": True}
     tf.config.optimizer.set_experimental_options(options)
     os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2, --tf_xla_cpu_global_jit" # turns on xla and cpu xla
@@ -147,6 +149,8 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             predicted_price = XGB(params, predictor, data_dict)
         elif "BAGREG" in predictor:
             predicted_price = BAGREG(params, predictor, data_dict)
+        elif "MLP" in predictor:
+            predicted_price = MLP(params, predictor, data_dict)
             
         elif "MLENS" in predictor:
             ensemble = SuperLearner(scorer=mean_squared_error, random_state=random_seed)

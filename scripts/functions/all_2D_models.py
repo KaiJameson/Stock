@@ -2,6 +2,7 @@ from config.environ import random_seed
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, ExtraTreesRegressor, BaggingRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPRegressor
 from sklearn.inspection import permutation_importance
 from sklearn.svm import LinearSVR
 from sklearn.linear_model import LinearRegression
@@ -98,6 +99,21 @@ def BAGREG(params, predictor, data_dict):
     bag_pred = bag.predict(data_dict[predictor]["X_test"])
     predicted_price = rescale_2D_preds(predictor, data_dict, bag_pred)
     
+    return predicted_price
+
+def MLP(params, predictor, data_dict):
+    if params[predictor]['EARLY_STOP'] == False:
+        mlp = MLPRegressor(params[predictor]['LAYERS'], shuffle=False, n_iter_no_change=params[predictor]['PATIENCE'],
+            verbose=False)
+    else:
+        mlp = MLPRegressor(params[predictor]['LAYERS'], early_stopping=True, validation_fraction=params[predictor]['VALIDATION_FRACTION'],
+            n_iter_no_change=params[predictor]['PATIENCE'], shuffle=False, verbose=False)
+    mlp.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
+    mlp_pred = mlp.predict(data_dict[predictor]["X_test"])
+    # print(data_dict)
+    # print(data_dict[predictor])
+    predicted_price = rescale_2D_preds(predictor, data_dict, mlp_pred)
+
     return predicted_price
 
 def rescale_2D_preds(predictor, data_dict, unscaled):

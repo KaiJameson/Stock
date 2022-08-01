@@ -451,6 +451,24 @@ models = {
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
+    "nn26" : { 
+        "N_STEPS": 50,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
     "DTREE1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
         "MAX_DEPTH": 5,
@@ -517,6 +535,17 @@ models = {
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
+    },
+    "MLP1" : { # 704
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+            "LAYERS": (8), 
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 5,
+            "LOOKUP_STEP":1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c",
+        
     },
 }
 
@@ -595,6 +624,19 @@ exhaustive_search = {
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
+    },
+    "MLP" : { # 704
+        "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
+            ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
+            "LAYERS": [(1), (2), (4), (8), (10), (10, 5), (20, 10, 5), (5, 10), (10, 10, 10), (50, 50), (100)],
+            "EARLY_STOP": [True, False],
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": [3, 5, 10, 25],
+            "LOOKUP_STEP":1,
+            "TEST_SIZE": 1,
+            "TEST_VAR": "c",
+        
     },
 
 

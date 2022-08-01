@@ -67,28 +67,10 @@ make_config = False
 """
 
 defaults = {
-    "ENSEMBLE": ["nn1", "nn2", "nn3", "sav_gol"],
+    "ENSEMBLE": ["nn8", "nn11", "nn14"],
     "TRADING": True,
     "SAVE_FOLDER": "trading",
-    "nn1" : { 
-        "N_STEPS": 100,
-        "LOOKUP_STEP": 1,
-        "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, LSTM)],
-        "DROPOUT": .4,
-        "BIDIRECTIONAL": False,
-        "LOSS": "huber_loss",
-        "OPTIMIZER": "adam",
-        "BATCH_SIZE": 1024,
-        "EPOCHS": 2000,
-        "PATIENCE": 200,
-        "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-        "SHUFFLE": True,
-        "TEST_VAR": "c",
-        "SAVE_PRED": {}
-        },
-    "nn2" : { 
+    "nn8" : { 
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
@@ -106,7 +88,7 @@ defaults = {
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
-    "nn3" : { 
+    "nn11" : { 
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
@@ -123,7 +105,25 @@ defaults = {
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
-        },    
+        },
+    "nn14" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        }, 
     "LIMIT": 4000
 }
 
