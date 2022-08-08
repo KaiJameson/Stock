@@ -303,7 +303,7 @@ def df_wavelet_transform(name, df):
 
 def convert_date_values(name, df):	    
     df[name] = df.index	
-    df[name] = df[name].dt.dayofweek
+    df[name] = df[name].dt.dayofweek + 1
 
 def testing(name, df):
     pass
