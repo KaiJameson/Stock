@@ -536,7 +536,7 @@ models = {
         "EPOCHS": 2000,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "pctc", "pcvwap", "day_of_week"],
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "stc", "svwap", "day_of_week"],
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
