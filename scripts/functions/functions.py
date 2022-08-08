@@ -116,7 +116,7 @@ def get_bagreg_name(bag_params):
         f"-msl{bag_params['MIN_SAMP_LEAF']}")
 
 def get_mlens_name(mlens_params):
-    return (f"TEMP_OH_GOD_PLEASE_FIX_ME!!!!!")
+    return f"{mlens_params['FEATURE_COLUMNS']}-l{mlens_params['LAYERS']}-m_est{mlens_params['META_EST']}"
 
 def get_mlp_name(mlp_params):
     return (f"{mlp_params['FEATURE_COLUMNS']}-l{mlp_params['LAYERS']}-stp{mlp_params['EARLY_STOP']}"
