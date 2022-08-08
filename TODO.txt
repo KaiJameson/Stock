@@ -1,0 +1,36 @@
+Implement classification ensemble
+    * change voting method
+    * rework the 2d models
+    * rework the 3d nn
+    * add in the wavelet transform 2d models
+    * add in wavelet transform 3d models
+News
+    * Try title and title/content from alpaca
+    * use the vader model
+    * use BERT model
+Fundamentals
+    * try out tiingo
+    * make all of the days for a quarter have the relevant fundmental numbers
+    * combine relevant fundamentals using principal component analysis or similar process
+    * make longer term models only using fundamentals for longer time horizon
+    * Bond rates, maybe putting precedence to 10 year rates
+PCA
+    * implement PCA option for data
+    * implement other feature simplication techniques
+Qlib
+    * find out if any models there are relevant for project
+MLENS
+    * review results of the extensive MLENS testing for models worthy of further investigation
+Data loading
+    * structure data loading so all features can be modified with s or pc or d or wt
+    * above looks like pc.o or pc.TSF or tick_SPY_pc.c
+    * rename all of those old prediction files to prevent unncessary duplication
+Model testing
+    * all of these new data sources need to be retested: SPY, 7MA, AROON, time series forecast, ht_trendmode, ht_sine, pearson's correlation, money flow index, relative strength index, day_of_week, chaikin line, true range, volatility estimators, 10Y bond rate, differenced data
+    * less patience for super complicated models like nn4
+Tensorflow tuner
+    * using build in tuner with a whole bunch of hyperparameters to see if it can find anything usefull
+Model loading/trading 
+    * start the load_run.py sooner than 3:58 on a timer
+    * have all the models get loaded into memory ahead of time
+    * load data exactly at 3:59 to make predictions/make trading decisions

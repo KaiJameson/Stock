@@ -282,6 +282,9 @@ def df_TSF(name, df):
 
 def df_wavelet_transform(name, df):
     df_selector = name[2:]
+    if df_selector == "m":
+        df_m("m", df) 
+
     std = np.nanstd(df[df_selector])
 
     # thresh = .04 # smooths more than sav_gol
@@ -291,7 +294,11 @@ def df_wavelet_transform(name, df):
     coeff[1:] = (pywt.threshold(i, value=thresh, mode="soft") for i in coeff[1:])
     reconstructed_signal = pywt.waverec(coeff, 'db4', mode="smooth")
 
-    df[name] = reconstructed_signal
+    # df[name] = reconstructed_signal[2:]
+    # print(df)
+    # print(len(df.index))
+    # print(len(reconstructed_signal))
+    df[name] = reconstructed_signal[len(reconstructed_signal) - len(df.index):]
     
 
 def convert_date_values(name, df):	    
@@ -300,7 +307,6 @@ def convert_date_values(name, df):
 
 def testing(name, df):
     pass
-
 
 techs_dict = {
     "m": {"function":df_m},

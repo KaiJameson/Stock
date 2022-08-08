@@ -9,7 +9,7 @@ from functions.time import get_time_string, get_past_date_string
 from functions.functions import get_model_name, sr2
 from functions.paca_model import create_model, get_accuracy, get_current_price, predict, return_real_predict
 from functions.io import save_prediction, load_saved_predictions
-from functions.all_2D_models import DTREE, RFORE, KNN, ADA, XGB, XTREE, BAGREG, MLP
+from functions.all_2D_models import DTREE, MLENS, RFORE, KNN, ADA, XGB, XTREE, BAGREG, MLP
 from scipy.signal import savgol_filter
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor
@@ -151,17 +151,8 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             predicted_price = BAGREG(params, predictor, data_dict)
         elif "MLP" in predictor:
             predicted_price = MLP(params, predictor, data_dict)
-            
         elif "MLENS" in predictor:
-            ensemble = SuperLearner(scorer=mean_squared_error, random_state=random_seed)
-            ensemble.add([RandomForestRegressor(random_state=42), LinearSVR(loss="squared_epsilon_insensitive", dual=False)])
-            ensemble.add_meta(LinearRegression())
-            ensemble.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-            fore_pred = ensemble.predict(data_dict[predictor]["X_test"])
-            scale = data_dict[predictor]["column_scaler"]["future"]
-            fore_pred = np.array(fore_pred)
-            fore_pred = fore_pred.reshape(1, -1)
-            predicted_price = np.float32(scale.inverse_transform(fore_pred)[-1][-1])
+            predicted_price = MLENS(params, predictor, data_dict)
                     
         elif "nn" in predictor:
             if params["TRADING"]:

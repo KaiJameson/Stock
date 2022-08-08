@@ -469,6 +469,78 @@ models = {
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
+    "nn27" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["wto", "wtl", "wth", "wtc", "wtm", "wtv", "wttc", "wtvwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn28" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["do", "dl", "dh", "dc", "dm", "dv", "dtc", "dvwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "dc",
+        "SAVE_PRED": {}
+        },
+    "nn29" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcv", "pctc", "pcvwap", "aroon_down", "aroon_up", "TSF", "ht_trendmode", "ht_sine"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn30" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "pctc", "pcvwap", "day_of_week"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
     "DTREE1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
         "MAX_DEPTH": 5,
@@ -505,48 +577,105 @@ models = {
     "ADA1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
         "N_ESTIMATORS": 100,
-        "MAX_DEPTH": 10000,
+        "MAX_DEPTH": 1000,
         "MIN_SAMP_LEAF": 1,
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
         },
     "XGB1" : {
-            "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            "N_ESTIMATORS": 100,
-            "MAX_DEPTH": 1000,
-            "MAX_LEAVES": 1000,
-            "LEARNING_RATE": 0.05,
-            "LOOKUP_STEP":1,
-            "TEST_SIZE": 1,
-            "TEST_VAR": "c"
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "N_ESTIMATORS": 100,
+        "MAX_DEPTH": 1000,
+        "MAX_LEAVES": 1000,
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c"
         },
     "BAGREG1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
         "N_ESTIMATORS": 100,
-        "MAX_DEPTH": 10000,
+        "MAX_DEPTH": 1000,
         "MIN_SAMP_LEAF": 1,
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"
         },
-    "MLENS1" : {
-        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+    "MLP1" : { 
+        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
+        "LAYERS": (8), 
+        "EARLY_STOP": True,
+        "VALIDATION_FRACTION": .2,
+        "PATIENCE": 5,
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
-        "TEST_VAR": "c"
+        "TEST_VAR": "c",
     },
-    "MLP1" : { # 704
-        "FEATURE_COLUMNS": ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"],
-            "LAYERS": (8), 
+    "MLENS1" : {
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "LAYERS": [["MLP1", "RFORE1"], ["ADA1", "KNN1"], ["XGB1", "BAGREG1"], ["DTREE1", "XTREE1"]],
+        "META_EST": "lin_reg",
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c",
+        "DTREE1" : {
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 5,
+        },
+        "XTREE1" : {
+            "N_ESTIMATORS": 10,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "RFORE1" : {
+            "N_ESTIMATORS": 10,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "KNN1" : {
+            "N_NEIGHBORS": 5,
+            "WEIGHTS": "distance"
+        },
+        "ADA1" : {
+            "N_ESTIMATORS": 100,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "XGB1" : {
+                "N_ESTIMATORS": 50,
+                "MAX_DEPTH": 10,
+                "MAX_LEAVES": 1000,
+        },
+        "XGB2" : {
+                "N_ESTIMATORS": 100,
+                "MAX_DEPTH": 10,
+                "MAX_LEAVES": 1000,
+        },
+        "BAGREG1" : {
+            "N_ESTIMATORS": 10,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "MLP1" : { 
+            "LAYERS": (10), 
             "EARLY_STOP": True,
             "VALIDATION_FRACTION": .2,
             "PATIENCE": 5,
-            "LOOKUP_STEP":1,
-            "TEST_SIZE": 1,
-            "TEST_VAR": "c",
-        
+        },
+        "MLP2" : { 
+            "LAYERS": (10, 10), 
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 5,
+        },
+        "MLP3" : { 
+            "LAYERS": (20, 10, 10), 
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 5,
+        },
     },
+    
 }
 
 exhaustive_search = {
@@ -629,15 +758,88 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
             ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
-            "LAYERS": [(1), (2), (4), (8), (10), (10, 5), (20, 10, 5), (5, 10), (10, 10, 10), (50, 50), (100)],
-            "EARLY_STOP": [True, False],
-            "VALIDATION_FRACTION": .2,
-            "PATIENCE": [3, 5, 10, 25],
-            "LOOKUP_STEP":1,
-            "TEST_SIZE": 1,
-            "TEST_VAR": "c",
+        "LAYERS": [(1), (2), (4), (8), (10), (10, 5), (20, 10, 5), (5, 10), (10, 10, 10), (50, 50), (100)],
+        "EARLY_STOP": [True, False],
+        "VALIDATION_FRACTION": .2,
+        "PATIENCE": [3, 5, 10, 25],
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c",
         
     },
+    "MLENS": { # 1856
+        "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+            ["so", "sl", "sh", "sc", "sm", "sv", "tc", "vwap"], ["pcv", "sv", "tc", "vwap"],
+            ["sc", "pcc"], ["c", "dc", "sc", "pcc"], ["pco", "pcl", "pch", "pcc", "pcm", "pcv", "tc", "vwap"]],
+        "LAYERS": [[["DTREE1"], ["DTREE1"]], [["XTREE1"], ["XTREE1"]], [["RFORE1"], ["RFORE1"]], [["KNN1"], ["KNN1"]], 
+            [["ADA1"], ["ADA1"]], [["XGB1"], ["XGB1"]], [["XGB2"], ["XGB2"]], [["BAGREG1"], ["BAGREG1"]], 
+            [["MLP1"], ["MLP1"]], [["MLP2"], ["MLP2"]], [["MLP3"], ["MLP3"]], 
+            [["DTREE1", "XTREE1", "RFORE1", "KNN1", "ADA1", "XGB1", "XGB2", "BAGREG1", "MLP1", "MLP2", "MLP3"]],
+            [["XTREE1", "MLP2"]], [["XGB2", "ADA1"]], [["BAGREG1", "KNN1"]], [["MLP1", "MLP2", "MLP3"]], [["MLP1", "RFORE1"]], 
+            [["DTREE1"]], [["XTREE1"]], [["RFORE1"]], [["KNN1"]], [["ADA1"]], [["XGB1"]], [["XGB2"]], [["BAGREG1"]], [["MLP1"]], 
+            [["MLP2"]], [["MLP3"]], [["MLP1", "RFORE1"], ["ADA1", "KNN1"], ["XGB1", "BAGREG1"], ["DTREE1", "XTREE1"]]],
+        "META_EST": ["lin_reg", "SVR", "huber", "DTREE", "RFORE", "KNN", "XGB", "MLP"],
+        "LOOKUP_STEP":1,
+        "TEST_SIZE": 1,
+        "TEST_VAR": "c",
+        "DTREE1" : {
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 5,
+        },
+        "XTREE1" : {
+            "N_ESTIMATORS": 10,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "RFORE1" : {
+            "N_ESTIMATORS": 10,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "KNN1" : {
+            "N_NEIGHBORS": 5,
+            "WEIGHTS": "distance"
+        },
+        "ADA1" : {
+            "N_ESTIMATORS": 100,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "XGB1" : {
+                "N_ESTIMATORS": 50,
+                "MAX_DEPTH": 10,
+                "MAX_LEAVES": 1000,
+        },
+        "XGB2" : {
+                "N_ESTIMATORS": 100,
+                "MAX_DEPTH": 10,
+                "MAX_LEAVES": 1000,
+        },
+        "BAGREG1" : {
+            "N_ESTIMATORS": 10,
+            "MAX_DEPTH": 1000,
+            "MIN_SAMP_LEAF": 1,
+        },
+        "MLP1" : { 
+            "LAYERS": (10), 
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 5,
+        },
+        "MLP2" : { 
+            "LAYERS": (10, 10), 
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 5,
+        },
+        "MLP3" : { 
+            "LAYERS": (20, 10, 10), 
+            "EARLY_STOP": True,
+            "VALIDATION_FRACTION": .2,
+            "PATIENCE": 5,
+        },
+
+    }
 
 
 }
