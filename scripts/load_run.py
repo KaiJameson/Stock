@@ -7,6 +7,7 @@ from functions.trade import getOwnedStocks, buy_all_at_once
 from functions.data_load import get_proper_df, load_all_data, modify_dataframe
 from functions.error import error_handler, keyboard_interrupt
 from functions.io import  make_load_run_excel, runtime_predict_excel
+from functions.time import get_current_datetime
 from functions.time import get_current_date_string
 from functions.trade import get_toggleable_api
 from functions.prcs_con import pause_running_training, resume_running_training
@@ -33,7 +34,7 @@ def load_trade(symbols, params, real_mon):
 
             df = get_proper_df(symbol, params["LIMIT"], "V2")
             
-            data_dict = load_all_data(defaults, df)
+            data_dict = load_all_data(defaults, df, get_current_datetime())
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()
             predicted_price, current_price, epochs_dict = ensemble_predictor(symbol, params, None, 

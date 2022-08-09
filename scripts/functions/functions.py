@@ -83,43 +83,43 @@ def get_random_folder():
 
 def get_model_name(nn_params):
     return (f"sh{'T' if nn_params['SHUFFLE'] else 'F'}"
-            f"{nn_params['FEATURE_COLUMNS']}{layers_string(nn_params['LAYERS'])}s"
+            f"{features_string(nn_params['FEATURE_COLUMNS'])}{layers_string(nn_params['LAYERS'])}s"
             f"{nn_params['N_STEPS']}l{nn_params['LIMIT']}e{nn_params['EPOCHS']}"
             f"p{nn_params['PATIENCE']}b{nn_params['BATCH_SIZE']}d{nn_params['DROPOUT']}"
             f"t{nn_params['TEST_SIZE']}{nn_params['TEST_VAR']}")
 
 
 def get_dtree_name(dt_params):
-    return (f"{dt_params['FEATURE_COLUMNS']}-md{dt_params['MAX_DEPTH']}-msl{dt_params['MIN_SAMP_LEAF']}")
+    return (f"{features_string(dt_params['FEATURE_COLUMNS'])}-md{dt_params['MAX_DEPTH']}-msl{dt_params['MIN_SAMP_LEAF']}")
 
 def get_xtree_name(xt_params):
-    return (f"{xt_params['FEATURE_COLUMNS']}-md{xt_params['MAX_DEPTH']}-est{xt_params['N_ESTIMATORS']}"
+    return (f"{features_string(xt_params['FEATURE_COLUMNS'])}-md{xt_params['MAX_DEPTH']}-est{xt_params['N_ESTIMATORS']}"
         f"-msl{xt_params['MIN_SAMP_LEAF']}")
 
 def get_rfore_name(rf_params):
-    return (f"{rf_params['FEATURE_COLUMNS']}-md{rf_params['MAX_DEPTH']}-est{rf_params['N_ESTIMATORS']}"
+    return (f"{features_string(rf_params['FEATURE_COLUMNS'])}-md{rf_params['MAX_DEPTH']}-est{rf_params['N_ESTIMATORS']}"
         f"-msl{rf_params['MIN_SAMP_LEAF']}")
 
 def get_knn_name(knn_params):
-    return f"{knn_params['FEATURE_COLUMNS']}-nei{knn_params['N_NEIGHBORS']}-w{knn_params['WEIGHTS']}"
+    return f"{features_string(knn_params['FEATURE_COLUMNS'])}-nei{knn_params['N_NEIGHBORS']}-w{knn_params['WEIGHTS']}"
 
 def get_ada_name(ada_params):
-    return (f"{ada_params['FEATURE_COLUMNS']}-md{ada_params['MAX_DEPTH']}-est{ada_params['N_ESTIMATORS']}"
+    return (f"{features_string(ada_params['FEATURE_COLUMNS'])}-md{ada_params['MAX_DEPTH']}-est{ada_params['N_ESTIMATORS']}"
         f"-msl{ada_params['MIN_SAMP_LEAF']}")
 
 def get_xgb_name(xgb_params):
-    return (f"{xgb_params['FEATURE_COLUMNS']}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
+    return (f"{features_string(xgb_params['FEATURE_COLUMNS'])}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
         f"-ml{xgb_params['MAX_LEAVES']}")
 
 def get_bagreg_name(bag_params):
-    return (f"{bag_params['FEATURE_COLUMNS']}-md{bag_params['MAX_DEPTH']}-est{bag_params['N_ESTIMATORS']}"
+    return (f"{features_string(bag_params['FEATURE_COLUMNS'])}-md{bag_params['MAX_DEPTH']}-est{bag_params['N_ESTIMATORS']}"
         f"-msl{bag_params['MIN_SAMP_LEAF']}")
 
 def get_mlens_name(mlens_params):
-    return f"{mlens_params['FEATURE_COLUMNS']}-l{mlens_params['LAYERS']}-m_est{mlens_params['META_EST']}"
+    return f"{features_string(mlens_params['FEATURE_COLUMNS'])}-l{mlens_params['LAYERS']}-m_est{mlens_params['META_EST']}"
 
 def get_mlp_name(mlp_params):
-    return (f"{mlp_params['FEATURE_COLUMNS']}-l{mlp_params['LAYERS']}-stp{mlp_params['EARLY_STOP']}"
+    return (f"{features_string(mlp_params['FEATURE_COLUMNS'])}-l{mlp_params['LAYERS']}-stp{mlp_params['EARLY_STOP']}"
         f"-p{mlp_params['PATIENCE']}")
 
 def get_test_name(params):
@@ -148,9 +148,18 @@ def get_test_name(params):
         else:
             test_name += "TEMP_FIX_NAME"
 
-    if len(test_name) > 200:
-        test_name = test_name[:200]
+    if len(test_name) > 190:
+        test_name = test_name[:190]
     return test_name
+
+def features_string(features):
+    string = "["
+    for feature in features:
+        string += f"""{feature.strip("'")},"""
+    string = string[:-1]
+    string += "]"
+
+    return string
 
 def layers_string(layers):
     string = "["

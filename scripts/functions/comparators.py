@@ -46,7 +46,7 @@ def sav_gol_comparator(df, time_period, poly_order, run_days):
     for i in range(len(df) - 1, len(df) - run_days - 1, -1):
         actual_price = df.c[i]
         df.drop(labels=df.iloc[i].name, inplace=True)
-        df["sc"] = savgol_filter(df.c[:i], time_period, poly_order)
+        df["s.c"] = savgol_filter(df.c[:i], time_period, poly_order)
         current_price = df.c[i - 1]
         predicted_price = df.sc[i - 1]
 

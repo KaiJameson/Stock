@@ -10,7 +10,7 @@ from config.model_repository import models
 from functions.data_load import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
 from functions.functions import check_directories, check_model_folders, get_model_name, delete_files_in_folder, r1002
 from functions.paca_model import create_model, get_accuracy, return_real_predict
-from functions.time import get_time_string
+from functions.time import get_time_string, get_current_datetime
 from paca_model import configure_gpu
 import os
 
@@ -25,7 +25,7 @@ def time_kfold(params):
 
 
         df = get_proper_df(symbol, params[predictor]["LIMIT"], "V2")
-        data_dict = load_all_data(params, df)
+        data_dict = load_all_data(params, df, get_current_datetime())
 
 
         tt_df, result = preprocess_dfresult(params[predictor], df, scale=scale, to_print=to_print)
