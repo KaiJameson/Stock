@@ -118,6 +118,8 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
                 if not s_current_date in params[predictor]["SAVE_PRED"][symbol]:
                     params[predictor]["SAVE_PRED"][symbol][s_current_date] = {}
 
+    current_price = get_current_price(df)
+
     for predictor in params["ENSEMBLE"]:
         if predictor == "7MA":
             df["7MA"] = df.c.rolling(window=7).mean()
@@ -128,7 +130,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             predicted_price = np.float32(df.lin_reg[len(df.c) - 1])
 
         elif predictor == "sav_gol":
-            df["sc"] = savgol_filter(df.c, 7, 3)
+            df["s.c"] = savgol_filter(df.c, 7, 3)
             predicted_price = np.float32(df.sc[len(df.c) - 1])
 
         elif predictor == "EMA":
@@ -170,13 +172,26 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             print("\nPREDICTOR NOT RECOGNIZED")
             print("GET YO SHIT TOGETHER\n")
             sys.exit(-1)
+        
+        print(current_date)
+        print(df.tail(5))
+
+        if params[predictor]["TEST_VAR"] == "pc.c":
+            print(current_price)
+            print(f"predicted_price before {predicted_price}")
+            predicted_price = current_price * 1 + predicted_price
+            print(f"predicted_price after {predicted_price}")
+        elif params[predictor]["TEST_VAR"] == "d.c":
+            print(current_price)
+            print(f"predicted_price before {predicted_price}")
+            predicted_price = current_price + predicted_price
+            print(f"predicted_price after {predicted_price}")
 
         ensemb_predict_list.append(np.float32(predicted_price))
 
     print(f"Ensemble prediction list: {ensemb_predict_list}")
     final_prediction = mean(ensemb_predict_list)
     print(f"The final prediction: {sr2(final_prediction)}")
-    current_price = get_current_price(df)
 
     return final_prediction, current_price, epochs_dict
 

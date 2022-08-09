@@ -6,6 +6,7 @@ from functions.functions import check_directories
 from functions.error import error_handler, keyboard_interrupt
 from functions.data_load import load_all_data, get_proper_df
 from functions.prcs_con import pause_running_training, resume_running_training
+from functions.time import get_current_datetime
 import sys
 import time
 
@@ -15,7 +16,7 @@ def save_models(symbols):
     for symbol in symbols:
         try:
             df = get_proper_df(symbol, 0, "V2")
-            data_dict = load_all_data(defaults, df)
+            data_dict = load_all_data(defaults, df, get_current_datetime())
             print(f"\n~~~ Now Training {symbol} ~~~")
             for predictor in defaults["ENSEMBLE"]:
                 if "nn"in predictor:

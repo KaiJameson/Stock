@@ -5,40 +5,58 @@ import pandas as pd
 import pywt
 import matplotlib.pyplot as plt
 
+base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
+
 def df_m(name, df):
     df[name] = (df.l + df.h) / 2
 
-def df_savgol(name, df):
-    df_selector = name[1:]
-    # print(f"{df_selector}")
-    if df_selector == "m":
-        df_m("m", df) 
-    df[name] = savgol_filter(df[df_selector], 7, 3)
+def df_savgol(selector, feature, df):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df)
 
-def df_change_percent(name, df):
-    df_selector = name[2:]
-    # print(f"{df_selector}")
-    if df_selector == "m":
-        df_m("m", df) 
-    df[name] = df[df_selector].pct_change()
+    df[f"{selector}.{feature}"] = savgol_filter(df[feature], 7, 3)
 
-def df_differencer(name, df):
-    df_selector = name[1:]
-    # print(f"{df_selector}")
-    if df_selector == "m":
-        df_m("m", df) 
-    df[name] = df[df_selector].diff(1)
+def df_change_percent(selector, feature, df):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df)
+    df[f"{selector}.{feature}"] = df[feature].pct_change()
 
-def df_power_transformation(name, df):
-    df_selector = name[1:]
-    print(f"{df_selector}")
-    if df_selector == "m":
-        df_m("m", df) 
-    df[name] = df[df_selector].pow(.5)
-    print(df[name])
+def df_differencer(selector, feature, df):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df)
+    df[f"{selector}.{feature}"] = df[feature].diff(1)
 
-def df_7MA(name, df):
-    df[name] = ta.SMA(df.c, timeperiod=7)
+def df_power_transformation(selector, feature, df):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df)
+    df[f"{selector}.{feature}"] = df[feature].pow(.5)
+
+def df_moving_average(selector, feature, df):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df)
+    df[f"{selector}.{feature}"] = ta.SMA(df.c, timeperiod=7)
+
+def df_wavelet_transform(selector, feature, df):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df)
+
+    std = np.nanstd(df[feature])
+
+    # thresh = .04 # smooths more than sav_gol
+    thresh = std/np.nanmax(df[feature]) # smooths more than above
+    thresh = thresh*np.nanmax(df[feature])
+    coeff = pywt.wavedec(df[feature], "db4", mode="smooth" )
+    coeff[1:] = (pywt.threshold(i, value=thresh, mode="soft") for i in coeff[1:])
+    reconstructed_signal = pywt.waverec(coeff, 'db4', mode="smooth")
+
+    # df[name] = reconstructed_signal[2:]
+    # print(df)
+    # print(len(df.index))
+    # print(len(reconstructed_signal))
+    df[f"{selector}.{feature}"] = reconstructed_signal[len(reconstructed_signal) - len(df.index):]
+    
+
+
 
 def df_BBANDS(name, df):
     up, mid, dow = ta.BBANDS(df.c, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
@@ -49,6 +67,7 @@ def df_BBANDS(name, df):
 
 def df_OBV(name, df):
     df[name] = ta.OBV(df.c, df.v)
+    print(df[name])
 
 def df_RSI(name, df):
     df[name] = ta.RSI(df.c)
@@ -280,26 +299,6 @@ def df_beta(name, df):
 def df_TSF(name, df):
     df[name] = ta.TSF(df.c, timeperiod=14)
 
-def df_wavelet_transform(name, df):
-    df_selector = name[2:]
-    if df_selector == "m":
-        df_m("m", df) 
-
-    std = np.nanstd(df[df_selector])
-
-    # thresh = .04 # smooths more than sav_gol
-    thresh = std/np.nanmax(df[df_selector]) # smooths more than above
-    thresh = thresh*np.nanmax(df[df_selector])
-    coeff = pywt.wavedec(df[df_selector], "db4", mode="smooth" )
-    coeff[1:] = (pywt.threshold(i, value=thresh, mode="soft") for i in coeff[1:])
-    reconstructed_signal = pywt.waverec(coeff, 'db4', mode="smooth")
-
-    # df[name] = reconstructed_signal[2:]
-    # print(df)
-    # print(len(df.index))
-    # print(len(reconstructed_signal))
-    df[name] = reconstructed_signal[len(reconstructed_signal) - len(df.index):]
-    
 
 def convert_date_values(name, df):	    
     df[name] = df.index	
@@ -309,39 +308,13 @@ def testing(name, df):
     pass
 
 techs_dict = {
+    "s": {"function":df_savgol},
+    "pc": {"function":df_change_percent},
+    "d": {"function":df_differencer},
+    "wt": {"function":df_wavelet_transform},
+    "pt": {"function":df_power_transformation},
+    "ma": {"function":df_moving_average},
     "m": {"function":df_m},
-    "sc": {"function":df_savgol},
-    "so": {"function":df_savgol},
-    "sl": {"function":df_savgol},
-    "sh": {"function":df_savgol},
-    "sm": {"function":df_savgol},
-    "sv": {"function":df_savgol},
-    "stc": {"function":df_savgol},
-    "svwap": {"function":df_savgol},
-    "pcc": {"function":df_change_percent},
-    "pco": {"function":df_change_percent},
-    "pcl": {"function":df_change_percent},
-    "pch": {"function":df_change_percent},
-    "pcm": {"function":df_change_percent},
-    "pcv": {"function":df_change_percent},
-    "pctc": {"function":df_change_percent},
-    "pcvwap": {"function":df_change_percent},
-    "dc": {"function":df_differencer},
-    "do": {"function":df_differencer},
-    "dl": {"function":df_differencer},
-    "dh": {"function":df_differencer},
-    "dm": {"function":df_differencer},
-    "dv": {"function":df_differencer},
-    "dtc": {"function":df_differencer},
-    "dvwap": {"function":df_differencer},
-    "wtc": {"function":df_wavelet_transform},
-    "wto": {"function":df_wavelet_transform},
-    "wtl": {"function":df_wavelet_transform},
-    "wth": {"function":df_wavelet_transform},
-    "wtm": {"function":df_wavelet_transform},
-    "wtv": {"function":df_wavelet_transform},
-    "wttc": {"function":df_wavelet_transform},
-    "wtvwap": {"function":df_wavelet_transform},
     "garman_klass":  {"function":garman_klass},
     "hodges_tompkins": {"function":hodges_tompkins},
     "kurtosis": {"function":get_kurtosis},
@@ -349,7 +322,6 @@ techs_dict = {
     "rogers_stachell": {"function":rogers_stachell},
     "skew": {"function":get_skew},
     "yang_zhang" : {"function":yang_zhang},
-    "7MA": {"function":df_7MA},
     "up_band": {"function":df_BBANDS},
     "low_band": {"function":df_BBANDS},
     "OBV": {"function":df_OBV},

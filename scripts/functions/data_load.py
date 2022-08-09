@@ -33,30 +33,49 @@ def alpaca_date_converter(df):
     return df
 
 
-def modify_dataframe(features, df, to_print):
+def modify_dataframe(features, df, current_date, test_var, to_print):
     base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
-    removable_features = ["o", "l", "h", "m", "v", "tc", "vwap", "div", "split"]
 
     for feature in features:
         if feature not in base_features:
-            if feature in techs_dict:
-                techs_dict[feature]["function"](feature, df)
-            elif feature.startswith("tick_"):
-                feature_split = feature.split("_")
-                ticker_df = get_proper_df(feature_split[1], 4000, "V2")
+            
+            if "." in feature:
+                dot_split = feature.split(".")
 
-                if feature_split[2] not in base_features:
-                    if feature_split[2] in techs_dict:
-                        techs_dict[feature_split[2]]["function"](feature_split[2], ticker_df)
-                        df[feature] = ticker_df[feature_split[2]]
+                if dot_split[0] in techs_dict:
+                    techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df)
+                elif dot_split[0].startswith("tick_"):
+                    feature_split = dot_split[0].split("_")
+                    ticker_df = get_proper_df(feature_split[1], 4000, "V2")
+                    ticker_df = df_subset(current_date, ticker_df)
+
+                    if feature_split[2] not in base_features:
+                        if feature_split[2] in techs_dict:
+                            techs_dict[feature_split[2]]["function"](feature_split[2], dot_split[1], ticker_df)
+                            df[feature] = ticker_df[f"{feature_split[2]}.{dot_split[1]}"]
                     else:
-                        print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
-                else:
-                    df[feature] = ticker_df[feature_split[2]]
+                        df[feature] = ticker_df[feature_split[2]]
             else:
+                if feature in techs_dict:
+                    techs_dict[feature]["function"](feature, df)
+                elif feature.startswith("tick_"):
+                    feature_split = feature.split("_")
+                    ticker_df = get_proper_df(feature_split[1], 4000, "V2")
+                    ticker_df = df_subset(current_date, ticker_df)
+
+                    if feature_split[2] not in base_features:
+                        if feature_split[2] in techs_dict:
+                            techs_dict[feature_split[2]]["function"](feature_split[2], ticker_df)
+                            df[feature] = ticker_df[feature_split[2]]
+                    else:
+                        df[feature] = ticker_df[feature_split[2]]
+                
+            if feature not in df.columns:
                 print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
-    for feature in removable_features:
-        if feature not in features and feature in list(df.columns):
+    
+    for feature in list(df.columns):
+        if feature not in features and feature != test_var:
+            # print(f"dropping {feature}")
             df = df.drop(columns=[feature])
 
     # pd.set_option("display.max_columns", None)
@@ -163,7 +182,7 @@ def get_proper_df(symbol, limit, option):
 
     return df
 
-def load_all_data(params, df, to_print=True):
+def load_all_data(params, df, current_date, to_print=True):
     data_dict = {}
     req_2d = ["DTREE", "XTREE", "BAGREG", "RFORE", "KNN", "ADA", "XGB", "MLENS", "MLP"]
     
@@ -174,12 +193,12 @@ def load_all_data(params, df, to_print=True):
             data_dict[predictor] = result
         if "nn" in predictor:
             if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
-                result, train, valid, test = load_2D_data(params[predictor], df, params[predictor]["SHUFFLE"],
+                result, train, valid, test = load_2D_data(params[predictor], df, current_date, params[predictor]["SHUFFLE"],
                     tensorify=True, to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
-                result, train, valid, test = load_3D_data(params[predictor], df, params[predictor]["SHUFFLE"],
+                result, train, valid, test = load_3D_data(params[predictor], df, current_date, params[predictor]["SHUFFLE"],
                 to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
@@ -187,18 +206,18 @@ def load_all_data(params, df, to_print=True):
 
     return data_dict
 
-def preprocess_dfresult(params, df, scale, to_print):
+def preprocess_dfresult(params, df, current_date, scale, to_print):
     tt_df = copy.deepcopy(df)
     tt_df = tt_df.replace(0.000000, 0.000000001)
     if to_print:
         print(f"""Included features: {params["FEATURE_COLUMNS"]}""")
 
-    tt_df = modify_dataframe(params["FEATURE_COLUMNS"], tt_df, to_print)
+    tt_df = modify_dataframe(params["FEATURE_COLUMNS"], tt_df, current_date, params["TEST_VAR"], to_print)
     for col in params["FEATURE_COLUMNS"]:
         assert col in tt_df.columns, f"'{col}' does not exist in the dataframe."
 
     tt_df["future"] = tt_df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
-    if "c" not in params["FEATURE_COLUMNS"]:
+    if params["TEST_VAR"] not in params["FEATURE_COLUMNS"]:
         tt_df = tt_df.drop(columns=["c"])
 
     result = {}
@@ -240,8 +259,8 @@ def construct_3D_np(tt_df, params, result):
 
     return X, y
 
-def load_3D_data(params, df, shuffle=True, scale=True, to_print=True):
-    tt_df, result = preprocess_dfresult(params, df, scale=scale, to_print=to_print)
+def load_3D_data(params, df, current_date, shuffle=True, scale=True, to_print=True):
+    tt_df, result = preprocess_dfresult(params, df, current_date, scale=scale, to_print=to_print)
     
     X, y = construct_3D_np(tt_df, params, result)
 
@@ -252,8 +271,8 @@ def load_3D_data(params, df, shuffle=True, scale=True, to_print=True):
    
 
 
-def load_2D_data(params, df, shuffle=True, scale=True, tensorify=False, to_print=True):
-    tt_df, result = preprocess_dfresult(params, df, scale, to_print)
+def load_2D_data(params, df, current_date, shuffle=True, scale=True, tensorify=False, to_print=True):
+    tt_df, result = preprocess_dfresult(params, df, current_date, scale, to_print)
 
     tt_df = tt_df.dropna()
     y = tt_df["future"]

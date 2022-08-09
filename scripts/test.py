@@ -223,7 +223,7 @@ if __name__ == "__main__":
             },
         },
         "TRANS1" :{
-            "FEATURE_COLUMNS": ["pco", "pcl", "pch", "pcc", "pcv"],
+            "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.v"],
             "LOOKUP_STEP":1,
             "TEST_SIZE": 1,
             "TEST_VAR": "c",
@@ -279,8 +279,8 @@ if __name__ == "__main__":
     ###############################################################################
     '''Normalize price columns'''
     #
-    min_return = min(df[(df.index < last_20pct)][["pco", "pcl", "pch", "pcc",]].min(axis=0))
-    max_return = max(df[(df.index < last_20pct)][["pco", "pcl", "pch", "pcc",]].max(axis=0))
+    min_return = min(df[(df.index < last_20pct)][["pc.o", "pc.l", "pc.h", "pc.c",]].min(axis=0))
+    max_return = max(df[(df.index < last_20pct)][["pc.o", "pc.l", "pc.h", "pc.c",]].max(axis=0))
 
     # Min-max normalize price columns (0-1 range)
     df['pco'] = (df['pco'] - min_return) / (max_return - min_return)
@@ -573,7 +573,7 @@ if __name__ == "__main__":
     # for symbol in load_save_symbols:
     #     df = get_proper_df(symbol, 4000, "V2")
     #     df = modify_dataframe(params["KNN1"]["FEATURE_COLUMNS"], df, True)
-    # data_dict = load_all_data(params, df)
+    # data_dict = load_all_data(params, df, get_current_datetime())
 
     
     def calculate_entropy(list_values):
@@ -723,7 +723,7 @@ if __name__ == "__main__":
     
     # print(get_proper_df(symbol, 4000, "V2"))
 
-    all_features = ["o", "l", "h", "c", "m", "v", "sc", "so", "sl", "sh", "sm", "sv", "7MA", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", 
+    all_features = ["o", "l", "h", "c", "m", "v", "up_band", "low_band", "OBV", "RSI", "lin_reg", "lin_reg_ang", 
         "lin_reg_int", "lin_reg_slope", "pears_cor", "mon_flow_ind", "willR", "std_dev", "min", "max", "commod_chan_ind", "para_SAR", "para_SAR_ext", "rate_of_change", 
         "ht_dcperiod", "ht_trendmode", "ht_dcphase", "ht_inphase", "quadrature", "ht_sine", "ht_leadsine", "ht_trendline", "mom", "abs_price_osc", "KAMA", "typ_price", 
         "ult_osc", "chai_line", "chai_osc", "norm_avg_true_range", "median_price", "var", "aroon_down", "aroon_up", "aroon_osc", "bal_of_pow", "chande_mom_osc", "MACD", 
@@ -732,7 +732,7 @@ if __name__ == "__main__":
         "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_dir_mov_ind", "true_range", "avg_price",
         "weig_c_price", "beta", "TSF", "day_of_week"]
 
-    direct_value_features = ["o", "l", "h", "c", "m", "sc", "so", "sl", "sh", "sm", "7MA", "up_band", "low_band", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", 
+    direct_value_features = ["o", "l", "h", "c", "m", "up_band", "low_band", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", 
                 "min", "max", "ht_trendline",  "KAMA", "typ_price", "median_price", "var", "TRIX", "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", 
                 "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_price", "weig_c_price", "TSF"]
 
