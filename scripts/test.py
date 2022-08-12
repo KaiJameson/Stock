@@ -29,12 +29,13 @@ from sklearn.model_selection import KFold
 from xgboost import XGBRegressor
 from mlens.ensemble import SuperLearner
 from mlens.model_selection import Evaluator
+from scipy.io import loadmat
+from collections import Counter
+import keras_tuner as kt
 import math
 import requests
 import scipy
-from scipy.io import loadmat
-from collections import Counter
-
+import keras
 import copy
 
 
@@ -239,322 +240,322 @@ if __name__ == "__main__":
     s = time.perf_counter()
     configure_gpu()
     # TRANSFORMER SECTION
-    import numpy as np
-    import pandas as pd
-    import os, datetime
-    import tensorflow as tf
-    from tensorflow.keras.models import *
-    from tensorflow.keras.layers import *
-    print('Tensorflow version: {}'.format(tf.__version__))
+    # import numpy as np
+    # import pandas as pd
+    # import os, datetime
+    # import tensorflow as tf
+    # from tensorflow.keras.models import *
+    # from tensorflow.keras.layers import *
+    # print('Tensorflow version: {}'.format(tf.__version__))
 
-    import matplotlib.pyplot as plt
-    plt.style.use('seaborn')
+    # import matplotlib.pyplot as plt
+    # plt.style.use('seaborn')
 
-    batch_size = 32
-    seq_len = 128
+    # batch_size = 32
+    # seq_len = 128
 
-    d_k = 256
-    d_v = 256
-    n_heads = 12
-    ff_dim = 256
+    # d_k = 256
+    # d_v = 256
+    # n_heads = 12
+    # ff_dim = 256
 
-    symbol = "AGYS"
+    # symbol = "AGYS"
 
-    df = get_proper_df(symbol, 4000, "V2")
-    df = modify_dataframe(params["TRANS1"]["FEATURE_COLUMNS"], df, True)
-    df = df.replace(0, 0.000000001)
-    #df =  df.replace(to_replace=0, method='ffill', inplace=True) 
+    # df = get_proper_df(symbol, 4000, "V2")
+    # df = modify_dataframe(params["TRANS1"]["FEATURE_COLUMNS"], df, True)
+    # df = df.replace(0, 0.000000001)
+    # #df =  df.replace(to_replace=0, method='ffill', inplace=True) 
 
-    df = df.reset_index()
-    df = df.drop(columns=["c", "timestamp"])
-    df = df.dropna(how='any', axis=0)
+    # df = df.reset_index()
+    # df = df.drop(columns=["c", "timestamp"])
+    # df = df.dropna(how='any', axis=0)
 
 
-    '''Create indexes to split dataset'''
+    # '''Create indexes to split dataset'''
 
-    times = sorted(df.index.values)
-    last_10pct = sorted(df.index.values)[-int(0.1*len(times))] # Last 10% of series
-    last_20pct = sorted(df.index.values)[-int(0.2*len(times))] # Last 20% of series
+    # times = sorted(df.index.values)
+    # last_10pct = sorted(df.index.values)[-int(0.1*len(times))] # Last 10% of series
+    # last_20pct = sorted(df.index.values)[-int(0.2*len(times))] # Last 20% of series
 
-    ###############################################################################
-    '''Normalize price columns'''
-    #
-    min_return = min(df[(df.index < last_20pct)][["pc.o", "pc.l", "pc.h", "pc.c",]].min(axis=0))
-    max_return = max(df[(df.index < last_20pct)][["pc.o", "pc.l", "pc.h", "pc.c",]].max(axis=0))
+    # ###############################################################################
+    # '''Normalize price columns'''
+    # #
+    # min_return = min(df[(df.index < last_20pct)][["pc.o", "pc.l", "pc.h", "pc.c",]].min(axis=0))
+    # max_return = max(df[(df.index < last_20pct)][["pc.o", "pc.l", "pc.h", "pc.c",]].max(axis=0))
 
-    # Min-max normalize price columns (0-1 range)
-    df['pco'] = (df['pco'] - min_return) / (max_return - min_return)
-    df['pch'] = (df['pch'] - min_return) / (max_return - min_return)
-    df['pcl'] = (df['pcl'] - min_return) / (max_return - min_return)
-    df['pcc'] = (df['pcc'] - min_return) / (max_return - min_return)
+    # # Min-max normalize price columns (0-1 range)
+    # df['pc.o'] = (df['pc.o'] - min_return) / (max_return - min_return)
+    # df['pc.h'] = (df['pc.h'] - min_return) / (max_return - min_return)
+    # df['pc.l'] = (df['pc.l'] - min_return) / (max_return - min_return)
+    # df['pc.c'] = (df['pc.c'] - min_return) / (max_return - min_return)
 
-    ###############################################################################
-    '''Normalize volume column'''
+    # ###############################################################################
+    # '''Normalize volume column'''
 
-    min_volume = df[(df.index < last_20pct)]['pcv'].min(axis=0)
-    max_volume = df[(df.index < last_20pct)]['pcv'].max(axis=0)
+    # min_volume = df[(df.index < last_20pct)]['pc.v'].min(axis=0)
+    # max_volume = df[(df.index < last_20pct)]['pc.v'].max(axis=0)
 
-    # Min-max normalize volume columns (0-1 range)
-    df['pcv'] = (df['pcv'] - min_volume) / (max_volume - min_volume)
+    # # Min-max normalize volume columns (0-1 range)
+    # df['pc.v'] = (df['pc.v'] - min_volume) / (max_volume - min_volume)
 
-    ###############################################################################
-    '''Create training, validation and test split'''
+    # ###############################################################################
+    # '''Create training, validation and test split'''
 
-    df_train = df[(df.index < last_20pct)]  # Training data are 80% of total data
-    df_val = df[(df.index >= last_20pct) & (df.index < last_10pct)]
-    df_test = df[(df.index >= last_10pct)]
+    # df_train = df[(df.index < last_20pct)]  # Training data are 80% of total data
+    # df_val = df[(df.index >= last_20pct) & (df.index < last_10pct)]
+    # df_test = df[(df.index >= last_10pct)]
 
-    print(df_train)
+    # print(df_train)
 
-    # Remove date column
-    # df_train.drop(columns=['Date'], inplace=True)
-    # df_val.drop(columns=['Date'], inplace=True)
-    # df_test.drop(columns=['Date'], inplace=True)
+    # # Remove date column
+    # # df_train.drop(columns=['Date'], inplace=True)
+    # # df_val.drop(columns=['Date'], inplace=True)
+    # # df_test.drop(columns=['Date'], inplace=True)
 
-    # Convert pandas columns into arrays
-    train_data = df_train.values
-    # print(train_data)
-    val_data = df_val.values
-    test_data = df_test.values
-    print('Training data shape: {}'.format(train_data.shape))
-    print('Validation data shape: {}'.format(val_data.shape))
-    print('Test data shape: {}'.format(test_data.shape))
+    # # Convert pandas columns into arrays
+    # train_data = df_train.values
+    # # print(train_data)
+    # val_data = df_val.values
+    # test_data = df_test.values
+    # print('Training data shape: {}'.format(train_data.shape))
+    # print('Validation data shape: {}'.format(val_data.shape))
+    # print('Test data shape: {}'.format(test_data.shape))
 
-    # Training data
-    X_train, y_train = [], []
-    for i in range(seq_len, len(train_data)):
-        X_train.append(train_data[i-seq_len:i]) # Chunks of training data with a length of 128 df-rows
-        y_train.append(train_data[:, 3][i]) #Value of 4th column (Close Price) of df-row 128+1
-    X_train, y_train = np.array(X_train), np.array(y_train)
+    # # Training data
+    # X_train, y_train = [], []
+    # for i in range(seq_len, len(train_data)):
+    #     X_train.append(train_data[i-seq_len:i]) # Chunks of training data with a length of 128 df-rows
+    #     y_train.append(train_data[:, 3][i]) #Value of 4th column (Close Price) of df-row 128+1
+    # X_train, y_train = np.array(X_train), np.array(y_train)
 
-    ###############################################################################
+    # ###############################################################################
 
-    # Validation data
-    X_val, y_val = [], []
-    for i in range(seq_len, len(val_data)):
-        X_val.append(val_data[i-seq_len:i])
-        y_val.append(val_data[:, 3][i])
-    X_val, y_val = np.array(X_val), np.array(y_val)
+    # # Validation data
+    # X_val, y_val = [], []
+    # for i in range(seq_len, len(val_data)):
+    #     X_val.append(val_data[i-seq_len:i])
+    #     y_val.append(val_data[:, 3][i])
+    # X_val, y_val = np.array(X_val), np.array(y_val)
 
-    ###############################################################################
+    # ###############################################################################
 
-    # Test data
-    X_test, y_test = [], []
-    for i in range(seq_len, len(test_data)):
-        X_test.append(test_data[i-seq_len:i])
-        y_test.append(test_data[:, 3][i])    
-    X_test, y_test = np.array(X_test), np.array(y_test)
+    # # Test data
+    # X_test, y_test = [], []
+    # for i in range(seq_len, len(test_data)):
+    #     X_test.append(test_data[i-seq_len:i])
+    #     y_test.append(test_data[:, 3][i])    
+    # X_test, y_test = np.array(X_test), np.array(y_test)
 
-    print('Training set shape', X_train.shape, y_train.shape)
-    print('Validation set shape', X_val.shape, y_val.shape)
-    print('Testing set shape' ,X_test.shape, y_test.shape)
+    # print('Training set shape', X_train.shape, y_train.shape)
+    # print('Validation set shape', X_val.shape, y_val.shape)
+    # print('Testing set shape' ,X_test.shape, y_test.shape)
 
-    class Time2Vector(Layer):
-        def __init__(self, seq_len, **kwargs):
-            super(Time2Vector, self).__init__()
-            self.seq_len = seq_len
+    # class Time2Vector(Layer):
+    #     def __init__(self, seq_len, **kwargs):
+    #         super(Time2Vector, self).__init__()
+    #         self.seq_len = seq_len
 
-        def build(self, input_shape):
-            '''Initialize weights and biases with shape (batch, seq_len)'''
-            self.weights_linear = self.add_weight(name='weight_linear',
-                                        shape=(int(self.seq_len),),
-                                        initializer='uniform',
-                                        trainable=True)
+    #     def build(self, input_shape):
+    #         '''Initialize weights and biases with shape (batch, seq_len)'''
+    #         self.weights_linear = self.add_weight(name='weight_linear',
+    #                                     shape=(int(self.seq_len),),
+    #                                     initializer='uniform',
+    #                                     trainable=True)
             
-            self.bias_linear = self.add_weight(name='bias_linear',
-                                        shape=(int(self.seq_len),),
-                                        initializer='uniform',
-                                        trainable=True)
+    #         self.bias_linear = self.add_weight(name='bias_linear',
+    #                                     shape=(int(self.seq_len),),
+    #                                     initializer='uniform',
+    #                                     trainable=True)
             
-            self.weights_periodic = self.add_weight(name='weight_periodic',
-                                        shape=(int(self.seq_len),),
-                                        initializer='uniform',
-                                        trainable=True)
+    #         self.weights_periodic = self.add_weight(name='weight_periodic',
+    #                                     shape=(int(self.seq_len),),
+    #                                     initializer='uniform',
+    #                                     trainable=True)
 
-            self.bias_periodic = self.add_weight(name='bias_periodic',
-                                        shape=(int(self.seq_len),),
-                                        initializer='uniform',
-                                        trainable=True)
+    #         self.bias_periodic = self.add_weight(name='bias_periodic',
+    #                                     shape=(int(self.seq_len),),
+    #                                     initializer='uniform',
+    #                                     trainable=True)
 
-        def call(self, x):
-            '''Calculate linear and periodic time features'''
-            x = tf.math.reduce_mean(x[:,:,:4], axis=-1) 
-            time_linear = self.weights_linear * x + self.bias_linear # Linear time feature
-            time_linear = tf.expand_dims(time_linear, axis=-1) # Add dimension (batch, seq_len, 1)
+    #     def call(self, x):
+    #         '''Calculate linear and periodic time features'''
+    #         x = tf.math.reduce_mean(x[:,:,:4], axis=-1) 
+    #         time_linear = self.weights_linear * x + self.bias_linear # Linear time feature
+    #         time_linear = tf.expand_dims(time_linear, axis=-1) # Add dimension (batch, seq_len, 1)
             
-            time_periodic = tf.math.sin(tf.multiply(x, self.weights_periodic) + self.bias_periodic)
-            time_periodic = tf.expand_dims(time_periodic, axis=-1) # Add dimension (batch, seq_len, 1)
-            return tf.concat([time_linear, time_periodic], axis=-1) # shape = (batch, seq_len, 2)
+    #         time_periodic = tf.math.sin(tf.multiply(x, self.weights_periodic) + self.bias_periodic)
+    #         time_periodic = tf.expand_dims(time_periodic, axis=-1) # Add dimension (batch, seq_len, 1)
+    #         return tf.concat([time_linear, time_periodic], axis=-1) # shape = (batch, seq_len, 2)
         
-        def get_config(self): # Needed for saving and loading model with custom layer
-            config = super().get_config().copy()
-            config.update({'seq_len': self.seq_len})
-            return config
+    #     def get_config(self): # Needed for saving and loading model with custom layer
+    #         config = super().get_config().copy()
+    #         config.update({'seq_len': self.seq_len})
+    #         return config
 
-    class SingleAttention(Layer):
-        def __init__(self, d_k, d_v):
-            super(SingleAttention, self).__init__()
-            self.d_k = d_k
-            self.d_v = d_v
+    # class SingleAttention(Layer):
+    #     def __init__(self, d_k, d_v):
+    #         super(SingleAttention, self).__init__()
+    #         self.d_k = d_k
+    #         self.d_v = d_v
 
-        def build(self, input_shape):
-            self.query = Dense(self.d_k, 
-                            input_shape=input_shape, 
-                            kernel_initializer='glorot_uniform', 
-                            bias_initializer='glorot_uniform')
+    #     def build(self, input_shape):
+    #         self.query = Dense(self.d_k, 
+    #                         input_shape=input_shape, 
+    #                         kernel_initializer='glorot_uniform', 
+    #                         bias_initializer='glorot_uniform')
             
-            self.key = Dense(self.d_k, 
-                            input_shape=input_shape, 
-                            kernel_initializer='glorot_uniform', 
-                            bias_initializer='glorot_uniform')
+    #         self.key = Dense(self.d_k, 
+    #                         input_shape=input_shape, 
+    #                         kernel_initializer='glorot_uniform', 
+    #                         bias_initializer='glorot_uniform')
             
-            self.value = Dense(self.d_v, 
-                            input_shape=input_shape, 
-                            kernel_initializer='glorot_uniform', 
-                            bias_initializer='glorot_uniform')
+    #         self.value = Dense(self.d_v, 
+    #                         input_shape=input_shape, 
+    #                         kernel_initializer='glorot_uniform', 
+    #                         bias_initializer='glorot_uniform')
 
-        def call(self, inputs): # inputs = (in_seq, in_seq, in_seq)
-            q = self.query(inputs[0])
-            k = self.key(inputs[1])
+    #     def call(self, inputs): # inputs = (in_seq, in_seq, in_seq)
+    #         q = self.query(inputs[0])
+    #         k = self.key(inputs[1])
 
-            attn_weights = tf.matmul(q, k, transpose_b=True)
-            attn_weights = tf.map_fn(lambda x: x/np.sqrt(self.d_k), attn_weights)
-            attn_weights = tf.nn.softmax(attn_weights, axis=-1)
+    #         attn_weights = tf.matmul(q, k, transpose_b=True)
+    #         attn_weights = tf.map_fn(lambda x: x/np.sqrt(self.d_k), attn_weights)
+    #         attn_weights = tf.nn.softmax(attn_weights, axis=-1)
             
-            v = self.value(inputs[2])
-            attn_out = tf.matmul(attn_weights, v)
-            return attn_out    
+    #         v = self.value(inputs[2])
+    #         attn_out = tf.matmul(attn_weights, v)
+    #         return attn_out    
 
-    #############################################################################
+    # #############################################################################
 
-    class MultiAttention(Layer):
-        def __init__(self, d_k, d_v, n_heads):
-            super(MultiAttention, self).__init__()
-            self.d_k = d_k
-            self.d_v = d_v
-            self.n_heads = n_heads
-            self.attn_heads = list()
+    # class MultiAttention(Layer):
+    #     def __init__(self, d_k, d_v, n_heads):
+    #         super(MultiAttention, self).__init__()
+    #         self.d_k = d_k
+    #         self.d_v = d_v
+    #         self.n_heads = n_heads
+    #         self.attn_heads = list()
 
-        def build(self, input_shape):
-            for n in range(self.n_heads):
-                self.attn_heads.append(SingleAttention(self.d_k, self.d_v))  
+    #     def build(self, input_shape):
+    #         for n in range(self.n_heads):
+    #             self.attn_heads.append(SingleAttention(self.d_k, self.d_v))  
                 
-                # input_shape[0]=(batch, seq_len, 7), input_shape[0][-1]=7 
-                self.linear = Dense(input_shape[0][-1], 
-                                    input_shape=input_shape, 
-                                    kernel_initializer='glorot_uniform', 
-                                    bias_initializer='glorot_uniform')
+    #             # input_shape[0]=(batch, seq_len, 7), input_shape[0][-1]=7 
+    #             self.linear = Dense(input_shape[0][-1], 
+    #                                 input_shape=input_shape, 
+    #                                 kernel_initializer='glorot_uniform', 
+    #                                 bias_initializer='glorot_uniform')
 
-        def call(self, inputs):
-            attn = [self.attn_heads[i](inputs) for i in range(self.n_heads)]
-            concat_attn = tf.concat(attn, axis=-1)
-            multi_linear = self.linear(concat_attn)
-            return multi_linear   
+    #     def call(self, inputs):
+    #         attn = [self.attn_heads[i](inputs) for i in range(self.n_heads)]
+    #         concat_attn = tf.concat(attn, axis=-1)
+    #         multi_linear = self.linear(concat_attn)
+    #         return multi_linear   
 
-    #############################################################################
+    # #############################################################################
 
-    class TransformerEncoder(Layer):
-        def __init__(self, d_k, d_v, n_heads, ff_dim, dropout=0.1, **kwargs):
-            super(TransformerEncoder, self).__init__()
-            self.d_k = d_k
-            self.d_v = d_v
-            self.n_heads = n_heads
-            self.ff_dim = ff_dim
-            self.attn_heads = list()
-            self.dropout_rate = dropout
+    # class TransformerEncoder(Layer):
+    #     def __init__(self, d_k, d_v, n_heads, ff_dim, dropout=0.1, **kwargs):
+    #         super(TransformerEncoder, self).__init__()
+    #         self.d_k = d_k
+    #         self.d_v = d_v
+    #         self.n_heads = n_heads
+    #         self.ff_dim = ff_dim
+    #         self.attn_heads = list()
+    #         self.dropout_rate = dropout
 
-        def build(self, input_shape):
-            self.attn_multi = MultiAttention(self.d_k, self.d_v, self.n_heads)
-            self.attn_dropout = Dropout(self.dropout_rate)
-            self.attn_normalize = LayerNormalization(input_shape=input_shape, epsilon=1e-6)
+    #     def build(self, input_shape):
+    #         self.attn_multi = MultiAttention(self.d_k, self.d_v, self.n_heads)
+    #         self.attn_dropout = Dropout(self.dropout_rate)
+    #         self.attn_normalize = LayerNormalization(input_shape=input_shape, epsilon=1e-6)
 
-            self.ff_conv1D_1 = Conv1D(filters=self.ff_dim, kernel_size=1, activation='relu')
-            # input_shape[0]=(batch, seq_len, 7), input_shape[0][-1] = 7 
-            self.ff_conv1D_2 = Conv1D(filters=input_shape[0][-1], kernel_size=1) 
-            self.ff_dropout = Dropout(self.dropout_rate)
-            self.ff_normalize = LayerNormalization(input_shape=input_shape, epsilon=1e-6)    
+    #         self.ff_conv1D_1 = Conv1D(filters=self.ff_dim, kernel_size=1, activation='relu')
+    #         # input_shape[0]=(batch, seq_len, 7), input_shape[0][-1] = 7 
+    #         self.ff_conv1D_2 = Conv1D(filters=input_shape[0][-1], kernel_size=1) 
+    #         self.ff_dropout = Dropout(self.dropout_rate)
+    #         self.ff_normalize = LayerNormalization(input_shape=input_shape, epsilon=1e-6)    
         
-        def call(self, inputs): # inputs = (in_seq, in_seq, in_seq)
-            attn_layer = self.attn_multi(inputs)
-            attn_layer = self.attn_dropout(attn_layer)
-            attn_layer = self.attn_normalize(inputs[0] + attn_layer)
+    #     def call(self, inputs): # inputs = (in_seq, in_seq, in_seq)
+    #         attn_layer = self.attn_multi(inputs)
+    #         attn_layer = self.attn_dropout(attn_layer)
+    #         attn_layer = self.attn_normalize(inputs[0] + attn_layer)
 
-            ff_layer = self.ff_conv1D_1(attn_layer)
-            ff_layer = self.ff_conv1D_2(ff_layer)
-            ff_layer = self.ff_dropout(ff_layer)
-            ff_layer = self.ff_normalize(inputs[0] + ff_layer)
-            return ff_layer 
+    #         ff_layer = self.ff_conv1D_1(attn_layer)
+    #         ff_layer = self.ff_conv1D_2(ff_layer)
+    #         ff_layer = self.ff_dropout(ff_layer)
+    #         ff_layer = self.ff_normalize(inputs[0] + ff_layer)
+    #         return ff_layer 
 
-        def get_config(self): # Needed for saving and loading model with custom layer
-            config = super().get_config().copy()
-            config.update({'d_k': self.d_k,
-                        'd_v': self.d_v,
-                        'n_heads': self.n_heads,
-                        'ff_dim': self.ff_dim,
-                        'attn_heads': self.attn_heads,
-                        'dropout_rate': self.dropout_rate})
-            return config          
+    #     def get_config(self): # Needed for saving and loading model with custom layer
+    #         config = super().get_config().copy()
+    #         config.update({'d_k': self.d_k,
+    #                     'd_v': self.d_v,
+    #                     'n_heads': self.n_heads,
+    #                     'ff_dim': self.ff_dim,
+    #                     'attn_heads': self.attn_heads,
+    #                     'dropout_rate': self.dropout_rate})
+    #         return config          
 
-    def create_model():
-        '''Initialize time and transformer layers'''
-        time_embedding = Time2Vector(seq_len)
-        attn_layer1 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
-        attn_layer2 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
-        attn_layer3 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
+    # def create_model():
+    #     '''Initialize time and transformer layers'''
+    #     time_embedding = Time2Vector(seq_len)
+    #     attn_layer1 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
+    #     attn_layer2 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
+    #     attn_layer3 = TransformerEncoder(d_k, d_v, n_heads, ff_dim)
 
-        '''Construct model'''
-        in_seq = Input(shape=(seq_len, 5))
-        x = time_embedding(in_seq)
-        x = Concatenate(axis=-1)([in_seq, x])
-        x = attn_layer1((x, x, x))
-        x = attn_layer2((x, x, x))
-        x = attn_layer3((x, x, x))
-        x = GlobalAveragePooling1D(data_format='channels_first')(x)
-        x = Dropout(0.1)(x)
-        x = Dense(64, activation='relu')(x)
-        x = Dropout(0.1)(x)
-        out = Dense(1, activation='linear')(x)
+    #     '''Construct model'''
+    #     in_seq = Input(shape=(seq_len, 5))
+    #     x = time_embedding(in_seq)
+    #     x = Concatenate(axis=-1)([in_seq, x])
+    #     x = attn_layer1((x, x, x))
+    #     x = attn_layer2((x, x, x))
+    #     x = attn_layer3((x, x, x))
+    #     x = GlobalAveragePooling1D(data_format='channels_first')(x)
+    #     x = Dropout(0.1)(x)
+    #     x = Dense(64, activation='relu')(x)
+    #     x = Dropout(0.1)(x)
+    #     out = Dense(1, activation='linear')(x)
 
-        model = Model(inputs=in_seq, outputs=out)
-        model.compile(loss='mse', optimizer='adam', metrics=['mae', 'mape'])
-        return model
+    #     model = Model(inputs=in_seq, outputs=out)
+    #     model.compile(loss='mse', optimizer='adam', metrics=['mae', 'mape'])
+    #     return model
 
 
-    model = create_model()
-    model.summary()
+    # model = create_model()
+    # model.summary()
 
-    print(X_train)
+    # print(X_train)
     
 
-    callback = tf.keras.callbacks.ModelCheckpoint('Transformer+TimeEmbedding.hdf5', 
-                                                monitor='val_loss', 
-                                                save_best_only=True, verbose=1)
+    # callback = tf.keras.callbacks.ModelCheckpoint('Transformer+TimeEmbedding.hdf5', 
+    #                                             monitor='val_loss', 
+    #                                             save_best_only=True, verbose=1)
 
-    history = model.fit(X_train, y_train, 
-                        batch_size=batch_size, 
-                        epochs=35, 
-                        callbacks=[callback],
-                        validation_data=(X_val, y_val))  
+    # history = model.fit(X_train, y_train, 
+    #                     batch_size=batch_size, 
+    #                     epochs=35, 
+    #                     callbacks=[callback],
+    #                     validation_data=(X_val, y_val))  
 
-    model = tf.keras.models.load_model('Transformer+TimeEmbedding.hdf5',
-                                   custom_objects={'Time2Vector': Time2Vector, 
-                                                   'SingleAttention': SingleAttention,
-                                                   'MultiAttention': MultiAttention,
-                                                   'TransformerEncoder': TransformerEncoder})
+    # model = tf.keras.models.load_model('Transformer+TimeEmbedding.hdf5',
+    #                                custom_objects={'Time2Vector': Time2Vector, 
+    #                                                'SingleAttention': SingleAttention,
+    #                                                'MultiAttention': MultiAttention,
+    #                                                'TransformerEncoder': TransformerEncoder})
 
-    train_pred = model.predict(X_train)
-    val_pred = model.predict(X_val)
-    test_pred = model.predict(X_test)
+    # train_pred = model.predict(X_train)
+    # val_pred = model.predict(X_val)
+    # test_pred = model.predict(X_test)
 
-    #Print evaluation metrics for all datasets
-    train_eval = model.evaluate(X_train, y_train, verbose=0)
-    val_eval = model.evaluate(X_val, y_val, verbose=0)
-    test_eval = model.evaluate(X_test, y_test, verbose=0)
-    print(' ')
-    print('Evaluation metrics')
-    print('Training Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(train_eval[0], train_eval[1], train_eval[2]))
-    print('Validation Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(val_eval[0], val_eval[1], val_eval[2]))
-    print('Test Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(test_eval[0], test_eval[1], test_eval[2]))
+    # #Print evaluation metrics for all datasets
+    # train_eval = model.evaluate(X_train, y_train, verbose=0)
+    # val_eval = model.evaluate(X_val, y_val, verbose=0)
+    # test_eval = model.evaluate(X_test, y_test, verbose=0)
+    # print(' ')
+    # print('Evaluation metrics')
+    # print('Training Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(train_eval[0], train_eval[1], train_eval[2]))
+    # print('Validation Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(val_eval[0], val_eval[1], val_eval[2]))
+    # print('Test Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(test_eval[0], test_eval[1], test_eval[2]))
 
     # NEWS WORKING SECTION
     # news = api.get_news("QCOM", limit=5000)
@@ -576,57 +577,57 @@ if __name__ == "__main__":
     # data_dict = load_all_data(params, df, get_current_datetime())
 
     
-    def calculate_entropy(list_values):
-        counter_values = Counter(list_values).most_common()
-        probabilities = [elem[1]/len(list_values) for elem in counter_values]
-        entropy=scipy.stats.entropy(probabilities)
-        return entropy
+    # def calculate_entropy(list_values):
+    #     counter_values = Counter(list_values).most_common()
+    #     probabilities = [elem[1]/len(list_values) for elem in counter_values]
+    #     entropy=scipy.stats.entropy(probabilities)
+    #     return entropy
  
-    def calculate_statistics(list_values):
-        n5 = np.nanpercentile(list_values, 5)
-        n25 = np.nanpercentile(list_values, 25)
-        n75 = np.nanpercentile(list_values, 75)
-        n95 = np.nanpercentile(list_values, 95)
-        median = np.nanpercentile(list_values, 50)
-        mean = np.nanmean(list_values)
-        std = np.nanstd(list_values)
-        var = np.nanvar(list_values)
-        rms = np.nanmean(np.sqrt(list_values**2))
-        return [n5, n25, n75, n95, median, mean, std, var, rms]
+    # def calculate_statistics(list_values):
+    #     n5 = np.nanpercentile(list_values, 5)
+    #     n25 = np.nanpercentile(list_values, 25)
+    #     n75 = np.nanpercentile(list_values, 75)
+    #     n95 = np.nanpercentile(list_values, 95)
+    #     median = np.nanpercentile(list_values, 50)
+    #     mean = np.nanmean(list_values)
+    #     std = np.nanstd(list_values)
+    #     var = np.nanvar(list_values)
+    #     rms = np.nanmean(np.sqrt(list_values**2))
+    #     return [n5, n25, n75, n95, median, mean, std, var, rms]
     
-    def get_features(list_values):
-        entropy = calculate_entropy(list_values)
-        statistics = calculate_statistics(list_values)
-        # print(entropy)
-        # print(statistics)
-        return [entropy] + statistics
+    # def get_features(list_values):
+    #     entropy = calculate_entropy(list_values)
+    #     statistics = calculate_statistics(list_values)
+    #     # print(entropy)
+    #     # print(statistics)
+    #     return [entropy] + statistics
 
-    def load_ecg_data(filename):
-        raw_data = loadmat(filename)
-        list_signals = raw_data['ECGData'][0][0][0]
-        list_labels = list(map(lambda x: x[0][0], raw_data['ECGData'][0][0][1]))
-        return list_signals, list_labels
+    # def load_ecg_data(filename):
+    #     raw_data = loadmat(filename)
+    #     list_signals = raw_data['ECGData'][0][0][0]
+    #     list_labels = list(map(lambda x: x[0][0], raw_data['ECGData'][0][0][1]))
+    #     return list_signals, list_labels
     
     
 
-    def get_ecg_features(ecg_data, waveletname):
-        list_features = []
-        # print(list_labels)
-        i = 0
-        for signal in ecg_data: # 97 
-            # print(f"\n\n SIGNAL {signal} {signal.shape} {i} SIGNAL \n")
-            list_coeff = pywt.wavedec(signal, waveletname)
-            features = []
-            for coeff in list_coeff:
-                # print(len(coeff), coeff.shape)
-                features += get_features(coeff)
-                # print(len(get_features(coeff)))
-            # print(len(features))
-            list_features.append(features)
-            i += 1
+    # def get_ecg_features(ecg_data, waveletname):
+    #     list_features = []
+    #     # print(list_labels)
+    #     i = 0
+    #     for signal in ecg_data: # 97 
+    #         # print(f"\n\n SIGNAL {signal} {signal.shape} {i} SIGNAL \n")
+    #         list_coeff = pywt.wavedec(signal, waveletname)
+    #         features = []
+    #         for coeff in list_coeff:
+    #             # print(len(coeff), coeff.shape)
+    #             features += get_features(coeff)
+    #             # print(len(get_features(coeff)))
+    #         # print(len(features))
+    #         list_features.append(features)
+    #         i += 1
 
-        list_features = sum(list_features, [])
-        return list_features
+    #     list_features = sum(list_features, [])
+    #     return list_features
 
 
     # TRYING 2D data with ECG FEATURES
@@ -713,6 +714,68 @@ if __name__ == "__main__":
     # f.write(str(port_history))
     # f.close()
 
+    # Running Keras Tuner
+    tuner_params = {
+        "ENSEMBLE" : ["nn1"],
+        "nn1" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, LSTM), (256, Dense), (256, Dense), (256, Dense)],
+            "SHUFFLE": True,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "SAVELOAD": True,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["s.c", "s.o", "s.l", "s.h", "s.m", "s.v", "s.tc", "s.vwap"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+        },
+        "LIMIT" : 4000
+    }
+
+    predictor = "nn1"
+    symbol = "AGYS"
+
+    df = get_proper_df(symbol, 4000, "V2")
+    data_dict = load_all_data(tuner_params, df, get_current_datetime())
+
+    def model_builder(hp, features):
+        model = keras.Sequential()
+        # model.add(keras.layers.Flatten(input_shape=(28, 28)))
+
+        # Tune the number of units in the first Dense layer
+        # Choose an optimal value between 32-512
+        hp_units = hp.Int('units', min_value=32, max_value=512, step=32)
+        model.add(keras.layers.Dense(units=hp_units, activation='relu', input_shape=(None, len(features)), return_sequences=False))
+        hp_units2 = hp.Int('units', min_value=32, max_value=512, step=32)
+        model.add(keras.layers.Dense(units=hp_units2, activation='relu'))
+
+        # Tune the learning rate for the optimizer
+        # Choose an optimal value from 0.01, 0.001, or 0.0001
+        hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+
+        model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate),
+                        loss=tuner_params[predictor]["LOSS"], metrics=["mean_absolute_error"])
+
+        return model
+
+    tuner = kt.Hyperband(model_builder(hp, params[predictor]["FEATURE_COLUMNS"]),
+        objective="val_loss",
+        max_epochs=200,
+        factor=3)
+
+    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
+
+    tuner.search(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"], data_dict[predictor]["X_valid"], data_dict[predictor]["y_valid"], epochs=50, callbacks=[stop_early])
+
+    best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
+    print(best_hps)
 
     print(time.perf_counter() - s, flush=True)
     # pd.set_option("display.max_columns", None)

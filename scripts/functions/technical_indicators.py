@@ -67,7 +67,6 @@ def df_BBANDS(name, df):
 
 def df_OBV(name, df):
     df[name] = ta.OBV(df.c, df.v)
-    print(df[name])
 
 def df_RSI(name, df):
     df[name] = ta.RSI(df.c)

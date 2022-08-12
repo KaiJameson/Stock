@@ -173,19 +173,19 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             print("GET YO SHIT TOGETHER\n")
             sys.exit(-1)
         
-        print(current_date)
-        print(df.tail(5))
+        # print(current_date)
+        # print(df.tail(5))
 
         if params[predictor]["TEST_VAR"] == "pc.c":
-            print(current_price)
-            print(f"predicted_price before {predicted_price}")
+            # print(current_price)
+            # print(f"predicted_price before {predicted_price}")
             predicted_price = current_price * 1 + predicted_price
-            print(f"predicted_price after {predicted_price}")
+            # print(f"predicted_price after {predicted_price}")
         elif params[predictor]["TEST_VAR"] == "d.c":
-            print(current_price)
-            print(f"predicted_price before {predicted_price}")
+            # print(current_price)
+            # print(f"predicted_price before {predicted_price}")
             predicted_price = current_price + predicted_price
-            print(f"predicted_price after {predicted_price}")
+            # print(f"predicted_price after {predicted_price}")
 
         ensemb_predict_list.append(np.float32(predicted_price))
 
