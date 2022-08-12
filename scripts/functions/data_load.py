@@ -41,7 +41,6 @@ def modify_dataframe(features, df, current_date, test_var, to_print):
             
             if "." in feature:
                 dot_split = feature.split(".")
-
                 if dot_split[0] in techs_dict:
                     techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df)
                 elif dot_split[0].startswith("tick_"):
@@ -72,6 +71,7 @@ def modify_dataframe(features, df, current_date, test_var, to_print):
                 
             if feature not in df.columns:
                 print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
+       
     
     for feature in list(df.columns):
         if feature not in features and feature != test_var:
@@ -189,7 +189,7 @@ def load_all_data(params, df, current_date, to_print=True):
     for predictor in params["ENSEMBLE"]:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]
         if len(in_req_2d) > 0:
-            result = load_2D_data(params[predictor], df, shuffle=True, tensorify=False, to_print=to_print)
+            result = load_2D_data(params[predictor], df, current_date, shuffle=True, tensorify=False, to_print=to_print)
             data_dict[predictor] = result
         if "nn" in predictor:
             if layer_name_converter(params[predictor]["LAYERS"][0]) == "Dense":
@@ -211,7 +211,7 @@ def preprocess_dfresult(params, df, current_date, scale, to_print):
     tt_df = tt_df.replace(0.000000, 0.000000001)
     if to_print:
         print(f"""Included features: {params["FEATURE_COLUMNS"]}""")
-
+   
     tt_df = modify_dataframe(params["FEATURE_COLUMNS"], tt_df, current_date, params["TEST_VAR"], to_print)
     for col in params["FEATURE_COLUMNS"]:
         assert col in tt_df.columns, f"'{col}' does not exist in the dataframe."

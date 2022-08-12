@@ -502,7 +502,7 @@ models = {
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["d.o", "d.l", "d.h", "d.c", "d.m", "d.v", "d.tc", "d.vwap"],
         "SHUFFLE": True,
-        "TEST_VAR": "dc",
+        "TEST_VAR": "d.c",
         "SAVE_PRED": {}
         },
     "nn29" : { 
@@ -556,7 +556,7 @@ models = {
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.v", "pc.tc", "pc.vwap"],
         "SHUFFLE": True,
-        "TEST_VAR": "pc",
+        "TEST_VAR": "pc.c",
         "SAVE_PRED": {}
         },
     "nn99" : { 
@@ -573,7 +573,6 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["ma.max", "d.willR", "pc.kurtosis", "pc.c", "s.OBV", "pt.RSI", "wt.pears_cor", "tick_SPY_o", "tick_SPY_pc.min"],
-        # 
         "SHUFFLE": True,
         "TEST_VAR": "pc.c",
         "SAVE_PRED": {}
@@ -606,7 +605,8 @@ models = {
         },
     "KNN1" : {
         "FEATURE_COLUMNS": ["c"],
-        "N_NEIGHBORS": 10,
+        "N_NEIGHBORS": 5,
+        "WEIGHTS": "distance",
         "LOOKUP_STEP":1,
         "TEST_SIZE": 1,
         "TEST_VAR": "c"

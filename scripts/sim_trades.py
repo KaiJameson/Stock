@@ -45,6 +45,10 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
         spy_start_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
             - datetime.timedelta(1)), spy_df, tmp_cal)
 
+        qqq_df = get_proper_df("QQQ", params["LIMIT"], "V2")
+        qqq_start_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
+            - datetime.timedelta(1)), qqq_df, tmp_cal)
+
         current_date = get_past_datetime(tune_year, tune_month, tune_day)
         starting_prices = []
         for symbol in tune_symbols:
@@ -63,7 +67,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
 
             pred_curr_list = {}
             current_date = increment_calendar(current_date, calendar)
-
+            
             for symbol in tune_symbols:
                 predicted_price, current_price, epochs_run, sub_df, data_dict = subset_and_predict(symbol, 
                             params, current_date, master_df_dict[symbol], to_print=False)
@@ -85,7 +89,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             elif params["TRADE_METHOD"] == "more_than_X":
                 portfolio = more_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             elif params['TRADE_METHOD'] == "random_guess":
-                portfolio = random_guess(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
+                portfolio = random_guess(tune_symbols, pred_curr_list, portfolio)
             elif params['TRADE_METHOD'] == "no_buy_if_less_than_X":
                 portfolio = no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             else:
@@ -108,6 +112,9 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     spy_sub_df = df_subset(current_date, spy_df)
     spy_end_price = get_current_price(spy_sub_df)
 
+    qqq_sub_df = df_subset(current_date, qqq_df)
+    qqq_end_price = get_current_price(qqq_sub_df)
+
     current_prices = []
     for symbol in pred_curr_list:
         current_prices.append(pred_curr_list[symbol]["current"])
@@ -118,7 +125,8 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     print(f"\nTesting finished for ensemble:{params['ENSEMBLE']} using trade method:{params['TRADE_METHOD']} with params:{interpret_dict(params['TRADE_PARAMS'])}")
     print(f"The total value of the portfolio was {r2(portfolio['equity'])} at the end with {r2(portfolio['cash'])} in cash")
     print(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}\n"
-        f"and holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}")
+        f"Holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}\n"
+        f"Holding the NASDAQ would have made {r2(test_money * (qqq_end_price / qqq_start_price))}")
     print(f"It was holding these {portfolio['owned']} stocks at the end")
     print(f"Testing all of the days took {r2(time_so_far / 3600)} hours or {int(time_so_far // 3600)}:"
         f"{int((time_so_far / 3600 - (time_so_far // 3600)) * 60)} minutes.")
@@ -127,8 +135,9 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     with open(f"{directory_dict['sim_trades']}/{params['ENSEMBLE']}-{params['TRADE_METHOD']}-{interpret_dict(params['TRADE_PARAMS'])}.txt", "a") as f:
         f.write(f"\nTesting finished for ensemble:{params['ENSEMBLE']} using trade method:{params['TRADE_METHOD']} with params:{interpret_dict(params['TRADE_PARAMS'])}\n")
         f.write(f"The total value of the portfolio was {r2(portfolio['equity'])} at the end with {r2(portfolio['cash'])} in cash\n")
-        f.write(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}\n"
-            f"and holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}\n")
+        f.write(f"Holding this group of stocks would have made {r2(test_money * (mean(current_prices) / mean(starting_prices)))}.\n"
+            f"Holding the S&P would have made {r2(test_money * (spy_end_price / spy_start_price))}.\n"
+            f"Holding the NASDAQ would have made {r2(test_money * (qqq_end_price / qqq_start_price))}.\n")
         f.write(f"It was holding these {portfolio['owned']} stocks at the end\n")
         f.write(f"Testing all of the days took {r2(time_so_far / 3600)} hours or {int(time_so_far // 3600)}:"
             f"{int((time_so_far / 3600 - (time_so_far // 3600)) * 60)} minutes.\n")
