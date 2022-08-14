@@ -559,12 +559,12 @@ models = {
         "TEST_VAR": "pc.c",
         "SAVE_PRED": {}
         },
-    "nn99" : { 
+    "nn32" : { 
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
-        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
-        "DROPOUT": .4,
+        "LAYERS": [(256, Dense), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .1,
         "BIDIRECTIONAL": False,
         "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
@@ -572,7 +572,43 @@ models = {
         "EPOCHS": 2000,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["ma.max", "d.willR", "pc.kurtosis", "pc.c", "s.OBV", "pt.RSI", "wt.pears_cor", "tick_SPY_o", "tick_SPY_pc.min"],
+        "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn33" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 50,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn99" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 1,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 200,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["ma.max", "d.willR", "pc.kurtosis", "pc.c", "s.OBV", "pt.RSI", "pc.c"],
         "SHUFFLE": True,
         "TEST_VAR": "pc.c",
         "SAVE_PRED": {}
@@ -877,6 +913,29 @@ exhaustive_search = {
         },
 
     }
+}
+
+keras_tune_models = {
+    "nn1": {
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "SHUFFLE": True,
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "SAVELOAD": True,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["s.c", "s.o", "s.l", "s.h", "s.m", "s.v", "s.tc", "s.vwap"],
+        "TEST_VAR": "c",
+        "SAVE_PRED": {},
+    }
 
 
 }
+

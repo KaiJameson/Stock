@@ -84,7 +84,7 @@ def modify_dataframe(features, df, current_date, test_var, to_print):
     if to_print:
         print(df.head(2))
         print(df.tail(2))
-        # print(df)
+        # print(df.shape)
 
     return df
 
@@ -198,6 +198,7 @@ def load_all_data(params, df, current_date, to_print=True):
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
+                # print("SHOULD GET HERE")
                 result, train, valid, test = load_3D_data(params[predictor], df, current_date, params[predictor]["SHUFFLE"],
                 to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
@@ -264,7 +265,8 @@ def load_3D_data(params, df, current_date, shuffle=True, scale=True, to_print=Tr
     
     X, y = construct_3D_np(tt_df, params, result)
 
-    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
+    print(f"Final X data shape is {X.shape}")
+    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)
 
     train, valid, test = make_tensor_slices(params, result)
     return result, train, valid, test
@@ -281,6 +283,8 @@ def load_2D_data(params, df, current_date, shuffle=True, scale=True, tensorify=F
 
     X = np.array(X)
     y = np.array(y)
+
+    print(f"Final X data shape is {X.shape}")
     
     result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
 

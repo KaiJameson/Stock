@@ -22,9 +22,9 @@ def check_model_folders(save_folder, symbol):
     if not os.path.isdir(f"{directory_dict['reports']}/{symbol}"):
         os.mkdir(f"{directory_dict['reports']}/{symbol}")
 
-def check_prediction_subfolders(nn_name):
-    if not os.path.isdir(f"{directory_dict['save_predicts']}/{nn_name}"):
-        os.mkdir(f"{directory_dict['save_predicts']}/{nn_name}")
+def check_prediction_subfolders(directory, nn_name):
+    if not os.path.isdir(f"{directory}/{nn_name}"):
+        os.mkdir(f"{directory}/{nn_name}")
 
 def delete_files(dirObject, dirPath):
     if dirObject.is_dir(follow_symlinks=False):

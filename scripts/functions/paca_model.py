@@ -129,12 +129,12 @@ def predict(model, data, n_steps, test_var="c", classification=False, layer="LST
             predicted_val = column_scaler["future"].inverse_transform(prediction)[0][0]
             
         else: 
-            print(data)
-            print(f"""what we put in {data["X_test"]}""")
+            # print(data)
+            # print(f"""what we put in {data["X_test"]}""")
             prediction = model.predict(data["X_test"])
             pred = np.array(prediction)
             pred= pred.reshape(1, -1)
-            print(pred)
+            # print(pred)
             predicted_val = column_scaler["future"].inverse_transform(pred)[-1][-1]
     else:
         pass

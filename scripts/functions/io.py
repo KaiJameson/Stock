@@ -324,7 +324,7 @@ def load_saved_predictions(symbol, params, current_date, predictor):
         epochs = nn_params['SAVE_PRED'][symbol][s_current_date]['epochs']
         return prediction, epochs
 
-    check_prediction_subfolders(nn_name)
+    check_prediction_subfolders(directory_dict['save_predicts'], nn_name)
     if os.path.isfile(f"{directory_dict['save_predicts']}/{nn_name}/{symbol}.txt"):
         nn_params['SAVE_PRED'] = read_saved_contents(f"{directory_dict['save_predicts']}/{nn_name}/{symbol}.txt", nn_params['SAVE_PRED'])
     else:

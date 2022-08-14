@@ -20,6 +20,7 @@ tax/
 env/
 predictions/
 sim_trades/
+keras_tune/
 error_file.txt
 scripts/config/symbols.py
 */tax_info.csv
