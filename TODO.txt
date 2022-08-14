@@ -29,8 +29,8 @@ Model testing
     * less patience for super complicated models like nn4
     * use the new volatility indicators
     * use sma to smooth all defaults data 
-Tensorflow tuner
-    * using build in tuner with a whole bunch of hyperparameters to see if it can find anything usefull
+keras tuner
+    * allow keras tuner to build model dynamically based on layers parameter
 Model loading/trading 
     * start the load_run.py sooner than 3:58 on a timer
     * have all the models get loaded into memory ahead of time
@@ -39,5 +39,4 @@ TIME KFOLD
     * rework the file so it actually works
     * allow it to test over certian time periods
 MISC
-    * give option to not use validation, just end after max epochs, make the model save less often every ~20 epochs or so with 
-    this option on, use the whole dataset for training
+    *
