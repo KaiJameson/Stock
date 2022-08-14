@@ -43,8 +43,8 @@ def modify_dataframe(features, df, current_date, test_var, to_print):
                 dot_split = feature.split(".")
                 if dot_split[0] in techs_dict:
                     techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df)
-                elif dot_split[0].startswith("tick_"):
-                    feature_split = dot_split[0].split("_")
+                elif dot_split[0].startswith("tick-"):
+                    feature_split = dot_split[0].split("-")
                     ticker_df = get_proper_df(feature_split[1], 4000, "V2")
                     ticker_df = df_subset(current_date, ticker_df)
 
@@ -57,8 +57,8 @@ def modify_dataframe(features, df, current_date, test_var, to_print):
             else:
                 if feature in techs_dict:
                     techs_dict[feature]["function"](feature, df)
-                elif feature.startswith("tick_"):
-                    feature_split = feature.split("_")
+                elif feature.startswith("tick-"):
+                    feature_split = feature.split("-")
                     ticker_df = get_proper_df(feature_split[1], 4000, "V2")
                     ticker_df = df_subset(current_date, ticker_df)
 

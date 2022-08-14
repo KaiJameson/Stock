@@ -608,7 +608,7 @@ models = {
         "EPOCHS": 200,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["ma.max", "d.willR", "pc.kurtosis", "pc.c", "s.OBV", "pt.RSI", "pc.c"],
+        "FEATURE_COLUMNS": ["ma.max", "d.willR", "tick-SPY-low_band", "tick-SPY-pc.c", "s.OBV", "pt.RSI", "pc.c"],
         "SHUFFLE": True,
         "TEST_VAR": "pc.c",
         "SAVE_PRED": {}
