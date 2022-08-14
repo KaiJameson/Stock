@@ -714,69 +714,6 @@ if __name__ == "__main__":
     # f.write(str(port_history))
     # f.close()
 
-    # Running Keras Tuner
-    tuner_params = {
-        "ENSEMBLE" : ["nn1"],
-        "nn1" : { 
-            "N_STEPS": 100,
-            "LOOKUP_STEP": 1,
-            "TEST_SIZE": 0.2,
-            "LAYERS": [(256, LSTM), (256, Dense), (256, Dense), (256, Dense)],
-            "SHUFFLE": True,
-            "DROPOUT": .4,
-            "BIDIRECTIONAL": False,
-            "LOSS": "huber_loss",
-            "OPTIMIZER": "adam",
-            "BATCH_SIZE": 1024,
-            "EPOCHS": 2000,
-            "PATIENCE": 200,
-            "SAVELOAD": True,
-            "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["s.c", "s.o", "s.l", "s.h", "s.m", "s.v", "s.tc", "s.vwap"],
-            "TEST_VAR": "c",
-            "SAVE_PRED": {}
-        },
-        "LIMIT" : 4000
-    }
-
-    predictor = "nn1"
-    symbol = "AGYS"
-
-    df = get_proper_df(symbol, 4000, "V2")
-    data_dict = load_all_data(tuner_params, df, get_current_datetime())
-
-    def model_builder(hp, features):
-        model = keras.Sequential()
-        # model.add(keras.layers.Flatten(input_shape=(28, 28)))
-
-        # Tune the number of units in the first Dense layer
-        # Choose an optimal value between 32-512
-        hp_units = hp.Int('units', min_value=32, max_value=512, step=32)
-        model.add(keras.layers.Dense(units=hp_units, activation='relu', input_shape=(None, len(features)), return_sequences=False))
-        hp_units2 = hp.Int('units', min_value=32, max_value=512, step=32)
-        model.add(keras.layers.Dense(units=hp_units2, activation='relu'))
-
-        # Tune the learning rate for the optimizer
-        # Choose an optimal value from 0.01, 0.001, or 0.0001
-        hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
-
-        model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate),
-                        loss=tuner_params[predictor]["LOSS"], metrics=["mean_absolute_error"])
-
-        return model
-
-    tuner = kt.Hyperband(model_builder(hp, params[predictor]["FEATURE_COLUMNS"]),
-        objective="val_loss",
-        max_epochs=200,
-        factor=3)
-
-    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20)
-
-    tuner.search(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"], data_dict[predictor]["X_valid"], data_dict[predictor]["y_valid"], epochs=50, callbacks=[stop_early])
-
-    best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
-    print(best_hps)
-
     print(time.perf_counter() - s, flush=True)
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)

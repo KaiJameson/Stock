@@ -13,6 +13,7 @@ directory_dict = {
     "day_summary":       "../excel/day_summary",
     "excel":             "../excel",
     "graph":             "../plots",
+    "keras_tuner":       "../keras_tuner",
     "load_run_results":  "../excel/load_run_results",
     "model":             "../models",
     "runtime_predict":   "../excel/runtime_predict",

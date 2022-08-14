@@ -56,8 +56,7 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
 
     logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
 
-    checkpointer = ModelCheckpoint(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" 
-        + model_name + ".h5", save_weights_only=True, save_best_only=True, verbose=1)
+    
     
     
     # checkpointer = ModelCheckpoint(directory_dict["model"] + "/" + params["SAVE_FOLDER"] + "/" 
@@ -68,18 +67,35 @@ def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_
     else:
         tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch=0)
 
-    early_stop = EarlyStopping(patience=nn_params["PATIENCE"])
-    
-    history = model.fit(data_dict["train"],
-        batch_size=nn_params["BATCH_SIZE"],
-        epochs=nn_params["EPOCHS"],
-        verbose=2,
-        validation_data=data_dict["valid"],
-        callbacks = [tboard_callback, checkpointer, early_stop]   
-        # callbacks = [checkpointer, tboard_callback]
-    )
 
-    epochs_used = len(history.history["loss"])
+    if nn_params['TEST_SIZE'] != 1: # Using validation
+        checkpointer = ModelCheckpoint(f"{directory_dict['model']}/{params['SAVE_FOLDER']}/{model_name}.h5", 
+            save_weights_only=True, save_best_only=True, verbose=1)
+
+        early_stop = EarlyStopping(patience=nn_params['PATIENCE'])
+        
+        history = model.fit(data_dict['train'],
+            batch_size=nn_params['BATCH_SIZE'],
+            epochs=nn_params['EPOCHS'],
+            verbose=2,
+            validation_data=data_dict['valid'],
+            callbacks = [tboard_callback, checkpointer, early_stop]   
+            # callbacks = [checkpointer, tboard_callback]
+        )
+    
+    else: # Not using validation
+        checkpointer = ModelCheckpoint(f"{directory_dict['model']}/{params['SAVE_FOLDER']}/{model_name}.h5", 
+            save_freq=50, save_weights_only=True, verbose=1)
+
+        history = model.fit(data_dict['train'],
+            batch_size=nn_params['BATCH_SIZE'],
+            epochs=nn_params['EPOCHS'],
+            verbose=2,
+            callbacks = [tboard_callback, checkpointer]   
+            # callbacks = [checkpointer, tboard_callback]
+        )
+
+    epochs_used = len(history.history['loss'])
         
     if not save_logs:
         delete_files_in_folder(logs_dir)
