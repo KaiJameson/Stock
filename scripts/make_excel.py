@@ -112,7 +112,7 @@ def make_trade_perform_sheet(date, api):
     trade_text += "\n"
 
     for i in range(len(runtime)):
-        trade_text += str(get_correct_direction(predict[i], runtime[i], actual_prices[i])) + "\t"
+        trade_text += str(get_correct_direction(predict[i], runtime[i], actual_prices[i], "c")) + "\t"
 
     trade_perform_file.write(trade_text)
     trade_perform_file.close()

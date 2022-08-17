@@ -51,11 +51,11 @@ def sav_gol_comparator(df, time_period, poly_order, run_days):
         predicted_price = df.sc[i - 1]
 
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
-        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price, "c")
         
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
-        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price, "c")
 
     avg_p = sr2(mean(percent_away_list))
     avg_d = sr1002(mean(correct_direction_list))
@@ -76,11 +76,11 @@ def RSI_comparator(df, run_days):
         predicted_price = df.c[i - 1] * (1/150000 * (-df.RSI[i - 1] + 50)**3 + 1)
             
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
-        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price, "c")
         
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
-        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price, "c")
     
     avg_p = sr2(mean(percent_away_list))
     avg_d = sr1002(mean(correct_direction_list))
@@ -98,24 +98,33 @@ def simple_one_day_predicting_comparator_guts(df, comp, run_days):
         predicted_price = df[comp][i - 1]
 
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
-        correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+        correct_dir = get_correct_direction(predicted_price, current_price, actual_price, "c")
         
         percent_away_list.append(p_diff)
         correct_direction_list.append(correct_dir)
-        current_money = update_money(current_money, predicted_price, current_price, actual_price)
+        current_money = update_money(current_money, predicted_price, current_price, actual_price, "c")
 
     avg_p = sr2(mean(percent_away_list))
     avg_d = sr1002(mean(correct_direction_list))
 
     return avg_p, avg_d, current_money
 
-def update_money(current_money, predicted_price, current_price, actual_price):
+def update_money(current_money, predicted_value, current_price, actual_price, test_var):
     p_change = 1 + ((actual_price - current_price) / actual_price)
     stocks = 0
-    if predicted_price > current_price:
-        stocks = current_money // current_price
-        if stocks > 0:
-            current_money -= stocks * current_price
-            current_money += stocks * current_price * p_change
+    if test_var == "acc":
+        print("getting there")
+        print(f"predicted value {predicted_value}")
+        if predicted_value == 1:
+            stocks = current_money // current_price
+            if stocks > 0:
+                current_money -= stocks * current_price
+                current_money += stocks * current_price * p_change
+    else:
+        if predicted_value > current_price:
+            stocks = current_money // current_price
+            if stocks > 0:
+                current_money -= stocks * current_price
+                current_money += stocks * current_price * p_change
 
     return round(current_money, 2)

@@ -64,10 +64,12 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
                 print("Exiting this instance of tuning now: ")
             continue
 
-
+        test_var = "c"
         for predictor in params['ENSEMBLE']:
             if "nn" in predictor:
                 progress['epochs_dict'][predictor] = []
+            if params[predictor]['TEST_VAR'] == "acc":
+                test_var = "acc"
 
         print(test_name)
         print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
@@ -103,8 +105,11 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
                         progress['epochs_dict'][predictor].append(epochs_run[predictor])
 
                 actual_price = get_actual_price(current_date, master_df, calendar)
-                p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
-                correct_dir = get_correct_direction(predicted_price, current_price, actual_price)
+                if test_var == "acc":
+                    p_diff = 0.0
+                else:
+                    p_diff = round((abs(actual_price - predicted_price) / actual_price) * 100, 2)
+                correct_dir = get_correct_direction(predicted_price, current_price, actual_price, test_var)
                 print(f"Symbol:{symbol} Date:{current_date} Predicted:{sr2(predicted_price)} " 
                     f"Current:{sr2(current_price)} Actual:{sr2(actual_price)} Direction:{correct_dir}\n", flush=True)
                 progress['percent_away_list'].append(p_diff)
@@ -115,7 +120,7 @@ def tuning(tune_year, tune_month, tune_day, tune_days, params, output=False):
                     f"{r2(day_took / 60)} minutes or {r2(day_took)} seconds.\n", flush=True)
 
                 progress['current_money'] = update_money(progress['current_money'], predicted_price, 
-                    current_price, actual_price)
+                    current_price, actual_price, test_var)
                 progress['time_so_far'] += day_took
                 progress['days_done'] += 1
 

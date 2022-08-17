@@ -49,14 +49,7 @@ def df_wavelet_transform(selector, feature, df):
     coeff[1:] = (pywt.threshold(i, value=thresh, mode="soft") for i in coeff[1:])
     reconstructed_signal = pywt.waverec(coeff, 'db4', mode="smooth")
 
-    # df[name] = reconstructed_signal[2:]
-    # print(df)
-    # print(len(df.index))
-    # print(len(reconstructed_signal))
     df[f"{selector}.{feature}"] = reconstructed_signal[len(reconstructed_signal) - len(df.index):]
-    
-
-
 
 def df_BBANDS(name, df):
     up, mid, dow = ta.BBANDS(df.c, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)

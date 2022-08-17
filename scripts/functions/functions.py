@@ -1,3 +1,4 @@
+from xmlrpc.client import boolean
 from config.environ import *
 from functions.error import error_handler
 import pandas as pd
@@ -188,16 +189,23 @@ def layer_name_converter(layer):
 
     return string
 
-def get_correct_direction(predicted_price, current_price, actual_price):
-    if ((predicted_price > current_price and actual_price > current_price) or 
-    (predicted_price < current_price and actual_price < current_price)): 
-        return 1.0
-    elif predicted_price == current_price == actual_price:
-        return 1.0
-    elif predicted_price == current_price or actual_price == current_price: 
-        return 0.5
+def get_correct_direction(predicted_value, current_price, actual_price, test_var):
+    if test_var == "acc":
+        real_direction = int(boolean(actual_price > current_price))
+        if real_direction == predicted_value:
+            return 1.0
+        else:
+            return 0.0
     else:
-        return 0.0
+        if ((predicted_value > current_price and actual_price > current_price) or 
+        (predicted_value < current_price and actual_price < current_price)): 
+            return 1.0
+        elif predicted_value == current_price == actual_price:
+            return 1.0
+        elif predicted_value == current_price or actual_price == current_price: 
+            return 0.5
+        else:
+            return 0.0
 
 def percent_diff(pri1, pri2):
     return r2((abs(pri1 - pri2) / pri1) * 100)
@@ -225,3 +233,7 @@ def ra1002(num):
 
 def r2(num):
     return round(num, 2)
+
+def r0(num):
+    return round(num, 0)
+
