@@ -1,12 +1,6 @@
 Implement classification ensemble
-    * use the "TEST_VAR" of acc to let system know this is classification model
-    * change voting method
-    * rework the 2d models
-    * rework the 3d nn
     * add in the wavelet transform 2d models
     * add in wavelet transform 3d models
-    * allow regresion models to function in classifier ensembles by voting which ever direction they think will be higher
-    * do scan off all models in ensemble at beginning and if any of them have "acc" switch to the classfier ensemble
 News
     * Try title and title/content from alpaca
     * use the vader model

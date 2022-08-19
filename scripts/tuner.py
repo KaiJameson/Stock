@@ -15,6 +15,7 @@ from functions.time import get_past_datetime, get_year_month_day
 from paca_model import configure_gpu
 from make_excel import make_tuning_sheet
 from statistics import mean
+import tensorflow as tf
 import pandas as pd
 import time
 import datetime

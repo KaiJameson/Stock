@@ -304,7 +304,7 @@ def load_2D_data(params, df, current_date, shuffle=True, scale=True, tensorify=F
 
     print(f"Final X data shape is {X.shape}")
     
-    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
+    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)   
 
     if tensorify:
         train, valid, test = make_tensor_slices(params, result)

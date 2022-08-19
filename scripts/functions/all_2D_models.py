@@ -15,7 +15,7 @@ import sys
 
 
 def DTREE(params, predictor, data_dict):
-    if params[predictor]['TEST_VAR'] == "acc":
+    if params[predictor]['TEST_VAR'] != "acc":
         tree = DecisionTreeRegressor(max_depth=params[predictor]["MAX_DEPTH"],
             min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"], random_state=random_seed)
     else:
@@ -26,8 +26,12 @@ def DTREE(params, predictor, data_dict):
     #     data_dict[predictor]["y_train"])["importances_mean"]
     # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
     #     print(f"{feature} has importance of {imps[i]}")
-    tree_pred = tree.predict(data_dict[predictor]["X_test"])
-    predicted_value = rescale_2D_preds(predictor, data_dict, tree_pred)
+    # print(data_dict[predictor]['X_test'], data_dict[predictor]['X_test'].shape)
+    predicted_value = tree.predict(data_dict[predictor]["X_test"])
+    if params[predictor]['TEST_VAR'] != "acc":
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
     
     return predicted_value
 
@@ -41,9 +45,11 @@ def XTREE(params, predictor, data_dict):
             max_depth=params[predictor]["MAX_DEPTH"], min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"], 
             random_state=random_seed, n_jobs=-1)
     xtree.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-    xtree_pred = xtree.predict(data_dict[predictor]["X_test"])
+    predicted_value = xtree.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, xtree_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
     
     return predicted_value
 
@@ -57,9 +63,11 @@ def RFORE(params, predictor, data_dict):
             max_depth=params[predictor]["MAX_DEPTH"], min_samples_leaf=params[predictor]["MIN_SAMP_LEAF"], 
             random_state=random_seed, n_jobs=-1)
     fore.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-    fore_pred = fore.predict(data_dict[predictor]["X_test"])
+    predicted_value = fore.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, fore_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
     
     return predicted_value
 
@@ -73,9 +81,11 @@ def KNN(params, predictor, data_dict):
         knn = KNeighborsClassifier(n_neighbors=params[predictor]["N_NEIGHBORS"], 
             weights=params[predictor]['WEIGHTS'], n_jobs=-1)
     knn.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-    knn_pred = knn.predict(data_dict[predictor]["X_test"])
+    predicted_value = knn.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, knn_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
     
     return predicted_value
 
@@ -96,9 +106,11 @@ def ADA(params, predictor, data_dict):
     #     data_dict[predictor]["y_train"])["importances_mean"]
     # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
     #     print(f"{feature} has importance of {imps[i]}")
-    ada_pred = ada.predict(data_dict[predictor]["X_test"])
+    predicted_value = ada.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, ada_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
     
     return predicted_value
 
@@ -111,13 +123,17 @@ def XGB(params, predictor, data_dict):
     else:
         regressor = xgb.XGBClassifier(n_estimators=params[predictor]["N_ESTIMATORS"], 
             max_depth=params[predictor]["MAX_DEPTH"], max_leaves=params[predictor]["MAX_LEAVES"], 
-            learning_rate=.05, n_jobs=8, random_state=random_seed, predictor="cpu_predictor")
+            learning_rate=.05, n_jobs=8, random_state=random_seed, predictor="cpu_predictor",
+            eval_metric="auc", use_label_encoder=False)
 
     regressor.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"], 
     eval_set=[(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])], verbose=False)
-    xgb_pred = regressor.predict(data_dict[predictor]["X_test"])
+    
+    predicted_value = regressor.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, xgb_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
     
     return predicted_value
 
@@ -137,10 +153,12 @@ def BAGREG(params, predictor, data_dict):
     #     data_dict[predictor]["y_train"])["importances_mean"]
     # for i,feature in enumerate(params[predictor]["FEATURE_COLUMNS"]):
     #     print(f"{feature} has importance of {imps[i]}")
-    bag_pred = bag.predict(data_dict[predictor]["X_test"])
+    predicted_value = bag.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, bag_pred)
-    
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
+
     return predicted_value
 
 def MLP(params, predictor, data_dict):
@@ -160,9 +178,11 @@ def MLP(params, predictor, data_dict):
                 n_iter_no_change=params[predictor]['PATIENCE'], shuffle=False, verbose=False)
 
     mlp.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-    mlp_pred = mlp.predict(data_dict[predictor]["X_test"])
+    predicted_value = mlp.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, mlp_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
 
     return predicted_value
 
@@ -313,9 +333,11 @@ def MLENS(params, predictor, data_dict):
 
     
     ensemble.fit(data_dict[predictor]["X_train"], data_dict[predictor]["y_train"])
-    mlen_pred = ensemble.predict(data_dict[predictor]["X_test"])
+    predicted_value = ensemble.predict(data_dict[predictor]["X_test"])
     if params[predictor]['TEST_VAR'] != "acc":
-        predicted_value = rescale_2D_preds(predictor, data_dict, mlen_pred)
+        predicted_value = rescale_2D_preds(predictor, data_dict, predicted_value)
+    else:
+        predicted_value = predicted_value[-1]
 
     return predicted_value
 
