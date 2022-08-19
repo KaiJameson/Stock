@@ -1,24 +1,31 @@
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
+from tensorflow.keras.layers import Dense
 from tensorflow.python.data import Dataset
 from tensorflow.python.data.experimental import AUTOTUNE
 from sklearn.model_selection import TimeSeriesSplit
 from config.environ import save_logs, directory_dict
-from config.symbols import real_test_symbols
+from config.symbols import sym_dict
 from config.model_repository import models
 from functions.data_load import get_proper_df, load_all_data, preprocess_dfresult, construct_3D_np
 from functions.functions import check_directories, check_model_folders, get_model_name, delete_files_in_folder, r1002
+from functions.time import get_current_datetime
+from functions.tuner import get_user_input
 from functions.paca_model import create_model, get_accuracy, return_real_predict
 from functions.time import get_time_string, get_current_datetime
 from paca_model import configure_gpu
+import numpy as np
 import os
 
 
 def time_kfold(params):
     configure_gpu()
 
-    for symbol in real_test_symbols:
+    kfold_symbols, params = get_user_input(sym_dict, params)
+    
+
+    for symbol in kfold_symbols:
         predictor = params["ENSEMBLE"][0]
         scale = True
         to_print = True
@@ -28,9 +35,17 @@ def time_kfold(params):
         data_dict = load_all_data(params, df, get_current_datetime())
 
 
-        tt_df, result = preprocess_dfresult(params[predictor], df, scale=scale, to_print=to_print)
+        tt_df, result = preprocess_dfresult(params[predictor], df, get_current_datetime(), scale=scale, to_print=to_print)
+        if params[predictor]['LAYERS'][0][1] == Dense:
+            tt_df = tt_df.dropna()
+            y = tt_df["future"]
+            tt_df = tt_df.drop(columns="future")
+            X = tt_df.to_numpy()
 
-        X, y = construct_3D_np(tt_df, params[predictor], result)
+            X = np.array(X)
+            y = np.array(y)
+        else:
+            X, y = construct_3D_np(tt_df, params[predictor], result)
         print(len(X), len(y))
 
         num_splits = 10
@@ -87,7 +102,7 @@ def time_kfold(params):
                 batch_size=nn_params["BATCH_SIZE"],
                 epochs=nn_params["EPOCHS"],
                 verbose=0,
-                # validation_data=data_dict["valid"],
+                validation_data=data_dict["valid"],
                 callbacks = [tboard_callback, checkpointer]   
             )
 
@@ -99,7 +114,7 @@ def time_kfold(params):
 
 
             print(result["column_scaler"])
-            y_real, y_pred = return_real_predict(model, X[test], y[test], result["column_scaler"]["c"])
+            y_real, y_pred = return_real_predict(model, X[test], y[test], result['column_scaler']['future'])
 
             # y_real = y[test]
             # y_pred = model.predict(X[test])

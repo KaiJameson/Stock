@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from config.environ import test_money, directory_dict
+from config.environ import directory_dict
 from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2, check_prediction_subfolders
 from functions.time import get_current_date_string, get_time_string, get_past_date_string
 from functions.comparators import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
@@ -9,35 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import ast
-
-def write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
-        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred, test_var="c"):
-    spencer_money = test_money * (curr_price/real_y_values[0])
-    f = open(report_dir, "a")
-    f.write("~~~~~~~" + symbol + "~~~~~~~\n")
-    f.write("Spencer wants to have: $" + str(round(spencer_money, 2)) + "\n")
-    money_made = model_money(test_money, real_y_values, predicted_y_values)
-    f.write("Money made from using real vs predicted: $" + str(round(money_made, 2)) + "\n")
-    per_mon = perfect_money(test_money, real_y_values)
-    f.write("Money made from being perfect: $" + str(round(per_mon, 2)) + "\n")
-    f.write("The test var was " + test_var + "\n")
-    f.write("Total run time was: " + str(round(total_minutes, 2)) + " minutes.\n")
-    f.write("The price at run time was: " + str(round(curr_price, 2)) + "\n")
-    f.write("The predicted price for tomorrow is: " + str(future_price) + "\n")
-    
-    percent = future_price / curr_price
-    if curr_price < future_price:
-        f.write("That would mean a growth of: " + str(round((percent - 1) * 100, 2)) + "%\n")
-        f.write("I would buy this stock.\n")
-    elif curr_price > future_price:
-        f.write("That would mean a loss of: " + str(abs(round((percent - 1) * 100, 2))) + "%\n")
-        f.write("I would sell this stock.\n")
-    
-    f.write("The average away from the real is: " + str(percent_from_real(y_real, y_pred)) + "%\n")
-    f.write("Test accuracy score: " + str(round(test_acc * 100, 2)) + "%\n")
-    f.write("Validation accuracy score: " + str(round(valid_acc * 100, 2)) + "%\n")
-    f.write("Training accuracy score: " + str(round(train_acc * 100, 2)) + "%\n")
-    f.close()
 
 
 def model_money(money, data1, data2):

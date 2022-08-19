@@ -74,7 +74,7 @@ def modify_dataframe(features, df, current_date, test_var, to_print):
        
     
     for feature in list(df.columns):
-        if feature not in features and feature != test_var:
+        if feature not in features and feature != test_var and feature != "c":
             # print(f"dropping {feature}")
             df = df.drop(columns=[feature])
 
@@ -217,9 +217,27 @@ def preprocess_dfresult(params, df, current_date, scale, to_print):
     for col in params["FEATURE_COLUMNS"]:
         assert col in tt_df.columns, f"'{col}' does not exist in the dataframe."
 
-    tt_df["future"] = tt_df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
-    if params["TEST_VAR"] not in params["FEATURE_COLUMNS"]:
-        tt_df = tt_df.drop(columns=["c"])
+    if params['TEST_VAR'] == "acc":
+        # print("WE SHOULD GET HeRE")
+        # print(tt_df)
+        # tt_df["future"] = tt_df['c'].shift(-1)
+        # print(tt_df)
+        # print(tt_df['c'][:-params["LOOKUP_STEP"]])
+        # print(tt_df['c'][params["LOOKUP_STEP"]:])
+        future = list(map(lambda current, future: int(float(future) > float(current)), tt_df['c'][:-params["LOOKUP_STEP"]], tt_df['c'][params["LOOKUP_STEP"]:]))
+        future.insert(len(future), np.nan)
+        # print(future, len(future))
+        # tt_df = tt_df.dropna()
+        # print(tt_df)
+        tt_df["future"] = future
+    else:
+        # print(tt_df)
+        tt_df["future"] = tt_df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
+
+    # print(tt_df)
+
+    if params['TEST_VAR'] not in params['FEATURE_COLUMNS'] and params['TEST_VAR'] in tt_df.columns:
+        tt_df = tt_df.drop(columns=[params['TEST_VAR']])
 
     result = {}
     if scale:
@@ -286,7 +304,7 @@ def load_2D_data(params, df, current_date, shuffle=True, scale=True, tensorify=F
 
     print(f"Final X data shape is {X.shape}")
     
-    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)    
+    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)   
 
     if tensorify:
         train, valid, test = make_tensor_slices(params, result)

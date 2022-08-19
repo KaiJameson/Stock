@@ -33,22 +33,22 @@ def keras_tuning(params):
             df = get_proper_df(symbol, 4000, "V2")
             data_dict = load_all_data(params, df, get_current_datetime())
 
-            hyper_params = []
+            hyper_params = set()
 
             def model_builder(hp):
                 model = keras.Sequential()
                 hp_units = hp.Int("units_l1", min_value=64, max_value=512, step=64)
                 model.add(LSTM(units=hp_units, activation='relu', input_shape=(None, len(params[predictor]['FEATURE_COLUMNS'])), return_sequences=False))
-                hyper_params.append("units_l1")
+                hyper_params.add("units_l1")
                 dp_ratio1 = hp.Float("dp_1", min_value=0.0, max_value=.8, step=.2)
                 model.add(Dropout(dp_ratio1))
-                hyper_params.append("dp_1")
+                hyper_params.add("dp_1")
                 hp_units2 = hp.Int("units_l2", min_value=64, max_value=512, step=64)
                 model.add(Dense(units=hp_units2, activation='relu'))
-                hyper_params.append("units_l2")
+                hyper_params.add("units_l2")
                 dp_ratio2 = hp.Float("dp_2", min_value=0.0, max_value=.8, step=.2)
                 model.add(Dropout(dp_ratio2))
-                hyper_params.append("dp_2")
+                hyper_params.add("dp_2")
 
                 model.add(Dense(1, activation="linear"))
                 model.compile(optimizer=keras.optimizers.Adam(),
@@ -71,17 +71,17 @@ def keras_tuning(params):
             tuner.search(data_dict[predictor]['train'], validation_data=data_dict[predictor]['valid'], epochs=50, callbacks=[stop_early])
            
            
-            hyperparams = tuner.get_best_hyperparameters(10)
+            best_hyperparams = tuner.get_best_hyperparameters(10)
             print(f"\nThe results from tuning {get_model_name(params[predictor])} on symbol {symbol}:")
-            for i, model in enumerate(hyperparams):
-                print(f"\nResults from model {i + 1} of {len(hyperparams)}:")
+            for i, model in enumerate(best_hyperparams):
+                print(f"\nResults from model {i + 1} of {len(best_hyperparams)}:")
                 for parameter in hyper_params:
                     print(f"Hyperparameter {parameter} had value of {r2(model.get(parameter))}")
 
             with open(f"{directory_dict['keras_tuner']}/{save_folder}/{symbol}.txt", "a") as f:
                 f.write(f"\nThe results from tuning {get_model_name(params[predictor])} on symbol {symbol}:\n")
-                for i, model in enumerate(hyperparams):
-                    f.write(f"\nResults from model {i + 1} of {len(hyperparams)}:\n")
+                for i, model in enumerate(best_hyperparams):
+                    f.write(f"\nResults from model {i + 1} of {len(best_hyperparams)}:\n")
                     for parameter in hyper_params:
                         f.write(f"Hyperparameter {parameter} had value of {r2(model.get(parameter))}\n")
                 

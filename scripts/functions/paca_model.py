@@ -3,14 +3,10 @@ from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.losses import BinaryCrossentropy, BinaryFocalCrossentropy
 from sklearn.metrics import accuracy_score
 from config.api_key import intrinio_sandbox_key
-from config.environ import (back_test_days, to_plot, test_money, stocks_traded, directory_dict)
-from functions.time import get_time_string, get_past_datetime
-from functions.io import make_runtime_price, plot_graph, write_nn_report
-from functions.error import error_handler
-from functions.data_load import load_3D_data, load_2D_data
-from functions.functions import get_model_name, layer_name_converter
+from functions.functions import layer_name_converter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
@@ -28,31 +24,6 @@ import sys
 import copy
 
 
-def nn_report(symbol, total_time, model, data, test_acc, valid_acc, train_acc, N_STEPS, classification, test_var="c"):
-    time_string = get_time_string()
-    # predict the future price
-    future_price = predict(model, data, N_STEPS)
-    
-    y_real, y_pred = return_real_predict(model, data["X_test"], data["y_test"], data["column_scaler"][test_var], classification)
-
-    report_dir = directory_dict["reports"] + "/" + symbol + "/" + time_string + ".txt"
-    
-    if to_plot:
-        plot_graph(y_real, y_pred, symbol, back_test_days, test_var)
-
-    total_minutes = total_time / 60
-
-    real_y_values = y_real[-back_test_days:]
-    predicted_y_values = y_pred[-back_test_days:]
-
-    curr_price = real_y_values[-1]
-    percent = future_price / curr_price
-
-    write_nn_report(symbol, report_dir, total_minutes, real_y_values, predicted_y_values,
-        curr_price, future_price, test_acc, valid_acc, train_acc, y_real, y_pred, test_var)
-    # excel_output(symbol, curr_price, future_price)
-
-    return percent
 
 def create_model(params):
     model = Sequential()
@@ -67,8 +38,16 @@ def create_model(params):
             model_hidden_layers(model, params["LAYERS"], layer)
     
         model.add(Dropout(params["DROPOUT"]))
-    model.add(Dense(1, activation="linear"))
-    model.compile(loss=params["LOSS"], metrics=["mean_absolute_error"], optimizer=params["OPTIMIZER"])
+
+    if params['TEST_VAR'] == "acc":
+        model.add(Dense(1))
+        if params['LOSS'] == "binary_crossentropy":
+            model.compile(loss=BinaryCrossentropy(from_logits=True), metrics=["accuracy"], optimizer=params["OPTIMIZER"])
+        else:
+            model.compile(loss=BinaryFocalCrossentropy(from_logits=True), metrics=["accuracy"], optimizer=params["OPTIMIZER"])
+    else:
+        model.add(Dense(1, activation="linear"))
+        model.compile(loss=params["LOSS"], metrics=["mean_absolute_error"], optimizer=params["OPTIMIZER"])
 
     return model
 
@@ -113,9 +92,19 @@ def model_last_layer(model, layers, ind):
     return model
 
 
-def predict(model, data, n_steps, test_var="c", classification=False, layer="LSTM"):
-    
-    if not classification:
+def predict(model, data, n_steps, test_var="c", layer="LSTM"):
+    if test_var == "acc":
+        last_sequence = data["last_sequence"][:n_steps]
+        last_sequence = np.expand_dims(last_sequence, axis=0)
+
+        predicted_val = model.predict(last_sequence)[-1][-1]
+        print(f"og_ predicted val {predicted_val}")
+        if predicted_val > .5:
+            predicted_val = 1
+        else:
+            predicted_val = 0
+
+    else:
         column_scaler = data["column_scaler"]
         
         if layer_name_converter(layer) != "Dense":
@@ -136,8 +125,6 @@ def predict(model, data, n_steps, test_var="c", classification=False, layer="LST
             pred= pred.reshape(1, -1)
             # print(pred)
             predicted_val = column_scaler["future"].inverse_transform(pred)[-1][-1]
-    else:
-        pass
     return predicted_val
 
 def sentiment_data(df):

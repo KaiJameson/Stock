@@ -1,3 +1,4 @@
+from xmlrpc.client import boolean
 from config.environ import *
 from functions.error import error_handler
 import pandas as pd
@@ -90,36 +91,36 @@ def get_model_name(nn_params):
 
 
 def get_dtree_name(dt_params):
-    return (f"{features_string(dt_params['FEATURE_COLUMNS'])}-md{dt_params['MAX_DEPTH']}-msl{dt_params['MIN_SAMP_LEAF']}")
+    return (f"{features_string(dt_params['FEATURE_COLUMNS'])}-md{dt_params['MAX_DEPTH']}-msl{dt_params['MIN_SAMP_LEAF']}-{dt_params['TEST_VAR']}")
 
 def get_xtree_name(xt_params):
-    return (f"{features_string(xt_params['FEATURE_COLUMNS'])}-md{xt_params['MAX_DEPTH']}-est{xt_params['N_ESTIMATORS']}"
+    return (f"{features_string(xt_params['FEATURE_COLUMNS'])}-md{xt_params['MAX_DEPTH']}-est{xt_params['N_ESTIMATORS']}-{xt_params['TEST_VAR']}"
         f"-msl{xt_params['MIN_SAMP_LEAF']}")
 
 def get_rfore_name(rf_params):
-    return (f"{features_string(rf_params['FEATURE_COLUMNS'])}-md{rf_params['MAX_DEPTH']}-est{rf_params['N_ESTIMATORS']}"
+    return (f"{features_string(rf_params['FEATURE_COLUMNS'])}-md{rf_params['MAX_DEPTH']}-est{rf_params['N_ESTIMATORS']}-{rf_params['TEST_VAR']}"
         f"-msl{rf_params['MIN_SAMP_LEAF']}")
 
 def get_knn_name(knn_params):
-    return f"{features_string(knn_params['FEATURE_COLUMNS'])}-nei{knn_params['N_NEIGHBORS']}-w{knn_params['WEIGHTS']}"
+    return f"{features_string(knn_params['FEATURE_COLUMNS'])}-nei{knn_params['N_NEIGHBORS']}-w{knn_params['WEIGHTS']}-{knn_params['TEST_VAR']}"
 
 def get_ada_name(ada_params):
-    return (f"{features_string(ada_params['FEATURE_COLUMNS'])}-md{ada_params['MAX_DEPTH']}-est{ada_params['N_ESTIMATORS']}"
+    return (f"{features_string(ada_params['FEATURE_COLUMNS'])}-md{ada_params['MAX_DEPTH']}-est{ada_params['N_ESTIMATORS']}-{ada_params['TEST_VAR']}"
         f"-msl{ada_params['MIN_SAMP_LEAF']}")
 
 def get_xgb_name(xgb_params):
-    return (f"{features_string(xgb_params['FEATURE_COLUMNS'])}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}"
+    return (f"{features_string(xgb_params['FEATURE_COLUMNS'])}-md{xgb_params['MAX_DEPTH']}-est{xgb_params['N_ESTIMATORS']}-{xgb_params['TEST_VAR']}"
         f"-ml{xgb_params['MAX_LEAVES']}")
 
 def get_bagreg_name(bag_params):
-    return (f"{features_string(bag_params['FEATURE_COLUMNS'])}-md{bag_params['MAX_DEPTH']}-est{bag_params['N_ESTIMATORS']}"
+    return (f"{features_string(bag_params['FEATURE_COLUMNS'])}-md{bag_params['MAX_DEPTH']}-est{bag_params['N_ESTIMATORS']}-{bag_params['TEST_VAR']}"
         f"-msl{bag_params['MIN_SAMP_LEAF']}")
 
 def get_mlens_name(mlens_params):
-    return f"{features_string(mlens_params['FEATURE_COLUMNS'])}-l{mlens_params['LAYERS']}-m_est{mlens_params['META_EST']}"
+    return f"{features_string(mlens_params['FEATURE_COLUMNS'])}-l{mlens_params['LAYERS']}-m_est{mlens_params['META_EST']}-{mlens_params['TEST_VAR']}"
 
 def get_mlp_name(mlp_params):
-    return (f"{features_string(mlp_params['FEATURE_COLUMNS'])}-l{mlp_params['LAYERS']}-stp{mlp_params['EARLY_STOP']}"
+    return (f"{features_string(mlp_params['FEATURE_COLUMNS'])}-l{mlp_params['LAYERS']}-stp{mlp_params['EARLY_STOP']}-{mlp_params['TEST_VAR']}"
         f"-p{mlp_params['PATIENCE']}")
 
 def get_test_name(params):
@@ -188,16 +189,23 @@ def layer_name_converter(layer):
 
     return string
 
-def get_correct_direction(predicted_price, current_price, actual_price):
-    if ((predicted_price > current_price and actual_price > current_price) or 
-    (predicted_price < current_price and actual_price < current_price)): 
-        return 1.0
-    elif predicted_price == current_price == actual_price:
-        return 1.0
-    elif predicted_price == current_price or actual_price == current_price: 
-        return 0.5
+def get_correct_direction(predicted_value, current_price, actual_price, test_var):
+    if test_var == "acc":
+        real_direction = int(boolean(actual_price > current_price))
+        if real_direction == predicted_value:
+            return 1.0
+        else:
+            return 0.0
     else:
-        return 0.0
+        if ((predicted_value > current_price and actual_price > current_price) or 
+        (predicted_value < current_price and actual_price < current_price)): 
+            return 1.0
+        elif predicted_value == current_price == actual_price:
+            return 1.0
+        elif predicted_value == current_price or actual_price == current_price: 
+            return 0.5
+        else:
+            return 0.0
 
 def percent_diff(pri1, pri2):
     return r2((abs(pri1 - pri2) / pri1) * 100)
@@ -225,3 +233,7 @@ def ra1002(num):
 
 def r2(num):
     return round(num, 2)
+
+def r0(num):
+    return round(num, 0)
+
