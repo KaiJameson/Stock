@@ -16,6 +16,8 @@ def pause_running_training():
             pause_list.append(pid)
         elif any("sym" in string for string in psutil.Process(pid).cmdline()):
             pause_list.append(pid)
+        elif any("multiprocessing" in string for string in psutil.Process(pid).cmdline()):
+            pause_list.append(pid)
 
     for pid in pause_list:
         psutil.Process(pid).suspend()

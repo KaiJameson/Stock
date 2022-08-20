@@ -1,8 +1,9 @@
 from tuner import tuning
-from config.symbols import tune_year, tune_month, tune_day, test_days
+from config.symbols import tune_year, tune_month, tune_day, test_days, sym_dict
 from config.model_repository import exhaustive_search
 from config.environ import directory_dict
-from functions.functions import check_directories
+from functions.functions import check_directories, r2
+from functions.tuner import get_user_input
 from itertools import product
 import pandas as pd
 import sys
@@ -52,9 +53,25 @@ if len(sys.argv) > 2:
         for i, k in enumerate(indexes):
             params[params["ENSEMBLE"][0]][keys[i]] = param_lists[i][index_tuple[i]]
 
-        print(f"Now starting test with adjustable params {params[params['ENSEMBLE'][0]]}")
-        test_output = tuning(tune_year, tune_month, tune_day, test_days, params, output=True)
+            tune_symbols, params = get_user_input(sym_dict, params)
+            print(params)
+            print(f"Now starting test with adjustable params {params[params['ENSEMBLE'][0]]}")
+
+            output_list = []
+            for symbol in tune_symbols:
+                tuning_output = tuning(symbol, tune_year, tune_month, tune_day, test_days, params, output=True)
+                output_list.append(tuning_output)
+
+            result_df = pd.DataFrame(output_list, columns=["Model Name", "Average percent", "Average direction", 
+                    "Time used", "Money Made"])
+            result_df["Average percent"] = pd.to_numeric(result_df["Average percent"]).astype("float64")
+            result_df["Average direction"] = pd.to_numeric(result_df["Average direction"]).astype("float64")
+            test_output = [result_df["Model Name"][0], r2(result_df["Average percent"].mean()), r2(result_df["Average direction"].mean()),
+                r2(result_df["Time used"].sum() / 60), r2(result_df["Money Made"].mean())]
+
         results.append(test_output)
+
+    
 
     result_df = pd.DataFrame(results, columns=["Model Name", "Average percent", "Average direction", 
         "Time used", "Money Made"])
