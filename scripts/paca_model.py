@@ -21,8 +21,14 @@ import gc
 import random
 import os
 
-def test_wrapper(symbol, params=defaults, end_date=None, predictor="nn1", data_dict={}):
+
+def nn_train_save(symbol, params=defaults, predictor="nn1", data_dict={}):
+    #description of all the parameters used is located inside environment.py
     
+
+    gc.collect()
+    tf.keras.backend.clear_session()
+    tf.keras.backend.reset_uids()
 
     # policy = mixed_precision.Policy("mixed_float16")
     # mixed_precision.set_global_policy(policy)
@@ -77,7 +83,7 @@ def test_wrapper(symbol, params=defaults, end_date=None, predictor="nn1", data_d
             callbacks = [tboard_callback, checkpointer]   
         )
 
-    epochs_used = len(history.history['loss'])
+    epochs_used = copy.copy(len(history.history['loss']))
 
 
     if not save_logs:
@@ -86,85 +92,7 @@ def test_wrapper(symbol, params=defaults, end_date=None, predictor="nn1", data_d
 
     return epochs_used
 
-def nn_train_save(symbol, params=defaults, end_date=None, predictor="nn1", data_dict={}):
-    #description of all the parameters used is located inside environment.py
-    gc.collect()
-    tf.keras.backend.clear_session()
-    tf.keras.backend.reset_uids()
-
-
-    p = multiprocessing.Process(target=test_wrapper(symbol, params, end_date, predictor, data_dict))
-    p.start()
-    p.join()
-
-    # gc.collect()
-    # tf.keras.backend.clear_session()
-    # tf.keras.backend.reset_uids()
-
-    # # policy = mixed_precision.Policy("mixed_float16")
-    # # mixed_precision.set_global_policy(policy)
-    # options = {"shape_optimization": True}
-    # tf.config.optimizer.set_experimental_options(options)
-    # os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2, --tf_xla_cpu_global_jit" # turns on xla and cpu xla
-    # tf.config.optimizer.set_jit(True)
-
-    # # set seed, so we can get the same results after rerunning several times
-    # np.random.seed(random_seed)
-    # tf.random.set_seed(random_seed)
-    # random.seed(random_seed)
-
-    # nn_params = params[predictor]
-    
-    # check_model_folders(params["SAVE_FOLDER"], symbol)
-   
-    # model_name = (symbol + "-" + get_model_name(nn_params))
-
-    # model = create_model(nn_params)
-
-    # logs_dir = "logs/" + get_time_string() + "-" + params["SAVE_FOLDER"]
-
-    # if save_logs:
-    #     tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch="200, 1200") 
-    # else:
-    #     tboard_callback = TensorBoard(log_dir=logs_dir, profile_batch=0)
-
-
-    # if nn_params['TEST_SIZE'] != 1: # Using validation
-    #     checkpointer = ModelCheckpoint(f"{directory_dict['model']}/{params['SAVE_FOLDER']}/{model_name}.h5", 
-    #         save_weights_only=True, save_best_only=True, verbose=1)
-
-    #     early_stop = EarlyStopping(patience=nn_params['PATIENCE'])
-        
-    #     history = model.fit(data_dict['train'],
-    #         batch_size=nn_params['BATCH_SIZE'],
-    #         epochs=nn_params['EPOCHS'],
-    #         verbose=2,
-    #         validation_data=data_dict['valid'],
-    #         callbacks = [tboard_callback, checkpointer, early_stop]   
-    #     )
-    
-    # else: # Not using validation
-    #     checkpointer = ModelCheckpoint(f"{directory_dict['model']}/{params['SAVE_FOLDER']}/{model_name}.h5", 
-    #         save_freq=50, save_weights_only=True, verbose=1)
-
-    #     history = model.fit(data_dict['train'],
-    #         batch_size=nn_params['BATCH_SIZE'],
-    #         epochs=nn_params['EPOCHS'],
-    #         verbose=2,
-    #         callbacks = [tboard_callback, checkpointer]   
-    #     )
-
-    # epochs_used = copy.copy(len(history.history['loss']))
-
-
-    # if not save_logs:
-    #     delete_files_in_folder(logs_dir)
-    #     os.rmdir(logs_dir)
-
-    # return epochs_used
-
 def configure_gpu():
-    print("HOWOHWOHWOHWOHWO")
     gpus = tf.config.experimental.list_physical_devices("GPU")
 
     if gpus:
@@ -248,7 +176,7 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
                     predicted_value, epochs_run = load_saved_predictions(symbol, params, current_date, predictor)
                     epochs_dict[predictor] = epochs_run
                 else:
-                    epochs_run = nn_train_save(symbol, params, current_date, predictor, data_dict[predictor])
+                    epochs_run = nn_train_save(symbol, params, predictor, data_dict[predictor])
                     epochs_dict[predictor] = epochs_run
                     predicted_value = nn_load_predict(symbol, params, predictor, data_dict[predictor])
                     save_prediction(symbol, params, current_date, predictor, predicted_value, epochs_run)

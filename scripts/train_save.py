@@ -21,7 +21,7 @@ def save_models(symbols):
             for predictor in defaults["ENSEMBLE"]:
                 if "nn"in predictor:
                     print(f"\nTraining submodel {predictor} ...")
-                    epochs = nn_train_save(symbol, end_date=None, params=defaults, predictor=predictor,
+                    epochs = nn_train_save(symbol, params=defaults, predictor=predictor,
                         data_dict=data_dict[predictor])
 
         except KeyboardInterrupt:
