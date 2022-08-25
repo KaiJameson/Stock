@@ -1,4 +1,5 @@
 from functions.volitility import *
+from functions.sentiment import get_sentiment
 from scipy.signal import savgol_filter
 import talib as ta
 import pandas as pd
@@ -7,38 +8,38 @@ import matplotlib.pyplot as plt
 
 base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
 
-def df_m(name, df):
+def df_m(name, df, *args):
     df[name] = (df.l + df.h) / 2
 
-def df_savgol(selector, feature, df):
+def df_savgol(selector, feature, df, symbol):
     if feature not in base_features:
-        techs_dict[feature]["function"](feature, df)
+        techs_dict[feature]["function"](feature, df, symbol)
 
     df[f"{selector}.{feature}"] = savgol_filter(df[feature], 7, 3)
 
-def df_change_percent(selector, feature, df):
+def df_change_percent(selector, feature, df, symbol):
     if feature not in base_features:
-        techs_dict[feature]["function"](feature, df)
+        techs_dict[feature]["function"](feature, df, symbol)
     df[f"{selector}.{feature}"] = df[feature].pct_change()
 
-def df_differencer(selector, feature, df):
+def df_differencer(selector, feature, df, symbol):
     if feature not in base_features:
-        techs_dict[feature]["function"](feature, df)
+        techs_dict[feature]["function"](feature, df, symbol)
     df[f"{selector}.{feature}"] = df[feature].diff(1)
 
-def df_power_transformation(selector, feature, df):
+def df_power_transformation(selector, feature, df, symbol):
     if feature not in base_features:
-        techs_dict[feature]["function"](feature, df)
+        techs_dict[feature]["function"](feature, df, symbol)
     df[f"{selector}.{feature}"] = df[feature].pow(.5)
 
-def df_moving_average(selector, feature, df):
+def df_moving_average(selector, feature, df, symbol):
     if feature not in base_features:
-        techs_dict[feature]["function"](feature, df)
+        techs_dict[feature]["function"](feature, df, symbol)
     df[f"{selector}.{feature}"] = ta.SMA(df.c, timeperiod=7)
 
-def df_wavelet_transform(selector, feature, df):
+def df_wavelet_transform(selector, feature, df, symbol):
     if feature not in base_features:
-        techs_dict[feature]["function"](feature, df)
+        techs_dict[feature]["function"](feature, df, symbol)
 
     std = np.nanstd(df[feature])
 
@@ -51,135 +52,135 @@ def df_wavelet_transform(selector, feature, df):
 
     df[f"{selector}.{feature}"] = reconstructed_signal[len(reconstructed_signal) - len(df.index):]
 
-def df_BBANDS(name, df):
+def df_BBANDS(name, df, *args):
     up, mid, dow = ta.BBANDS(df.c, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
     if name == "up_band":
         df[name] = up
     else:
         df[name] = dow
 
-def df_OBV(name, df):
+def df_OBV(name, df, *args):
     df[name] = ta.OBV(df.c, df.v)
 
-def df_RSI(name, df):
+def df_RSI(name, df, *args):
     df[name] = ta.RSI(df.c)
 
-def df_lin_reg(name, df):
+def df_lin_reg(name, df, *args):
     df[name] = ta.LINEARREG(df.c, timeperiod=14)
 
-def df_lin_reg_ang(name, df):
+def df_lin_reg_ang(name, df, *args):
     df[name] = ta.LINEARREG_ANGLE(df.c, timeperiod=14)
     
-def df_lin_reg_int(name, df):
+def df_lin_reg_int(name, df, *args):
     df[name] = ta.LINEARREG_INTERCEPT(df.c, timeperiod=14)
 
-def df_lin_reg_slope(name, df):
+def df_lin_reg_slope(name, df, *args):
     df[name] = ta.LINEARREG_SLOPE(df.c, timeperiod=14)
 
-def df_pears_cor(name, df):
+def df_pears_cor(name, df, *args):
     df[name] = ta.CORREL(df.h, df.l, timeperiod=30)
 
-def df_mon_flow_ind(name, df):
+def df_mon_flow_ind(name, df, *args):
     df[name] = ta.MFI(df.h, df.l, df.c, df.v, timeperiod=14)
 
-def df_willR(name, df):
+def df_willR(name, df, *args):
     df[name] = ta.WILLR(df.h, df.l, df.c, timeperiod=14)
 
-def df_std_dev(name, df):
+def df_std_dev(name, df, *args):
     df[name] = ta.STDDEV(df.c, timeperiod=5, nbdev=1)
 
-def df_minmax(name, df):
+def df_minmax(name, df, *args):
     min, max = ta.MINMAX(df.c, timeperiod=30)
     if name == "min":
         df[name] = min
     else:
         df[name] = max
 
-def df_commod_chan_ind(name, df):
+def df_commod_chan_ind(name, df, *args):
     df[name] = ta.CCI(df.h, df.l, df.c, timeperiod=14)
 
-def df_para_SAR(name, df):
+def df_para_SAR(name, df, *args):
     df[name] = ta.SAR(df.h, df.l)
 
-def df_para_SAR_ext(name, df):
+def df_para_SAR_ext(name, df, *args):
     df[name] = ta.SAREXT(df.h, df.l)
 
-def df_rate_of_change(name, df):
+def df_rate_of_change(name, df, *args):
     df[name] = ta.ROC(df.c, timeperiod=10)
 
-def df_ht_dcperiod(name, df):
+def df_ht_dcperiod(name, df, *args):
     df[name] = ta.HT_DCPERIOD(df.c)
 
-def df_ht_trendmode(name, df):
+def df_ht_trendmode(name, df, *args):
     df[name] = ta.HT_TRENDMODE(df.c)
 
-def df_ht_dcphase(name, df):
+def df_ht_dcphase(name, df, *args):
     df[name] = ta.HT_DCPHASE(df.c)
 
-def df_ht_phasor(name, df):
+def df_ht_phasor(name, df, *args):
     inphase, quad = ta.HT_PHASOR(df.c)
     if name == "ht_inphase":
         df[name] = inphase
     else:
         df[name] = quad
 
-def df_ht_sine(name, df):
+def df_ht_sine(name, df, *args):
     ht_sine, ht_leadsine = ta.HT_SINE(df.c)
     if name == "ht_sine":
         df[name] = ht_sine
     else:
         df[name] = ht_leadsine
 
-def df_ht_trendline(name, df):
+def df_ht_trendline(name, df, *args):
     df[name] = ta.HT_TRENDLINE(df.c)
 
-def df_mom(name, df):
+def df_mom(name, df, *args):
     df[name] = ta.MOM(df.c, timeperiod=10)
 
-def df_abs_price_osc(name, df):
+def df_abs_price_osc(name, df, *args):
     df[name] = ta.APO(df.c, fastperiod=12, slowperiod=26, matype=0)
 
-def df_KAMA(name, df):
+def df_KAMA(name, df, *args):
     df[name] = ta.KAMA(df.c, timeperiod=30)
 
-def df_typ_price(name, df):
+def df_typ_price(name, df, *args):
     df[name] = ta.TYPPRICE(df.h, df.l, df.c)
 
-def df_ult_osc(name, df):
+def df_ult_osc(name, df, *args):
     df[name] = ta.ULTOSC(df.h, df.l, df.c, timeperiod1=7, timeperiod2=14, timeperiod3=28)
 
-def df_chai_line(name, df):
+def df_chai_line(name, df, *args):
     df[name] = ta.AD(df.h, df.l, df.c, df.v)
 
-def df_chai_osc(name, df):
+def df_chai_osc(name, df, *args):
     df[name] = ta.ADOSC(df.h, df.l, df.c, df.v, fastperiod=3, slowperiod=10)
 
-def df_norm_avg_true_range(name, df):
+def df_norm_avg_true_range(name, df, *args):
     df[name] = ta.NATR(df.h, df.l, df.c, timeperiod=14)
 
-def df_median_price(name, df):
+def df_median_price(name, df, *args):
     df[name] = ta.MEDPRICE(df.h, df.l)
 
-def df_var(name, df):
+def df_var(name, df, *args):
     df[name] = ta.MEDPRICE(df.h, df.l)
 
-def df_aroon(name, df):
+def df_aroon(name, df, *args):
     aroon_down, aroon_up = ta.AROON(df.h, df.l, timeperiod=14)
     if name == "aroon_down":
         df[name] = aroon_down
     else:
         df[name] = aroon_up
 
-def df_aroon_osc(name, df):
+def df_aroon_osc(name, df, *args):
     df[name] = ta.AROONOSC(df.h, df.l, timeperiod=14)
 
-def df_bal_of_pow(name, df):
+def df_bal_of_pow(name, df, *args):
     df[name] = ta.BOP(df.o, df.h, df.l, df.c)
 
-def df_chande_mom_osc(name, df):
+def df_chande_mom_osc(name, df, *args):
     df[name] = ta.CMO(df.c, timeperiod=14)
 
-def df_MACD(name, df):
+def df_MACD(name, df, *args):
     macd, macdsignal, macdhist = ta.MACD(df.c, fastperiod=12, slowperiod=26, signalperiod=9)
     if name == "MACD":
         df[name] = macd
@@ -188,7 +189,7 @@ def df_MACD(name, df):
     else:
         df[name] = macdhist
 
-def df_con_MACD(name, df):
+def df_con_MACD(name, df, *args):
     con_MACD, con_MACD_signal, con_MACD_hist = ta.MACDEXT(df.c, fastperiod=12, slowperiod=26, signalperiod=9)
     if name == "con_MACD":
         df[name] = con_MACD
@@ -197,7 +198,7 @@ def df_con_MACD(name, df):
     else:
         df[name] = con_MACD_hist
 
-def df_fix_MACD(name, df):
+def df_fix_MACD(name, df, *args):
     fix_MACD, fix_MACD_signal, fix_MACD_hist = ta.MACDFIX(df.c, signalperiod=9)
     if name == "fix_MACD":
         df[name] = fix_MACD
@@ -206,97 +207,96 @@ def df_fix_MACD(name, df):
     else:
         df[name] = fix_MACD_hist
 
-def df_min_dir_ind(name, df):
+def df_min_dir_ind(name, df, *args):
     df[name] = ta.MINUS_DI(df.h, df.l, df.c, timeperiod=14)
 
-def df_min_dir_mov(name, df):
+def df_min_dir_mov(name, df, *args):
     df[name] = ta.MINUS_DM(df.h, df.l, timeperiod=14)
 
-def df_plus_dir_ind(name, df):
+def df_plus_dir_ind(name, df, *args):
     df[name] = ta.PLUS_DI(df.h, df.l, df.c, timeperiod=14)
 
-def df_plus_dir_mov(name, df):
+def df_plus_dir_mov(name, df, *args):
     df[name] = ta.PLUS_DM(df.h, df.l, timeperiod=14)
 
-def df_per_price_osc(name, df):
+def df_per_price_osc(name, df, *args):
     df[name] = ta.PPO(df.c, fastperiod=12, slowperiod=26, matype=0)
 
-def df_stoch_fast(name, df):
+def df_stoch_fast(name, df, *args):
     stoch_fast_k, stoch_fast_d = ta.STOCHF(df.h, df.l, df.c)
     if name == "stoch_fast_k":
         df[name] = stoch_fast_k
     else:
         df[name] = stoch_fast_d
 
-def df_stoch_rel_stren(name, df):
+def df_stoch_rel_stren(name, df, *args):
     stoch_rel_stren_k, stoch_rel_stren_d = ta.STOCHRSI(df.c)
     if name == "stoch_rel_stren_k":
         df[name] = stoch_rel_stren_k
     else:
         df[name] = stoch_rel_stren_d
 
-def df_stoch_slow(name, df):
+def df_stoch_slow(name, df, *args):
     stoch_slowk, stoch_slowd = ta.STOCHF(df.h, df.l, df.c)
     if name == "stoch_slowk":
         df[name] = stoch_slowk
     else:
         df[name] = stoch_slowd
 
-def df_TRIX(name, df):
+def df_TRIX(name, df, *args):
     df[name] = ta.TRIX(df.c, timeperiod=30)
 
-def df_weigh_mov_avg(name, df):
+def df_weigh_mov_avg(name, df, *args):
     df[name] = ta.WMA(df.c, timeperiod=30)
 
-def df_DEMA(name, df):
+def df_DEMA(name, df, *args):
     df[name] = ta.DEMA(df.c, timeperiod=30)
 
-def df_EMA(name, df):
+def df_EMA(name, df, *args):
     df[name] = ta.EMA(df.c, timeperiod=5)
 
-def df_MESA(name, df):
+def df_MESA(name, df, *args):
     MESA_mama, MESA_fama = ta.MAMA(df.c)
     if name == "MESA_mama":
         df[name] = MESA_mama
     else:
         df[name] = MESA_fama
 
-def df_midpnt(name, df):
+def df_midpnt(name, df, *args):
     df[name] = ta.MIDPOINT(df.c, timeperiod=14)
 
-def df_midprice(name, df):
+def df_midprice(name, df, *args):
     df[name] = ta.MIDPRICE(df.h, df.l, timeperiod=14)
 
-def df_triple_EMA(name, df):
+def df_triple_EMA(name, df, *args):
     df[name] = ta.TEMA(df.c, timeperiod=30)
 
-def df_tri_MA(name, df):
+def df_tri_MA(name, df, *args):
     df[name] = ta.TRIMA(df.c, timeperiod=30)
 
-def df_avg_dir_mov_ind(name, df):
+def df_avg_dir_mov_ind(name, df, *args):
     df[name] = ta.ADX(df.h, df.l, df.c, timeperiod=14)
 
-def df_true_range(name, df):
+def df_true_range(name, df, *args):
     df[name] = ta.TRANGE(df.h, df.l, df.c)
 
-def df_avg_price(name, df):
+def df_avg_price(name, df, *args):
     df[name] = ta.AVGPRICE(df.o, df.h, df.l, df.c)
 
-def df_weig_c_price(name, df):
+def df_weig_c_price(name, df, *args):
     df[name] = ta.WCLPRICE(df.h, df.l, df.c)
 
-def df_beta(name, df):
+def df_beta(name, df, *args):
     df[name] = ta.BETA(df.h, df.l, timeperiod=5)
 
-def df_TSF(name, df):
+def df_TSF(name, df, *args):
     df[name] = ta.TSF(df.c, timeperiod=14)
 
-
-def convert_date_values(name, df):	    
+def convert_date_values(name, df, *args):	    
     df[name] = df.index	
     df[name] = df[name].dt.dayofweek + 1
 
-def testing(name, df):
+def testing(name, df, *args):
     pass
 
 techs_dict = {
@@ -307,6 +307,8 @@ techs_dict = {
     "pt": {"function":df_power_transformation},
     "ma": {"function":df_moving_average},
     "m": {"function":df_m},
+    "vad": {"function":get_sentiment},
+    "fin_vad": {"function":get_sentiment},
     "garman_klass":  {"function":garman_klass},
     "hodges_tompkins": {"function":hodges_tompkins},
     "kurtosis": {"function":get_kurtosis},

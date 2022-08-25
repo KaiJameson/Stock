@@ -34,7 +34,7 @@ def load_trade(symbols, params, real_mon):
 
             df = get_proper_df(symbol, params["LIMIT"], "V2")
             
-            data_dict = load_all_data(defaults, df, get_current_datetime())
+            data_dict = load_all_data(symbol, defaults, df, get_current_datetime())
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()
             predicted_price, current_price, epochs_dict = ensemble_predictor(symbol, params, None, 

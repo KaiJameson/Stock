@@ -7,7 +7,7 @@ import copy
 
 def subset_and_predict(symbol, params, current_date, master_df, to_print=True):
     sub_df = df_subset(current_date, master_df)
-    data_dict = load_all_data(params, sub_df, get_current_datetime(), to_print)
+    data_dict = load_all_data(symbol, params, sub_df, get_current_datetime(), to_print)
 
     predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
                     data_dict, sub_df)

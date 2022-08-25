@@ -32,7 +32,7 @@ def time_kfold(params):
 
 
         df = get_proper_df(symbol, params[predictor]["LIMIT"], "V2")
-        data_dict = load_all_data(params, df, get_current_datetime())
+        data_dict = load_all_data(symbol, params, df, get_current_datetime())
 
 
         tt_df, result = preprocess_dfresult(params[predictor], df, get_current_datetime(), scale=scale, to_print=to_print)

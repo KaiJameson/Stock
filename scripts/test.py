@@ -22,6 +22,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import HuberRegressor, LinearRegression
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from sklearn.metrics import mean_squared_error
 from tensorflow_addons.layers import ESN
 from iexfinance.stocks import Stock, get_historical_data
@@ -33,6 +34,7 @@ from scipy.io import loadmat
 from collections import Counter
 from multiprocessing.pool import Pool
 import keras_tuner as kt
+import nltk
 import math
 import requests
 import scipy
@@ -558,14 +560,6 @@ if __name__ == "__main__":
     # print('Validation Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(val_eval[0], val_eval[1], val_eval[2]))
     # print('Test Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(test_eval[0], test_eval[1], test_eval[2]))
 
-    # NEWS WORKING SECTION
-    # news = api.get_news("QCOM", limit=5000)
-
-    # print(news)
-    # print(news[0])
-    # for ele in news:
-    #     print(ele.author, ele.created_at)
-    # print(len(news))
 
 
     # WAVELET TRANSFORMS WORKING SECTION
@@ -575,7 +569,7 @@ if __name__ == "__main__":
     # for symbol in load_save_symbols:
     #     df = get_proper_df(symbol, 4000, "V2")
     #     df = modify_dataframe(params["KNN1"]["FEATURE_COLUMNS"], df, True)
-    # data_dict = load_all_data(params, df, get_current_datetime())
+    # data_dict = load_all_data(symbol, params, df, get_current_datetime())
 
     
     # def calculate_entropy(list_values):
