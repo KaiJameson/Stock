@@ -16,7 +16,7 @@ def save_models(symbols):
     for symbol in symbols:
         try:
             df = get_proper_df(symbol, 0, "V2")
-            data_dict = load_all_data(defaults, df, get_current_datetime())
+            data_dict = load_all_data(symbol, defaults, df, get_current_datetime())
             print(f"\n~~~ Now Training {symbol} ~~~")
             for predictor in defaults["ENSEMBLE"]:
                 if "nn"in predictor:

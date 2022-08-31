@@ -26,7 +26,10 @@ import os
 def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=False):
     api = get_api()
     
+    if not output:
+        configure_gpu()
 
+    output_list = []
 
     test_name = (symbol + "-" + get_test_name(params))
 
@@ -54,8 +57,9 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
             }
 
             output_dict = read_saved_contents(f"{params['TUNE_FOLDER']}/{test_name}.txt", output_dict)
-            output_list.append([test_name, output_dict['percent_away'], output_dict['correct_direction'],
-                output_dict['time_so_far'], output_dict['total_money']])
+            output_list = [test_name, output_dict['percent_away'], output_dict['correct_direction'],
+                output_dict['time_so_far'], output_dict['total_money']]
+            return output_list
         else:
             print(f"A fully completed file with the name {test_name} already exists.")
             print("Exiting this instance of tuning now: ")
@@ -152,7 +156,7 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
         backtest_excel(params, progress, avg_p, avg_d, avg_e, hold_money, test_name)
 
         if output:
-            output_list.append([test_name, avg_p, avg_d, progress["time_so_far"], progress["current_money"]])
+            output_list = [test_name, avg_p, avg_d, progress["time_so_far"], progress["current_money"]]
 
         if os.path.isfile(params['TUNE_FOLDER'] + "/" + "SAVE-" + test_name + ".txt"):
             os.remove(params['TUNE_FOLDER'] + "/" + "SAVE-" + test_name + ".txt")
@@ -169,15 +173,17 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
     except Exception:
             error_handler(symbol, Exception)
 
-    make_tuning_sheet(get_test_name(params), params['TUNE_FOLDER'])
-    
     if output:
-        result_df = pd.DataFrame(output_list, columns=["Model Name", "Average percent", "Average direction", 
-            "Time used", "Money Made"])
-        result_df["Average percent"] = pd.to_numeric(result_df["Average percent"]).astype("float64")
-        result_df["Average direction"] = pd.to_numeric(result_df["Average direction"]).astype("float64")
-        return [result_df["Model Name"][0], r2(result_df["Average percent"].mean()), r2(result_df["Average direction"].mean()),
-            r2(result_df["Time used"].sum() / 60), r2(result_df["Money Made"].mean())]
+        print(output_list)
+        return output_list
+    
+    # if output:
+    #     result_df = pd.DataFrame(output_list, columns=["Model Name", "Average percent", "Average direction", 
+    #         "Time used", "Money Made"])
+    #     result_df["Average percent"] = pd.to_numeric(result_df["Average percent"]).astype("float64")
+    #     result_df["Average direction"] = pd.to_numeric(result_df["Average direction"]).astype("float64")
+    #     return [result_df["Model Name"][0], r2(result_df["Average percent"].mean()), r2(result_df["Average direction"].mean()),
+    #         r2(result_df["Time used"].sum() / 60), r2(result_df["Money Made"].mean())]
 
 if __name__ == "__main__":
     check_directories()
@@ -188,21 +194,23 @@ if __name__ == "__main__":
             tuner_dict[model] = models[model]
     print(tuner_dict)
 
-    configure_gpu()
+    
         
     tune_symbols, params = get_user_input(sym_dict, tuner_dict)
     print(params)
-    print("\nStaring tuner.py using these following symbols: " + str(tune_symbols) + "\n")
+    print("\nStaring tuner.py using these following symbols: " + str(tune_symbols) + "\n", flush=True)
 
-    output_list = []
+
     for symbol in tune_symbols:
         with Pool(1) as pool:
             items = [(symbol, tune_year, tune_month, tune_day, tune_days, tuner_dict)]
             for result in pool.starmap(tuning, items):
-                print(f'Got result: {result}', flush=True)
+                pass
+                # print(f'Got result: {result}', flush=True)
         pool.close()
         pool.join()
 
+    make_tuning_sheet(get_test_name(params), params['TUNE_FOLDER'])
 
 
 

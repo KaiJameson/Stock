@@ -134,14 +134,22 @@ def get_actual_price(current_date, df, cal):
     # print(f"cd copy before {cd_copy}")
     cd_copy = increment_calendar(cd_copy, cal)
     # print(f"cd copy after inc {cd_copy}")
-    df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
-    if type(df_sub.index[0]) == type(""):
-        df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
-        actual_price = df_sub.loc[get_past_date_string(cd_copy)]["c"]
-    else:
-        actual_price = df_sub.loc[get_past_date_string(cd_copy)]["c"][0]
+    # df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
 
-    del df_sub
+    actual_price = df_sub.loc[cd_copy]['c']
+
+    # if type(df_sub.index[0]) == type(""):
+    #     # df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
+    #     # actual_price = df_sub.loc[get_past_date_string(cd_copy)]["c"]
+    #     print("\n\n\nfuck\n\n\n\n", flush=True)
+    #     actual_price = df_sub.loc[cd_copy]['c']
+    # else:
+    #     print(cd_copy, type(cd_copy), type(df_sub.index[0]), flush=True)
+    #     print(df_sub.loc[cd_copy])
+    #     print(df_sub.loc[cd_copy]['c'], flush=True)
+    #     actual_price = df_sub.loc[cd_copy]["c"][0]
+
+    # del df_sub
     return actual_price
 
     

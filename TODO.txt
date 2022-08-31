@@ -4,7 +4,7 @@ Implement classification ensemble
 News
     * Try title and title/content from alpaca
     * use the vader model
-    * use BERT model
+    * use finBERT model
 Fundamentals
     * try out tiingo
     * make all of the days for a quarter have the relevant fundmental numbers
@@ -21,6 +21,7 @@ MLENS
 Model testing
     * all of these new data sources need to be retested: SPY, 7MA, AROON, time series forecast, ht_trendmode, ht_sine, pearson's correlation, money flow index, relative strength index, day_of_week, chaikin line, true range, volatility estimators, 10Y bond rate
     * less patience for super complicated models like nn4
+    * classification NN ensembles
     * use the new volatility indicators
     * use sma to smooth all defaults data 
 keras tuner
@@ -33,4 +34,4 @@ TIME KFOLD
     * rework the file so it actually works
     * allow it to test over certian time periods
 MISC
-    *
+    * change the index of the dataframe to datetime.date instead of pd.Timestamp
