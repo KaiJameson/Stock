@@ -67,7 +67,7 @@ if len(sys.argv) > 2:
 
         output_list = []
         for symbol in tune_symbols:
-            print(symbol)
+            # print(symbol)
             tuning_output = tuning(symbol, tune_year, tune_month, tune_day, test_days, params, output=True)
             output_list.append(tuning_output)
 

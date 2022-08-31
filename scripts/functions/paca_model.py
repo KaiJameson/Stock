@@ -99,7 +99,12 @@ def predict(model, data, n_steps, test_var="c", layer="LSTM"):
 
         predicted_val = model.predict(last_sequence)[-1][-1]
         print(f"og_ predicted val {predicted_val}")
-        if predicted_val > .5:
+        # if predicted_val > .5: <- Probably wrong
+        #     predicted_val = 1
+        # else:
+        #     predicted_val = 0
+
+        if predicted_val > 0:
             predicted_val = 1
         else:
             predicted_val = 0

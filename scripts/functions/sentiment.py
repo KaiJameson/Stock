@@ -2,6 +2,7 @@ from functions.trade import get_api
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import pandas as pd
 import datetime
+import copy
 import sys
 
 
@@ -14,6 +15,7 @@ def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
         print(*map(f, objects), sep=sep, end=end, file=file)
 
 def get_sentiment(name, df, symbol):
+    df_copy = copy.copy(df)
 
     api = get_api()
 
@@ -72,21 +74,21 @@ def get_sentiment(name, df, symbol):
     for ele in reversed(news):
         sent_list.append([ele.created_at.date(), vader.polarity_scores(ele.headline)["compound"]])
 
-    sen_df = pd.DataFrame(sent_list, columns= ['date', 'sentiment'])
+    sen_df = pd.DataFrame(sent_list, columns= ['date', name])
     mean_scores = sen_df.groupby(['date']).mean()
 
     # df.index = df.index.date
-    mean_scores = mean_scores[mean_scores.index >= df.index[0]]
+    mean_scores = mean_scores[mean_scores.index >= df_copy.index[0]]
 
 
     for day in mean_scores.index:
-        if day in df.index:
+        if day in df_copy.index:
             pass
         else:
             fit = False
             tmp_day = day
             while not fit:
-                if tmp_day in df.index:
+                if tmp_day in df_copy.index:
                     mean_scores = mean_scores.rename(index={day:tmp_day})
                     fit = True
                 else:
@@ -95,8 +97,11 @@ def get_sentiment(name, df, symbol):
 
     mean_scores = mean_scores.groupby([mean_scores.index]).mean()
 
-    df = df.join(mean_scores, how="left")
-    df = df.fillna(0.000000)
+    df_copy = df_copy.join(mean_scores, how="left")
+    df_copy = df_copy.fillna(0.000000)
+    df[name] = df_copy[name]
 
-    print(df)
+    # print(df.head(40))
+    # print(df.tail(40))
+
 

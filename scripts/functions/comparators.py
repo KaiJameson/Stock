@@ -112,9 +112,10 @@ def simple_one_day_predicting_comparator_guts(df, comp, run_days):
 def update_money(current_money, predicted_value, current_price, actual_price, test_var):
     p_change = 1 + ((actual_price - current_price) / actual_price)
     stocks = 0
+    
     if test_var == "acc":
-        print("getting there")
-        print(f"predicted value {predicted_value}")
+        # print("getting there")
+        # print(f"predicted value {predicted_value}")
         if predicted_value == 1:
             stocks = current_money // current_price
             if stocks > 0:

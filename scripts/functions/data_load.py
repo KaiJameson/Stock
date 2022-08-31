@@ -62,7 +62,7 @@ def modify_dataframe(symbol, features, df, current_date, test_var, to_print):
                             df[feature] = ticker_df[feature_split[2]]
                     else:
                         df[feature] = ticker_df[feature_split[2]]
-                
+            
             if feature not in df.columns:
                 print(f"Feature {feature} is not in the technical indicators dictionary. That sucks, probably")
        
@@ -193,12 +193,11 @@ def load_all_data(symbol, params, df, current_date, to_print=True):
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
-                # print("SHOULD GET HERE")
                 result, train, valid, test = load_3D_data(symbol, params[predictor], df, current_date, params[predictor]["SHUFFLE"],
                 to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
-                # print(data_dict[predictor])
+                
 
     return data_dict
 
@@ -213,20 +212,10 @@ def preprocess_dfresult(symbol, params, df, current_date, scale, to_print):
         assert col in tt_df.columns, f"'{col}' does not exist in the dataframe."
 
     if params['TEST_VAR'] == "acc":
-        # print("WE SHOULD GET HeRE")
-        # print(tt_df)
-        # tt_df["future"] = tt_df['c'].shift(-1)
-        # print(tt_df)
-        # print(tt_df['c'][:-params["LOOKUP_STEP"]])
-        # print(tt_df['c'][params["LOOKUP_STEP"]:])
         future = list(map(lambda current, future: int(float(future) > float(current)), tt_df['c'][:-params["LOOKUP_STEP"]], tt_df['c'][params["LOOKUP_STEP"]:]))
         future.insert(len(future), np.nan)
-        # print(future, len(future))
-        # tt_df = tt_df.dropna()
-        # print(tt_df)
         tt_df["future"] = future
     else:
-        # print(tt_df)
         tt_df["future"] = tt_df[params["TEST_VAR"]].shift(-params["LOOKUP_STEP"])
 
     # print(tt_df)
