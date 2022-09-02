@@ -743,6 +743,24 @@ models = {
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "ma.fin_vad"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn43" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
         "LAYERS": [(512, LSTM), (448, LSTM)],
         "DROPOUT": 0.0,
         "BIDIRECTIONAL": False,
@@ -770,7 +788,7 @@ models = {
         "EPOCHS": 200,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "SHUFFLE": True,
         "TEST_VAR": "acc",
         "SAVE_PRED": {}
@@ -784,7 +802,7 @@ models = {
         "TEST_VAR": "c"
         },
     "XTREE1" : {
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -793,7 +811,7 @@ models = {
         "TEST_VAR": "c"
         },
     "RFORE1" : {
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -837,7 +855,7 @@ models = {
         "TEST_VAR": "c"
         },
     "MLP1" : { 
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "LAYERS": (20, 20), 
         "EARLY_STOP": True,
         "VALIDATION_FRACTION": .2,
@@ -919,7 +937,7 @@ models = {
         "TEST_VAR": "acc"
         },
     "XTREE2" : {
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -928,7 +946,7 @@ models = {
         "TEST_VAR": "acc"
         },
     "RFORE2" : {
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -972,7 +990,7 @@ models = {
         "TEST_VAR": "acc"
         },
     "MLP2" : { 
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
         "LAYERS": (20, 20), 
         "EARLY_STOP": True,
         "VALIDATION_FRACTION": .2,
@@ -1051,8 +1069,8 @@ models = {
 exhaustive_search = {
     "DTREE" : { # 384
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
         "LOOKUP_STEP": 1,
@@ -1061,8 +1079,8 @@ exhaustive_search = {
     },
     "XTREE" : { # 1920
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1072,8 +1090,8 @@ exhaustive_search = {
         },
     "RFORE" : { # 1920
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1083,8 +1101,8 @@ exhaustive_search = {
         },
     "KNN" : { # 160
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "N_NEIGHBORS": [1, 2, 3, 4, 5, 7, 10, 20, 50, 100],
         "WEIGHTS": ["uniform", "distance"],
         "LOOKUP_STEP":1,
@@ -1093,8 +1111,8 @@ exhaustive_search = {
     },
     "ADA" : { # 1920
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1104,8 +1122,8 @@ exhaustive_search = {
     },
     "XGB" : { # 1440
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MAX_LEAVES": [10, 100, 1000],
@@ -1115,8 +1133,8 @@ exhaustive_search = {
     },
     "BAGREG" : { # 1920
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1126,8 +1144,8 @@ exhaustive_search = {
     },
     "MLP" : { # 1408
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "LAYERS": [(1), (2), (4), (8), (10), (10, 5), (20, 10, 5), (5, 10), (10, 10, 10), (50, 50), (100)],
         "EARLY_STOP": [True, False],
         "VALIDATION_FRACTION": .2,
@@ -1139,8 +1157,8 @@ exhaustive_search = {
     },
     "MLENS": { # 3712
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
-            ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"], ["pc.v", "s.v", "tc", "vwap"],
-            ["s.c", "pc.c"], ["c", "d.c", "s.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+            ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
+            ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
         "LAYERS": [[["DTREE1"], ["DTREE1"]], [["XTREE1"], ["XTREE1"]], [["RFORE1"], ["RFORE1"]], [["KNN1"], ["KNN1"]], 
             [["ADA1"], ["ADA1"]], [["XGB1"], ["XGB1"]], [["XGB2"], ["XGB2"]], [["BAGREG1"], ["BAGREG1"]], 
             [["MLP1"], ["MLP1"]], [["MLP2"], ["MLP2"]], [["MLP3"], ["MLP3"]], 
@@ -1228,7 +1246,7 @@ keras_tune_models = {
         "PATIENCE": 200,
         "SAVELOAD": True,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["s.c", "s.o", "s.l", "s.h", "s.m", "s.v", "s.tc", "s.vwap"],
+        "FEATURE_COLUMNS": ["ma.c", "ma.o", "ma.l", "ma.h", "ma.m", "ma.v", "ma.tc", "ma.vwap"],
         "TEST_VAR": "c",
         "SAVE_PRED": {},
     }

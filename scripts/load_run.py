@@ -4,7 +4,7 @@ from config.symbols import load_save_symbols, do_the_trades
 from config.environ import directory_dict, defaults
 from functions.functions import check_directories, r2
 from functions.trade import getOwnedStocks, buy_all_at_once
-from functions.data_load import get_proper_df, load_all_data, modify_dataframe
+from functions.data_load import get_df_dict, load_all_data
 from functions.error import error_handler, keyboard_interrupt
 from functions.io import  make_load_run_excel, runtime_predict_excel
 from functions.time import get_current_datetime
@@ -32,13 +32,12 @@ def load_trade(symbols, params, real_mon):
             ss = time.perf_counter()
             s = time.perf_counter()
 
-            df = get_proper_df(symbol, params["LIMIT"], "V2")
-            
-            data_dict = load_all_data(symbol, defaults, df, get_current_datetime())
+            df_dict = get_df_dict(symbol, params, "V2", False)
+            data_dict = load_all_data(defaults, df_dict)
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()
             predicted_price, current_price, epochs_dict = ensemble_predictor(symbol, params, None, 
-                data_dict, df)    
+                data_dict, df_dict['price'])    
             print(f"Ensemble_predictor took {r2(time.perf_counter() - s)} seconds")
             
             pred_curr_list[symbol] = {"predicted": predicted_price, "current": current_price}

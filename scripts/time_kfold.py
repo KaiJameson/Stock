@@ -32,10 +32,10 @@ def time_kfold(params):
 
 
         df = get_proper_df(symbol, params[predictor]["LIMIT"], "V2")
-        data_dict = load_all_data(symbol, params, df, get_current_datetime())
+        data_dict = load_all_data(params, df)
 
 
-        tt_df, result = preprocess_dfresult(params[predictor], df, get_current_datetime(), scale=scale, to_print=to_print)
+        tt_df, result = preprocess_dfresult(params[predictor], df, scale=scale, to_print=to_print)
         if params[predictor]['LAYERS'][0][1] == Dense:
             tt_df = tt_df.dropna()
             y = tt_df["future"]

@@ -10,7 +10,7 @@ from functions.time import increment_calendar, get_actual_price, get_calendar
 from functions.error import error_handler, keyboard_interrupt
 from functions.tuner import subset_and_predict, get_user_input
 from functions.comparators import update_money
-from functions.data_load import df_subset, get_proper_df
+from functions.data_load import df_subset, get_df_dict
 from functions.time import get_past_datetime, get_year_month_day
 from multiprocessing.pool import Pool
 from paca_model import configure_gpu
@@ -24,6 +24,7 @@ import os
 
 
 def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=False):
+
     api = get_api()
     
     if not output:
@@ -75,10 +76,12 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
     print(test_name)
     print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
 
-    master_df = get_proper_df(symbol, params['LIMIT'], "V2")
+    # master_df = get_proper_df(symbol, params['LIMIT'], "V2")
+
+    df_dict = get_df_dict(symbol, params, "V2", to_print=True)
     tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
     starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
-        - datetime.timedelta(1)), master_df, tmp_cal)
+        - datetime.timedelta(1)), df_dict['price'], tmp_cal)
 
 
     # check if we already have a save file, if we do, extract the info and run it
@@ -97,15 +100,15 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
                 f"using ensemble: {params['ENSEMBLE']} with folder:{params['SAVE_FOLDER']}.\n")
 
             current_date = increment_calendar(current_date, calendar)
-            predicted_price, current_price, epochs_run, sub_df, data_dict = subset_and_predict(symbol, 
-                params, current_date, master_df)
+            predicted_price, current_price, epochs_run = subset_and_predict(symbol, 
+                params, current_date, df_dict)
 
 
             if bool(epochs_run):
                 for predictor in epochs_run:
                     progress['epochs_dict'][predictor].append(epochs_run[predictor])
 
-            actual_price = get_actual_price(current_date, master_df, calendar)
+            actual_price = get_actual_price(current_date, df_dict['price'], calendar)
             if test_var == "acc":
                 p_diff = 0.0
             else:
@@ -135,7 +138,6 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
                         if sym != symbol:
                             del params[predictor]['SAVE_PRED'][sym]
                     save_to_dictionary(f"{directory_dict['save_predicts']}/{nn_name}/{symbol}.txt", params[predictor]['SAVE_PRED'])
-            del sub_df, data_dict
 
 
         print(f"Percent away: {progress['percent_away_list']}")
@@ -148,7 +150,7 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
                 avg_e[predictor] = mean(progress['epochs_dict'][predictor])
         hold_money = r2(test_money * (current_price / starting_day_price))
 
-        sub_df = df_subset(current_date, master_df)
+        sub_df = df_subset(df_dict['price'], current_date)
         comparator_results_excel(sub_df, tune_days, symbol)
         
         
@@ -166,7 +168,7 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
         
 
         print(f"The name for the test was {get_test_name(params)}")
-        del sub_df, master_df
+       
 
     except KeyboardInterrupt:
         keyboard_interrupt()
