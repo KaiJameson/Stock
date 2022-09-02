@@ -4,7 +4,7 @@ from tensorflow.keras.layers import LSTM, GRU, Dense, SimpleRNN, Dropout
 from config.environ import directory_dict
 from config.symbols import sym_dict, keras_tuner_dict
 from config.model_repository import keras_tune_models
-from functions.data_load import get_proper_df, load_all_data
+from functions.data_load import get_df_dict, load_all_data
 from functions.time import get_current_datetime
 from functions.functions import check_directories, get_model_name, check_prediction_subfolders, r2
 from functions.tuner import get_user_input
@@ -30,8 +30,9 @@ def keras_tuning(params):
             save_folder = f"summary-{get_model_name(params[predictor])}"
             check_prediction_subfolders(directory_dict['keras_tuner'], save_folder)
 
-            df = get_proper_df(symbol, 4000, "V2")
-            data_dict = load_all_data(params, df, get_current_datetime())
+            # df = get_proper_df(symbol, 4000, "V2")
+            df_dict = get_df_dict(symbol, params, "V2", True)
+            data_dict = load_all_data(params, df_dict)
 
             hyper_params = set()
 

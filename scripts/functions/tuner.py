@@ -5,14 +5,17 @@ from paca_model import ensemble_predictor
 import sys
 import copy
 
-def subset_and_predict(symbol, params, current_date, master_df, to_print=True):
-    sub_df = df_subset(current_date, master_df)
-    data_dict = load_all_data(symbol, params, sub_df, get_current_datetime(), to_print)
-
-    predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
-                    data_dict, sub_df)
+def subset_and_predict(symbol, params, current_date, df_dict, to_print=True):
+    sub_df = df_subset(df_dict, current_date)
+    # print(current_date)
+    # print(sub_df, flush=True)
+    data_dict = load_all_data(params, sub_df, to_print)
     
-    return predicted_price, current_price, epochs_run, data_dict, sub_df
+    # print(data_dict["KNN3"])
+    predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
+        data_dict, sub_df['price'])
+    
+    return predicted_price, current_price, epochs_run
 
 
 def get_user_input(sym_dict, params):

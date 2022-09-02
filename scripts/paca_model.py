@@ -105,7 +105,7 @@ def nn_load_predict(symbol, params, predictor, data_dict, to_print=False):
         symbol + "-" + get_model_name(params[predictor]) + ".h5")
     predicted_value = predict(model, data_dict["result"], params[predictor]["N_STEPS"], params[predictor]["TEST_VAR"],
         layer=params[predictor]["LAYERS"][0])
-    print(f"inside nn_load_predict {predicted_value} {type(predicted_value)}")
+    # print(f"inside nn_load_predict {predicted_value} {type(predicted_value)}")
 
     return predicted_value
 

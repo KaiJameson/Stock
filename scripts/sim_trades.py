@@ -8,7 +8,7 @@ from functions.time import get_calendar, increment_calendar, get_actual_price
 from functions.error import error_handler, keyboard_interrupt
 from functions.tuner import subset_and_predict, get_user_input
 from functions.paca_model import get_current_price
-from functions.data_load import get_proper_df, df_subset
+from functions.data_load import get_proper_df, df_subset, get_df_dict
 from functions.time import get_past_datetime
 from functions.functions import check_directories, r2, interpret_dict
 from paca_model import configure_gpu
@@ -30,7 +30,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
 
     days_done = 1
 
-    master_df_dict = {}
+    symbols_df_dict = {}
     portfolio = {
         "cash": test_money,
         "equity": test_money,
@@ -41,20 +41,27 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     symbol = "SPY"
     try:
         tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
+
+        comparison_df_dict = {}
         spy_df = get_proper_df(symbol, params["LIMIT"], "V2")
+        comparison_df_dict["SPY"] = spy_df
         spy_start_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
             - datetime.timedelta(1)), spy_df, tmp_cal)
 
         qqq_df = get_proper_df("QQQ", params["LIMIT"], "V2")
+        comparison_df_dict["QQQ"] = qqq_df
         qqq_start_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
             - datetime.timedelta(1)), qqq_df, tmp_cal)
 
         current_date = get_past_datetime(tune_year, tune_month, tune_day)
+        
+        
         starting_prices = []
         for symbol in tune_symbols:
-            master_df_dict[symbol] = get_proper_df(symbol, params["LIMIT"], "V2")
+            symbols_df_dict[symbol] = get_df_dict(symbol, params, "V2", True)
+            # symbols_df_dict[symbol] = get_proper_df(symbol, params["LIMIT"], "V2")
             starting_prices.append(get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
-            - datetime.timedelta(1)), master_df_dict[symbol], tmp_cal))
+            - datetime.timedelta(1)), symbols_df_dict[symbol]['price'], tmp_cal))
             
         print(starting_prices)
 
@@ -69,8 +76,8 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             current_date = increment_calendar(current_date, calendar)
             
             for symbol in tune_symbols:
-                predicted_price, current_price, epochs_run, sub_df, data_dict = subset_and_predict(symbol, 
-                            params, current_date, master_df_dict[symbol], to_print=False)
+                predicted_price, current_price, epochs_run = subset_and_predict(symbol, 
+                            params, current_date, symbols_df_dict[symbol], to_print=False)
                 pred_curr_list[symbol] = {"predicted": predicted_price, "current": current_price}
 
 
@@ -108,12 +115,13 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
     except Exception:
         error_handler(symbol, Exception)
     
+    comparison_sub_df = df_subset(comparison_df_dict, current_date)
 
-    spy_sub_df = df_subset(current_date, spy_df)
-    spy_end_price = get_current_price(spy_sub_df)
+    # spy_sub_df = df_subset(spy_df, current_date)
+    spy_end_price = get_current_price(comparison_sub_df['SPY'])
+    qqq_end_price = get_current_price(comparison_sub_df['QQQ'])
 
-    qqq_sub_df = df_subset(current_date, qqq_df)
-    qqq_end_price = get_current_price(qqq_sub_df)
+    # qqq_sub_df = df_subset(qqq_df, current_date)
 
     current_prices = []
     for symbol in pred_curr_list:
