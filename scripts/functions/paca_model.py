@@ -98,12 +98,7 @@ def predict(model, data, n_steps, test_var="c", layer="LSTM"):
         last_sequence = np.expand_dims(last_sequence, axis=0)
 
         predicted_val = model.predict(last_sequence)[-1][-1]
-        print(f"og_ predicted val {predicted_val}")
-        # if predicted_val > .5: <- Probably wrong
-        #     predicted_val = 1
-        # else:
-        #     predicted_val = 0
-
+        
         if predicted_val > 0:
             predicted_val = 1
         else:
@@ -191,6 +186,15 @@ def get_accuracy(y_real, y_pred, lookup_step):
     y_real = list(map(lambda current, future: int(float(future) > float(current)), y_real[:-lookup_step], y_real[lookup_step:]))
 
     return accuracy_score(y_real, y_pred)
+
+def get_percent_away(y_real, y_pred):
+    the_diffs = []
+    for i in range(len(y_real) - 1):
+        per_diff = (abs(y_real[i] - y_pred[i])/y_real[i]) * 100
+        the_diffs.append(per_diff)
+    pddf = pd.DataFrame(data=the_diffs)
+    pddf = pddf.values
+    return round(pddf.mean(), 2)
 
 def get_all_maes(model, test_tensorslice, valid_tensorslice, train_tensorslice, data):
     train_mae = get_mae(model, train_tensorslice, data)

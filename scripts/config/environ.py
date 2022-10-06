@@ -21,6 +21,8 @@ directory_dict = {
     "results":           "results",
     "runtime_price":     "../excel/curr_price",
     "tax":               "../tax",
+    "kfold_summary":     "../time_kfold/summary",
+    "time_kfold":        "../time_kfold",
     "trade_perform":     "../excel/trade_perform",
     "tune_summary":      "../tuning_info/summary",
     "tuning":            "../tuning_info",

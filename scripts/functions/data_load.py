@@ -15,15 +15,13 @@ from sklearn.model_selection import train_test_split
 from scipy.signal import savgol_filter, cwt
 from collections import deque
 from alpaca_trade_api.rest import TimeFrame
-import talib as ta
 import pandas as pd
 import numpy as np
-import datetime
 import time
 import copy
 import requests
 import os
-import datetime
+import sys
 
 
 
@@ -39,6 +37,7 @@ def modify_dataframe(symbol, features, df, test_var, option, to_print):
                     techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df, symbol)
                 elif dot_split[0].startswith("tick-"):
                     feature_split = dot_split[0].split("-")
+                    print(f"feature split {feature_split}")
                     ticker_df = get_proper_df(feature_split[1], 4000, option)
                     # ticker_df = df_subset(current_date, ticker_df)
 
@@ -181,35 +180,31 @@ def get_df_dict(symbol, params, option, to_print):
     df_dict = {}
 
     base_df = get_proper_df(symbol, 4000, option)
-    # print(f"base df {base_df}")
     df_dict['price'] = modify_dataframe(symbol, "c", base_df, "c", option, False)
-    # print(f"base_df after {base_df}")
-
 
     for predictor in params['ENSEMBLE']:
         df_dict[predictor] = modify_dataframe(symbol, params[predictor]["FEATURE_COLUMNS"], base_df, params[predictor]["TEST_VAR"], option, to_print)
-        # print(df_dict[predictor])
 
     return df_dict
         
 
-def load_all_data(params, df_dict, to_print=True):
+def load_all_data(params, df_dict, split_type, to_print=True):
     data_dict = {}
     req_2d = ["DTREE", "XTREE", "BAGREG", "RFORE", "KNN", "ADA", "XGB", "MLENS", "MLP"]
     
     for predictor in params['ENSEMBLE']:
         in_req_2d = [bool(i) for i in req_2d if i in predictor]
         if len(in_req_2d) > 0:
-            result = load_2D_data(params[predictor], df_dict[predictor], shuffle=True, tensorify=False, to_print=to_print)
+            result = load_2D_data(params[predictor], df_dict[predictor], split_type, shuffle=True, tensorify=False, to_print=to_print)
             data_dict[predictor] = result
         if "nn" in predictor:
             if layer_name_converter(params[predictor]['LAYERS'][0]) == "Dense":
-                result, train, valid, test = load_2D_data(params[predictor], df_dict[predictor], params[predictor]["SHUFFLE"],
+                result, train, valid, test = load_2D_data(params[predictor], df_dict[predictor], split_type, params[predictor]["SHUFFLE"],
                     tensorify=True, to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
             else:
-                result, train, valid, test = load_3D_data(params[predictor], df_dict[predictor], params[predictor]["SHUFFLE"],
+                result, train, valid, test = load_3D_data(params[predictor], df_dict[predictor], split_type, params[predictor]["SHUFFLE"],
                 to_print=to_print)
                 data_dict[predictor] = {"result": result, "train": train, "valid": valid,
                     "test": test}
@@ -217,7 +212,7 @@ def load_all_data(params, df_dict, to_print=True):
 
     return data_dict
 
-def preprocess_dfresult( params, df, scale, to_print):
+def preprocess_dfresult(params, df, scale, to_print):
     tt_df = copy.deepcopy(df)
     tt_df = tt_df.replace(0.000000, 0.000000001)
     if to_print:
@@ -278,20 +273,20 @@ def construct_3D_np(tt_df, params, result):
 
     return X, y
 
-def load_3D_data(params, df, shuffle=True, scale=True, to_print=True):
+def load_3D_data(params, df, split_type, shuffle=True, scale=True, to_print=True):
     tt_df, result = preprocess_dfresult(params, df, scale=scale, to_print=to_print)
     
     X, y = construct_3D_np(tt_df, params, result)
 
     print(f"Final X data shape is {X.shape}")
-    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)
+    result = split_data(X, y, params["TEST_SIZE"], split_type, shuffle, result)
 
     train, valid, test = make_tensor_slices(params, result)
     return result, train, valid, test
    
 
 
-def load_2D_data(params, df, shuffle=True, scale=True, tensorify=False, to_print=True):
+def load_2D_data(params, df, split_type, shuffle=True, scale=True, tensorify=False, to_print=True):
     tt_df, result = preprocess_dfresult(params, df, scale, to_print)
 
     tt_df = tt_df.dropna()
@@ -304,7 +299,7 @@ def load_2D_data(params, df, shuffle=True, scale=True, tensorify=False, to_print
 
     print(f"Final X data shape is {X.shape}")
     
-    result = split_data(X, y, params["TEST_SIZE"], shuffle, result)   
+    result = split_data(X, y, params["TEST_SIZE"], split_type, shuffle, result)   
 
     if tensorify:
         train, valid, test = make_tensor_slices(params, result)
@@ -312,11 +307,21 @@ def load_2D_data(params, df, shuffle=True, scale=True, tensorify=False, to_print
     else:
         return result
 
-def split_data(X, y, test_size, shuffle, result):
-    result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=2, random_state=42, 
-        shuffle=False)
-    result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(result["X_train"], result["y_train"],
-        test_size=test_size, random_state=42, shuffle=shuffle)
+def split_data(X, y, test_size, split_type, shuffle, result):
+    if split_type == "one_day":
+        result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=2, random_state=42, 
+            shuffle=False)
+        result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(result["X_train"], result["y_train"],
+            test_size=test_size, random_state=42, shuffle=shuffle)
+    elif type(split_type) == type(1): # In this case split_type should be an int
+        result["X_train"], result["X_test"], result["y_train"], result["y_test"] = train_test_split(X, y, test_size=split_type, random_state=42, 
+            shuffle=False)
+        result["X_train"], result["X_valid"], result["y_train"], result["y_valid"] = train_test_split(result["X_train"], result["y_train"],
+            test_size=test_size, random_state=42, shuffle=shuffle)
+    else:
+        print(f"split_type {split_type} is improperly defined")
+        print(f"Exiting now")
+        sys.exit(-1)
     return result
 
 def make_tensor_slices(params, result):

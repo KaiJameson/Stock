@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from config.environ import directory_dict
-from functions.functions import percent_from_real, layers_string, get_model_name, r2, r1002, sr2, check_prediction_subfolders
+from functions.functions import layers_string, get_model_name, r2, r1002, sr2, check_prediction_subfolders
 from functions.time import get_current_date_string, get_time_string, get_past_date_string
 from functions.comparators import (MA_comparator, lin_reg_comparator, sav_gol_comparator,
     EMA_comparator, pre_c_comparator, TSF_comparator)

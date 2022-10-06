@@ -7,11 +7,8 @@ import copy
 
 def subset_and_predict(symbol, params, current_date, df_dict, to_print=True):
     sub_df = df_subset(df_dict, current_date)
-    # print(current_date)
-    # print(sub_df, flush=True)
-    data_dict = load_all_data(params, sub_df, to_print)
+    data_dict = load_all_data(params, sub_df, "one_day", to_print)
     
-    # print(data_dict["KNN3"])
     predicted_price, current_price, epochs_run = ensemble_predictor(symbol, params, current_date, 
         data_dict, sub_df['price'])
     
@@ -35,7 +32,4 @@ def get_user_input(sym_dict, params):
         print("You need to provide a second argument that says which tuning file ")
         print("and symbols you want to use. Please try again")
         sys.exit(-1)
-
-
-
 
