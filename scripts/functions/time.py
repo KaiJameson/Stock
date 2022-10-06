@@ -132,7 +132,7 @@ def get_actual_price(current_date, df, cal):
     df_sub = copy.deepcopy(df)
     cd_copy = copy.copy(current_date)
     # print(f"cd copy before {cd_copy}")
-    cd_copy = increment_calendar(cd_copy, cal)
+    cd_copy = increment_calendar(cd_copy, cal, 1)
     # print(f"cd copy after inc {cd_copy}")
     # df_sub.index = pd.to_datetime(df_sub.index, format="%Y-%m-%d")
 
@@ -168,10 +168,12 @@ def get_calendar(current_date, api, symbol):
         
     return calendar
 
-def increment_calendar(current_date, calendar):
+def increment_calendar(current_date, calendar, increment):
     for day, ele in enumerate(calendar):
         if calendar[day].date.date() == current_date:
-            current_date = calendar[day + 1].date.date()
+            # print(f"before current date {current_date}")
+            current_date = calendar[day + increment].date.date()
+            # print(f"after current date {current_date}")
             return current_date
 
     current_date = calendar[0].date.date()

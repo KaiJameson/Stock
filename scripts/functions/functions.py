@@ -210,15 +210,6 @@ def get_correct_direction(predicted_value, current_price, actual_price, test_var
 def percent_diff(pri1, pri2):
     return r2((abs(pri1 - pri2) / pri1) * 100)
 
-def percent_from_real(y_real, y_predict):
-    the_diffs = []
-    for i in range(len(y_real) - 1):
-        per_diff = (abs(y_real[i] - y_predict[i])/y_real[i]) * 100
-        the_diffs.append(per_diff)
-    pddf = pd.DataFrame(data=the_diffs)
-    pddf = pddf.values
-    return round(pddf.mean(), 2)
-
 def sr1002(num):
         return str(round(num * 100, 2))
 

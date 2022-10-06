@@ -38,6 +38,12 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
         "buy_prices": {},
     }
 
+    test_var = "c"
+
+    for predictor in params['ENSEMBLE']:
+        if params[predictor]['TEST_VAR'] == "acc":
+            test_var = "acc"
+
     symbol = "SPY"
     try:
         tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
@@ -73,7 +79,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             print(current_date)
 
             pred_curr_list = {}
-            current_date = increment_calendar(current_date, calendar)
+            current_date = increment_calendar(current_date, calendar, 1)
             
             for symbol in tune_symbols:
                 predicted_price, current_price, epochs_run = subset_and_predict(symbol, 
@@ -88,17 +94,17 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             portfolio["equity"] += portfolio["cash"]
             
             if params["TRADE_METHOD"] == "preport_no_rebal":
-                portfolio = preport_no_rebal(tune_symbols, pred_curr_list, portfolio)
+                portfolio = preport_no_rebal(tune_symbols, pred_curr_list, portfolio, test_var)
             elif params["TRADE_METHOD"] == "rebal_split":
-                portfolio = rebal_split(tune_symbols, pred_curr_list, portfolio)
+                portfolio = rebal_split(tune_symbols, pred_curr_list, portfolio, test_var)
             elif params["TRADE_METHOD"] == "top_X":
-                portfolio = top_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
+                portfolio = top_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"], test_var)
             elif params["TRADE_METHOD"] == "more_than_X":
                 portfolio = more_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
             elif params['TRADE_METHOD'] == "random_guess":
                 portfolio = random_guess(tune_symbols, pred_curr_list, portfolio)
             elif params['TRADE_METHOD'] == "no_buy_if_less_than_X":
-                portfolio = no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"])
+                portfolio = no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, params["TRADE_PARAMS"], test_var)
             else:
                 print(f"Don't have trading strategy {params['TRADE_METHOD']} implemented yet")
                 print(f"Sorry bud, try again next time")

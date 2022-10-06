@@ -21,6 +21,7 @@ env/
 predictions/
 sim_trades/
 keras_tuner/
+time_kfold/
 error_file.txt
 scripts/config/symbols.py
 */tax_info.csv

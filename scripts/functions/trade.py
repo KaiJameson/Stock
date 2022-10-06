@@ -172,11 +172,25 @@ def get_stock_portion_adjuster(value_in_stocks, buy_list):
     return stock_portion_adjuster
 
 
-def preport_no_rebal(tune_symbols, pred_curr_list, portfolio):
+def greater_future_value(predicted, current, test_var):
+    if test_var == "c":
+        if predicted > current:
+            return True
+        else:
+            return False
+    else:
+        if predicted == 1:
+            return True
+        else:
+            return False
+
+
+def preport_no_rebal(tune_symbols, pred_curr_list, portfolio, test_var):
     # sell block
     buy_list = []
     for symbol in tune_symbols:
-        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+        # if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+        if greater_future_value(pred_curr_list[symbol]["predicted"], pred_curr_list[symbol]["current"], test_var):
             if symbol not in portfolio["owned"]:
                 buy_list.append(symbol)
         else :
@@ -202,11 +216,11 @@ def preport_no_rebal(tune_symbols, pred_curr_list, portfolio):
 
     return portfolio
 
-def rebal_split(tune_symbols, pred_curr_list, portfolio):
+def rebal_split(tune_symbols, pred_curr_list, portfolio, test_var):
     # sell block
     buy_list = []
     for symbol in tune_symbols:
-        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+        if greater_future_value(pred_curr_list[symbol]["predicted"], pred_curr_list[symbol]["current"], test_var):
             buy_list.append(symbol)
         
         #sell
@@ -230,12 +244,12 @@ def rebal_split(tune_symbols, pred_curr_list, portfolio):
 
     return portfolio
 
-def top_X(tune_symbols, pred_curr_list, portfolio, trade_params):
+def top_X(tune_symbols, pred_curr_list, portfolio, trade_params, test_var):
     # sell block
     buy_list = []
     buy_list_price_diffs = []
     for symbol in tune_symbols:
-        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+        if greater_future_value(pred_curr_list[symbol]["predicted"], pred_curr_list[symbol]["current"], test_var):
             buy_list.append(symbol)
             buy_list_price_diffs.append(percent_diff(pred_curr_list[symbol]["predicted"], 
             pred_curr_list[symbol]["current"]))
@@ -321,11 +335,11 @@ def random_guess(tune_symbols, pred_curr_list, portfolio):
 
     return portfolio
 
-def no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, trade_params):
+def no_buy_if_less_than_X(tune_symbols, pred_curr_list, portfolio, trade_params, test_var):
     # sell block
     buy_list = []
     for symbol in tune_symbols:
-        if pred_curr_list[symbol]["predicted"] > pred_curr_list[symbol]["current"]:
+        if greater_future_value(pred_curr_list[symbol]["predicted"], pred_curr_list[symbol]["current"], test_var):
             buy_list.append(symbol)
         
         #sell

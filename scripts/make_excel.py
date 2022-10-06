@@ -95,7 +95,7 @@ def make_trade_perform_sheet(date, api):
         predict[i] = float(predict[i])
 
     calendar = get_calendar(date, api, "NA")
-    end_date = increment_calendar(date, calendar)
+    end_date = increment_calendar(date, calendar, 1)
 
     actual_prices = []
     for symbol in symbols:
@@ -158,7 +158,7 @@ def make_PL_sheet(date, api):
         predict[i] = float(predict[i])
 
     calendar = get_calendar(date, api, "NA")
-    end_date = increment_calendar(date, calendar)
+    end_date = increment_calendar(date, calendar, 1)
 
     actual_prices = []
     for symbol in symbols:

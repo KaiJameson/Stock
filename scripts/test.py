@@ -686,6 +686,74 @@ if __name__ == "__main__":
     #     features = np.array(features)
     #     print(features.shape)
 
+    # CHECK NEWS RESULTS
+    # symbol = "SPY"
+    # name = "fin_vad"
+
+    # api = get_api()
+
+    # news = api.get_news(symbol, limit=99999)
+    # print(f"{len(news)} news articles were found for {symbol}")
+    
+    # # nltk.download('vader_lexicon')
+
+    # new_words = {
+    #     'down': -1.0,
+    #     'downgrade': -1.0,
+    #     'downgrades': -1.0,
+    #     'downgrading': -1.0,
+    #     'fall': -1.0,
+    #     'tumbles': -1.5,
+    #     'bearish': -1.0,
+    #     'losers': -1.0,
+    #     'litigation': -.5,
+    #     'weak': -.8,
+    #     'cut': -1.0,
+    #     'correction': -.5,
+    #     'drops': -1.0,
+    #     'illegal': -.5,
+    #     'illegally': -.5,
+    #     'disappointing': -.8,
+    #     'short': -1.0,
+    #     'dipped': -.8,
+    #     'dip': -.8,
+
+    #     'strong': .8,
+    #     'bargain': 1.0,
+    #     'winners': 1.0,
+    #     'monster': 1.0,
+    #     'spikes': 1.0,
+    #     'bullish': 1.0,
+    #     'watch': .2,
+    #     'watching': .2,
+    #     'raises': 1.0,
+    #     'higher': 1.0,
+    #     'up': 1.0,
+    #     'upgrade': 1.0,
+    #     'upgrades': 1.0,
+    #     'upgrading': 1.0,
+    #     'surge': 1.5,
+    #     "buyback": .8,
+    #     "beat": 1,
+    #     "beats": 1,
+    #     'highs': 1,
+    # }
+
+    # vader = SentimentIntensityAnalyzer()
+    
+    # if name == "fin_vad":
+    #     vader.lexicon.update(new_words)
+    #     pop_words = ["alert"]
+    #     for word in pop_words:
+    #         vader.lexicon.pop(word)
+
+    # sent_list = []
+
+    # for ele in reversed(news):
+    #     print(ele.headline, vader.polarity_scores(ele.headline)["compound"])
+        # sent_list.append([ele.created_at.date(), vader.polarity_scores(ele.headline)["compound"]])
+
+
     # GET ACCOUNT ACTIVITIES
 
     # api = get_api()

@@ -196,12 +196,14 @@ def ensemble_predictor(symbol, params, current_date, data_dict, df):
             # print(predicted_value != 1)
             if predicted_value != 0 and predicted_value != 1:
                 # print("shouldn't be here")
+                # print(predicted_value > current_price, predicted_value)
                 if predicted_value > current_price:
                     ensemb_predict_list.append(1)
                 else:
                     ensemb_predict_list.append(0)
             else:
                 ensemb_predict_list.append(predicted_value)
+
         else:
             ensemb_predict_list.append(np.float32(predicted_value))
 

@@ -32,7 +32,7 @@ def keras_tuning(params):
 
             # df = get_proper_df(symbol, 4000, "V2")
             df_dict = get_df_dict(symbol, params, "V2", True)
-            data_dict = load_all_data(params, df_dict)
+            data_dict = load_all_data(params, df_dict, "one_day")
 
             hyper_params = set()
 

@@ -16,8 +16,6 @@ from multiprocessing.pool import Pool
 from paca_model import configure_gpu
 from make_excel import make_tuning_sheet
 from statistics import mean
-import tensorflow as tf
-import pandas as pd
 import time
 import datetime
 import os
@@ -76,7 +74,6 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
     print(test_name)
     print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
 
-    # master_df = get_proper_df(symbol, params['LIMIT'], "V2")
 
     df_dict = get_df_dict(symbol, params, "V2", to_print=True)
     tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
@@ -99,7 +96,7 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
             print(f"\nCurrently on day {progress['days_done']} of {progress['total_days']} "
                 f"using ensemble: {params['ENSEMBLE']} with folder:{params['SAVE_FOLDER']}.\n")
 
-            current_date = increment_calendar(current_date, calendar)
+            current_date = increment_calendar(current_date, calendar, 1)
             predicted_price, current_price, epochs_run = subset_and_predict(symbol, 
                 params, current_date, df_dict)
 
@@ -179,13 +176,7 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
         print(output_list)
         return output_list
     
-    # if output:
-    #     result_df = pd.DataFrame(output_list, columns=["Model Name", "Average percent", "Average direction", 
-    #         "Time used", "Money Made"])
-    #     result_df["Average percent"] = pd.to_numeric(result_df["Average percent"]).astype("float64")
-    #     result_df["Average direction"] = pd.to_numeric(result_df["Average direction"]).astype("float64")
-    #     return [result_df["Model Name"][0], r2(result_df["Average percent"].mean()), r2(result_df["Average direction"].mean()),
-    #         r2(result_df["Time used"].sum() / 60), r2(result_df["Money Made"].mean())]
+
 
 if __name__ == "__main__":
     check_directories()
