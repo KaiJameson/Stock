@@ -60,6 +60,11 @@ def time_kfold(params):
 
         test_name = f"{symbol}-{test_interval}-{get_test_name(params)}"
 
+        if os.path.isfile(f"{params['TUNE_FOLDER']}/{test_name}.txt"):
+            print(f"A fully completed file with the name {test_name} already exists.")
+            print("Exiting this instance of tuning now: ")
+            continue
+
         current_date = get_past_datetime(progress['tune_year'], progress['tune_month'], progress['tune_day'])
         calendar = get_calendar(current_date, api, symbol)
 

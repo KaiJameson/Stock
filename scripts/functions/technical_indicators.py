@@ -1,5 +1,5 @@
 from functions.volitility import *
-from functions.sentiment import get_sentiment
+from functions.sentiment import vad_sentiment, fin_bert_sentiment
 from scipy.signal import savgol_filter
 import talib as ta
 import pandas as pd
@@ -307,8 +307,9 @@ techs_dict = {
     "pt": {"function":df_power_transformation},
     "ma": {"function":df_moving_average},
     "m": {"function":df_m},
-    "vad": {"function":get_sentiment},
-    "fin_vad": {"function":get_sentiment},
+    "vad": {"function":vad_sentiment},
+    "fin_vad": {"function":vad_sentiment},
+    "fin_bert_pos": {"function":fin_bert_sentiment},
     "garman_klass":  {"function":garman_klass},
     "hodges_tompkins": {"function":hodges_tompkins},
     "kurtosis": {"function":get_kurtosis},

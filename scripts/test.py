@@ -235,6 +235,29 @@ if __name__ == "__main__":
         },
         "LIMIT": 4000,
     }
+
+    params2 = {
+         "nn1" : { 
+            "N_STEPS": 100,
+            "LOOKUP_STEP": 1,
+            "TEST_SIZE": 0.2,
+            "LAYERS": [(256, Dense), (256, Dense), (256, Dense), (256, Dense)],
+            "SHUFFLE": True,
+            "DROPOUT": .4,
+            "BIDIRECTIONAL": False,
+            "LOSS": "huber_loss",
+            "OPTIMIZER": "adam",
+            "BATCH_SIZE": 1024,
+            "EPOCHS": 2000,
+            "PATIENCE": 200,
+            "SAVELOAD": True,
+            "LIMIT": 4000,
+            "FEATURE_COLUMNS": ["c", "fin_bert_pos", "fin_bert_neg", "fin_bert_neu", "fin_vad"],
+            "TEST_VAR": "c",
+            "SAVE_PRED": {}
+        },
+
+    }
  
 
 
@@ -687,71 +710,27 @@ if __name__ == "__main__":
     #     print(features.shape)
 
     # CHECK NEWS RESULTS
-    # symbol = "SPY"
-    # name = "fin_vad"
-
-    # api = get_api()
-
-    # news = api.get_news(symbol, limit=99999)
-    # print(f"{len(news)} news articles were found for {symbol}")
     
-    # # nltk.download('vader_lexicon')
+    base_df = get_proper_df("AGYS", 4000, "V2")
+    news_df = modify_dataframe("SPY", params2["nn1"]["FEATURE_COLUMNS"], base_df, params2["nn1"]["TEST_VAR"], "V2", False)
 
-    # new_words = {
-    #     'down': -1.0,
-    #     'downgrade': -1.0,
-    #     'downgrades': -1.0,
-    #     'downgrading': -1.0,
-    #     'fall': -1.0,
-    #     'tumbles': -1.5,
-    #     'bearish': -1.0,
-    #     'losers': -1.0,
-    #     'litigation': -.5,
-    #     'weak': -.8,
-    #     'cut': -1.0,
-    #     'correction': -.5,
-    #     'drops': -1.0,
-    #     'illegal': -.5,
-    #     'illegally': -.5,
-    #     'disappointing': -.8,
-    #     'short': -1.0,
-    #     'dipped': -.8,
-    #     'dip': -.8,
+    print(news_df.tail(60))
 
-    #     'strong': .8,
-    #     'bargain': 1.0,
-    #     'winners': 1.0,
-    #     'monster': 1.0,
-    #     'spikes': 1.0,
-    #     'bullish': 1.0,
-    #     'watch': .2,
-    #     'watching': .2,
-    #     'raises': 1.0,
-    #     'higher': 1.0,
-    #     'up': 1.0,
-    #     'upgrade': 1.0,
-    #     'upgrades': 1.0,
-    #     'upgrading': 1.0,
-    #     'surge': 1.5,
-    #     "buyback": .8,
-    #     "beat": 1,
-    #     "beats": 1,
-    #     'highs': 1,
-    # }
+    # top_10 = []
 
-    # vader = SentimentIntensityAnalyzer()
+    # top_20 = []
+
+    # top_50 = []
+
+    # top_100 = []
+
+    # top_300 = []
     
-    # if name == "fin_vad":
-    #     vader.lexicon.update(new_words)
-    #     pop_words = ["alert"]
-    #     for word in pop_words:
-    #         vader.lexicon.pop(word)
+    # top_500 = []
 
-    # sent_list = []
-
-    # for ele in reversed(news):
-    #     print(ele.headline, vader.polarity_scores(ele.headline)["compound"])
-        # sent_list.append([ele.created_at.date(), vader.polarity_scores(ele.headline)["compound"]])
+    # news = api.get_news(symbol="SPY", limit=1000)
+    # print(news)
+    # print(f"{len(news)} news articles were found for")
 
 
     # GET ACCOUNT ACTIVITIES
@@ -784,6 +763,9 @@ if __name__ == "__main__":
 
     #best so far for volitility 
     # symbol = "UVXY"
+    # Dow Jones = "DIA"
+    # S&P 500 = "SPY"
+    # NASDAQ = "QQQ"
     
     # print(get_proper_df(symbol, 4000, "V2"))
 
@@ -794,7 +776,8 @@ if __name__ == "__main__":
         "MACD_signal", "MACD_hist", "con_MACD", "con_MACD_signal", "con_MACD_hist", "fix_MACD", "fix_MACD_signal", "fix_MACD_hist", "min_dir_ind", "min_dir_mov", "plus_dir_ind",
         "plus_dir_mov", "per_price_osc", "stoch_fast_k", "stoch_fast_d", "stoch_rel_stren_k", "stoch_rel_stren_d", "stoch_slowk", "stoch_slowd", "TRIX",
         "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", "midpnt", "midprice", "triple_EMA", "tri_MA", "avg_dir_mov_ind", "true_range", "avg_price",
-        "weig_c_price", "beta", "TSF", "day_of_week"]
+        "weig_c_price", "beta", "TSF", "day_of_week", "vad", "fin_vad", "fin_bert_pos", "garman_klass", "hodges_tompkins", "kurtosis", "parkison", "rogers_stachell", "skew",
+        "yang_zhang"]
 
     direct_value_features = ["o", "l", "h", "c", "m", "up_band", "low_band", "lin_reg", "lin_reg_ang", "lin_reg_int", "lin_reg_slope", 
                 "min", "max", "ht_trendline",  "KAMA", "typ_price", "median_price", "var", "TRIX", "weigh_mov_avg", "DEMA", "EMA", "MESA_mama", "MESA_fama", 
