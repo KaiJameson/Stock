@@ -43,7 +43,7 @@ def modify_dataframe(symbol, features, df, test_var, option, to_print):
 
                     if feature_split[2] not in base_features:
                         if feature_split[2] in techs_dict:
-                            techs_dict[feature_split[2]]["function"](feature_split[2], dot_split[1], ticker_df, symbol)
+                            techs_dict[feature_split[2]]["function"](feature_split[2], dot_split[1], ticker_df, feature_split[1])
                             df[feature] = ticker_df[f"{feature_split[2]}.{dot_split[1]}"]
                     else:
                         df[feature] = ticker_df[feature_split[2]]
@@ -57,7 +57,8 @@ def modify_dataframe(symbol, features, df, test_var, option, to_print):
 
                     if feature_split[2] not in base_features:
                         if feature_split[2] in techs_dict:
-                            techs_dict[feature_split[2]]["function"](feature_split[2], ticker_df, symbol)
+                            print(f"did we get herer \n\n\n")
+                            techs_dict[feature_split[2]]["function"](feature_split[2], ticker_df, feature_split[1])
                             df[feature] = ticker_df[feature_split[2]]
                     else:
                         df[feature] = ticker_df[feature_split[2]]
