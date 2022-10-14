@@ -2,7 +2,9 @@ import numpy as np
 import math
 
 
-def garman_klass(name, df, window=30, trading_periods=252):
+def garman_klass(name, df, symbol, window=30, trading_periods=252):
+
+    print(window)
 
     log_hl = (df['h'] / df['l']).apply(np.log)
     log_co = (df['c'] / df['o']).apply(np.log)
@@ -15,7 +17,7 @@ def garman_klass(name, df, window=30, trading_periods=252):
     df[name] = rs.rolling(window=window, center=False).apply(func=f)
     
 
-def hodges_tompkins(name, df, window=30, trading_periods=252):
+def hodges_tompkins(name, df, symbol, window=30, trading_periods=252):
     
     log_return = (df['c'] / df['c'].shift(1)).apply(np.log)
 
@@ -32,7 +34,7 @@ def hodges_tompkins(name, df, window=30, trading_periods=252):
     df[name] = vol * adj_factor
 
 
-def get_kurtosis(name, df, window=30):
+def get_kurtosis(name, df, symbol, window=30):
 
     log_return = (df['c'] / df['c'].shift(1)).apply(np.log)
 
@@ -42,7 +44,7 @@ def get_kurtosis(name, df, window=30):
     ).kurt()
 
 
-def parkinson(name, df, window=30, trading_periods=252):
+def parkinson(name, df, symbol, window=30, trading_periods=252):
 
     rs = (1.0 / (4.0 * math.log(2.0))) * ((df['h'] / df['l']).apply(np.log))**2.0
 
@@ -54,7 +56,7 @@ def parkinson(name, df, window=30, trading_periods=252):
         center=False
     ).apply(func=f)
     
-def rogers_stachell(name, df, window=30, trading_periods=252):
+def rogers_stachell(name, df, symbol, window=30, trading_periods=252):
     
     log_ho = (df['h'] / df['o']).apply(np.log)
     log_lo = (df['l'] / df['o']).apply(np.log)
@@ -71,7 +73,7 @@ def rogers_stachell(name, df, window=30, trading_periods=252):
     ).apply(func=f)
     
 
-def get_skew(name, df, window=30):
+def get_skew(name, df, symbol, window=30):
 
     log_return = (df['c'] / df['c'].shift(1)).apply(np.log)
     
@@ -81,7 +83,7 @@ def get_skew(name, df, window=30):
     ).skew()
 
 
-def yang_zhang(name, df, window=30, trading_periods=252):
+def yang_zhang(name, df, symbol, window=30, trading_periods=252):
 
     log_ho = (df['h'] / df['o']).apply(np.log)
     log_lo = (df['l'] / df['o']).apply(np.log)
