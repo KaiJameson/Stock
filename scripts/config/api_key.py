@@ -11,3 +11,5 @@ iex_key = "pk_98c1d26879f342cf9a1a9c9ad9a02fc8"
 iex_sandbox_key = "Tsk_48510cffd3ee489d9a44da9982d4a39e"
 
 alpha_key = "0XKA1G6FP7JM4JQ6"
+
+tiingo_key = "2c1adb61475b3fb73e7fb6e31ef92cfcc0ab6197"

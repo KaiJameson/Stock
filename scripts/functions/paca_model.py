@@ -2,7 +2,7 @@ from tensorflow.python.keras.layers.core import Activation
 from config.silen_ten import silence_tensorflow
 silence_tensorflow()
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.losses import BinaryCrossentropy, BinaryFocalCrossentropy
 from sklearn.metrics import accuracy_score
 from config.api_key import intrinio_sandbox_key
@@ -27,15 +27,14 @@ import copy
 
 def create_model(params):
     model = Sequential()
-    bi_string = "Bidirectional" if params["BIDIRECTIONAL"] else ""
-    # print(bi_string)
+
     for layer in range(len(params["LAYERS"])):
         if layer == 0:
-            model_first_layer(model, params["LAYERS"], layer, params["N_STEPS"], params["FEATURE_COLUMNS"])
+            model_first_layer(model, params["LAYERS"], layer, params["N_STEPS"], params["FEATURE_COLUMNS"], params["BIDIRECTIONAL"])
         elif layer == len(params["LAYERS"]) - 1:
-            model_last_layer(model, params["LAYERS"], layer)
+            model_last_layer(model, params["LAYERS"], layer, params["BIDIRECTIONAL"])
         else:
-            model_hidden_layers(model, params["LAYERS"], layer)
+            model_hidden_layers(model, params["LAYERS"], layer, params["BIDIRECTIONAL"])
     
         model.add(Dropout(params["DROPOUT"]))
 
@@ -51,43 +50,69 @@ def create_model(params):
 
     return model
 
-def model_first_layer(model, layers, ind, n_steps, features):
+def model_first_layer(model, layers, ind, n_steps, features, bidirectional):
     layer_name = layer_name_converter(layers[ind])
     next_layer_name = layer_name_converter(layers[ind + 1])
 
     if layer_name == "Dense":
+        # if bidirectional:
+        #     model.add(Bidirectional(layers[ind][1](layers[ind][0], activation="elu", input_shape=(None, len(features)))))
+        # else:
         model.add(layers[ind][1](layers[ind][0], activation="elu", input_shape=(None, len(features))))
     else:
         if next_layer_name == "Dense":
-            model.add(layers[ind][1](layers[ind][0], return_sequences=False, 
-                input_shape=(n_steps, len(features))))
+            if bidirectional:
+                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=False, 
+                    input_shape=(n_steps, len(features)))))
+            else:
+                model.add(layers[ind][1](layers[ind][0], return_sequences=False, 
+                    input_shape=(n_steps, len(features))))
         else:
-            model.add(layers[ind][1](layers[ind][0], return_sequences=True, 
-                input_shape=(n_steps, len(features))))
+            if bidirectional:
+                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=True, 
+                    input_shape=(n_steps, len(features)))))
+            else:
+                model.add(layers[ind][1](layers[ind][0], return_sequences=True, 
+                    input_shape=(n_steps, len(features))))
 
     return model
 
-def model_hidden_layers(model, layers, ind):
+def model_hidden_layers(model, layers, ind, bidirectional):
     layer_name = layer_name_converter(layers[ind])
     next_layer_name = layer_name_converter(layers[ind + 1])
 
     if layer_name == "Dense":
+        # if bidirectional:
+        #     model.add(Bidirectional(layers[ind][1](layers[ind][0], activation="elu")))
+        # else:
         model.add(layers[ind][1](layers[ind][0], activation="elu"))
     else:
         if next_layer_name == "Dense":
-            model.add(layers[ind][1](layers[ind][0], return_sequences=False))
+            if bidirectional:
+                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=False)))
+            else:
+                model.add(layers[ind][1](layers[ind][0], return_sequences=False))
         else:
-            model.add(layers[ind][1](layers[ind][0], return_sequences=True))
+            if bidirectional:
+                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=True)))
+            else:
+                model.add(layers[ind][1](layers[ind][0], return_sequences=True))
 
     return model
 
-def model_last_layer(model, layers, ind):
+def model_last_layer(model, layers, ind, bidirectional):
     layer_name = layer_name_converter(layers[ind])
 
     if layer_name == "Dense":
+        # if bidirectional:
+        #     model.add(Bidirectional(layers[ind][1](layers[ind][0], activation="elu")))
+        # else:
         model.add(layers[ind][1](layers[ind][0], activation="elu"))
     else:
-        model.add(layers[ind][1](layers[ind][0], return_sequences=False))
+        if bidirectional:
+            model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=False)))
+        else:
+            model.add(layers[ind][1](layers[ind][0], return_sequences=False))
     
     return model
 
