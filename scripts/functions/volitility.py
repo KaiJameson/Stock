@@ -4,8 +4,6 @@ import math
 
 def garman_klass(name, df, symbol, window=30, trading_periods=252):
 
-    print(window)
-
     log_hl = (df['h'] / df['l']).apply(np.log)
     log_co = (df['c'] / df['o']).apply(np.log)
 

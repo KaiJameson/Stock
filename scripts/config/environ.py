@@ -69,7 +69,7 @@ make_config = False
 """
 
 defaults = {
-    "ENSEMBLE": ["nn8", "nn11", "nn14"],
+    "ENSEMBLE": ["nn8", "nn11", "nn26", "nn28"],
     "TRADING": True,
     "SAVE_FOLDER": "trading",
     "nn8" : { 
@@ -108,7 +108,25 @@ defaults = {
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
-    "nn14" : { 
+    "nn26" : { 
+        "N_STEPS": 50,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn28" : { 
         "N_STEPS": 100,
         "LOOKUP_STEP": 1,
         "TEST_SIZE": 0.2,
@@ -121,11 +139,11 @@ defaults = {
         "EPOCHS": 2000,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["d.o", "d.l", "d.h", "d.c", "d.m", "d.v", "d.tc", "d.vwap"],
         "SHUFFLE": True,
-        "TEST_VAR": "c",
+        "TEST_VAR": "d.c",
         "SAVE_PRED": {}
-        }, 
+        },
     "LIMIT": 4000
 }
 

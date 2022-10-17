@@ -711,10 +711,10 @@ if __name__ == "__main__":
 
     # CHECK NEWS RESULTS
     
-    base_df = get_proper_df("AGYS", 4000, "V2")
-    news_df = modify_dataframe("SPY", params2["nn1"]["FEATURE_COLUMNS"], base_df, params2["nn1"]["TEST_VAR"], "V2", False)
+    # base_df = get_proper_df("AGYS", 4000, "V2")
+    # news_df = modify_dataframe("SPY", params2["nn1"]["FEATURE_COLUMNS"], base_df, params2["nn1"]["TEST_VAR"], "V2", False)
 
-    print(news_df.tail(60))
+    # print(news_df.tail(60))
 
     # top_10 = []
 
@@ -756,10 +756,45 @@ if __name__ == "__main__":
     # f.write(str(port_history))
     # f.close()
 
+    # TIINGO SHIT
+
+    # symbol = "UPS"
+    historical_date_str = "2015-12-1"
+    latest_date_str = get_current_date_string()
+
+    for symbol in load_save_symbols:
+
+        url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices?startDate={historical_date_str}&endDate={latest_date_str}&token={tiingo_key}"
+        print(url)
+
+        r = requests.get(url)
+        # print(r.json())
+        response = r.json()
+        response = pd.DataFrame(response)
+        response = response.set_index(["date"])
+        response.index = pd.to_datetime(response.index).date
+
+        
+        response = response.drop(columns=["adjHigh", "adjLow", "adjOpen", "adjVolume", "splitFactor", "divCash"], axis=1) 
+        # response = response.rename(columns = {"adjHigh":"high","adjLow":"low","adjOpen":"open","adjVolume":"volume"}) #"adjClose":"close"
+        # pd.set_option("display.max_columns", None)
+        # pd.set_option("display.max_rows", None)
+        # print(response)
+
+        alpaca_df = get_proper_df(symbol, 4000, "V2")
+
+        print(type(alpaca_df.index[0]), print(type(response.index[0])))
+
+        printing_df = pd.concat([alpaca_df['c'], response['close'], response["adjClose"]], axis=1, keys=["alpaca_c", "tiingo_c", "tiingo_adj_c"])
+        
+        # print(response["close"])
+        # print(printing_df)
+
+        print(len(alpaca_df["c"]), len(response["close"]), len(response["adjClose"]))
+        print(get_percent_away(alpaca_df['c'], response['close']))
+        print(get_percent_away(alpaca_df['c'], response['adjClose']))
 
     print(time.perf_counter() - s, flush=True)
-    # pd.set_option("display.max_columns", None)
-    # pd.set_option("display.max_rows", None)
 
     #best so far for volitility 
     # symbol = "UVXY"
