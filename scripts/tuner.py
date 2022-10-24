@@ -199,7 +199,6 @@ if __name__ == "__main__":
             items = [(symbol, tune_year, tune_month, tune_day, tune_days, tuner_dict)]
             for result in pool.starmap(tuning, items):
                 pass
-                # print(f'Got result: {result}', flush=True)
         pool.close()
         pool.join()
 

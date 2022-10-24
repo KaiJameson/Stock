@@ -208,7 +208,7 @@ def read_saved_contents(file_path, return_dict):
             return_dict[key] = ast.literal_eval(file_contents[key])
         else:
             print("Unexpected type found in this file")
-    del file_contents
+    
     return return_dict
 
 def save_to_dictionary(file_path, dictionary):

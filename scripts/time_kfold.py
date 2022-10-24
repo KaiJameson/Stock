@@ -15,6 +15,7 @@ from functions.tuner import get_user_input
 from functions.paca_model import create_model, return_real_predict, get_accuracy, get_percent_away
 from functions.time import increment_calendar, get_calendar, get_past_datetime, get_year_month_day
 from functions.error import error_handler, keyboard_interrupt
+from multiprocessing.pool import Pool
 from paca_model import configure_gpu, nn_train_save
 from make_excel import make_tuning_sheet
 from statistics import mean
@@ -42,7 +43,7 @@ def time_kfold(params):
         print("Please try again")
         sys.exit(-1)
 
-    
+    # print(f"{params['ENSEMBLE']}", flush=True)
 
     for symbol in kfold_symbols:
         progress = {
@@ -67,10 +68,6 @@ def time_kfold(params):
 
         current_date = get_past_datetime(progress['tune_year'], progress['tune_month'], progress['tune_day'])
         calendar = get_calendar(current_date, api, symbol)
-
-        
-        accuracies = []
-        percents_away = []
         
         predictor = params["ENSEMBLE"][0]
         df_dict = get_df_dict(symbol, params, "V2", True)
@@ -137,13 +134,22 @@ if __name__ == "__main__":
     check_directories()
     
 
+
+
     for model in time_kfold_dict["ENSEMBLE"]:
         if model in models:
             time_kfold_dict[model] = models[model]
+        time_kfold_dict["ENSEMBLE"] = [model]
 
-    print(time_kfold_dict)
 
-    time_kfold(time_kfold_dict)
+        print(time_kfold_dict)
+        
+        with Pool(1) as pool:
+            items = [time_kfold_dict]
+            for result in pool.map(time_kfold, items):
+                pass
+        pool.close()
+        pool.join()
 
 
     
