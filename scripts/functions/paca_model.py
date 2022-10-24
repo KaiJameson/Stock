@@ -55,9 +55,6 @@ def model_first_layer(model, layers, ind, n_steps, features, bidirectional):
     next_layer_name = layer_name_converter(layers[ind + 1])
 
     if layer_name == "Dense":
-        # if bidirectional:
-        #     model.add(Bidirectional(layers[ind][1](layers[ind][0], activation="elu", input_shape=(None, len(features)))))
-        # else:
         model.add(layers[ind][1](layers[ind][0], activation="elu", input_shape=(None, len(features))))
     else:
         if next_layer_name == "Dense":
@@ -82,9 +79,6 @@ def model_hidden_layers(model, layers, ind, bidirectional):
     next_layer_name = layer_name_converter(layers[ind + 1])
 
     if layer_name == "Dense":
-        # if bidirectional:
-        #     model.add(Bidirectional(layers[ind][1](layers[ind][0], activation="elu")))
-        # else:
         model.add(layers[ind][1](layers[ind][0], activation="elu"))
     else:
         if next_layer_name == "Dense":
@@ -104,9 +98,6 @@ def model_last_layer(model, layers, ind, bidirectional):
     layer_name = layer_name_converter(layers[ind])
 
     if layer_name == "Dense":
-        # if bidirectional:
-        #     model.add(Bidirectional(layers[ind][1](layers[ind][0], activation="elu")))
-        # else:
         model.add(layers[ind][1](layers[ind][0], activation="elu"))
     else:
         if bidirectional:

@@ -252,7 +252,7 @@ if __name__ == "__main__":
             "PATIENCE": 200,
             "SAVELOAD": True,
             "LIMIT": 4000,
-            "FEATURE_COLUMNS": ["c", "fin_bert_pos", "fin_bert_neg", "fin_bert_neu", "fin_vad"],
+            "FEATURE_COLUMNS": ["c", "es.c"],
             "TEST_VAR": "c",
             "SAVE_PRED": {}
         },
@@ -759,40 +759,56 @@ if __name__ == "__main__":
     # TIINGO SHIT
 
     # symbol = "UPS"
-    historical_date_str = "2015-12-1"
-    latest_date_str = get_current_date_string()
+    # historical_date_str = "2015-12-1"
+    # latest_date_str = get_current_date_string()
 
-    for symbol in load_save_symbols:
+    # for symbol in load_save_symbols:
 
-        url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices?startDate={historical_date_str}&endDate={latest_date_str}&token={tiingo_key}"
-        print(url)
+    #     url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices?startDate={historical_date_str}&endDate={latest_date_str}&token={tiingo_key}"
+    #     print(url)
 
-        r = requests.get(url)
-        # print(r.json())
-        response = r.json()
-        response = pd.DataFrame(response)
-        response = response.set_index(["date"])
-        response.index = pd.to_datetime(response.index).date
+    #     r = requests.get(url)
+    #     # print(r.json())
+    #     response = r.json()
+    #     response = pd.DataFrame(response)
+    #     response = response.set_index(["date"])
+    #     response.index = pd.to_datetime(response.index).date
 
         
-        response = response.drop(columns=["adjHigh", "adjLow", "adjOpen", "adjVolume", "splitFactor", "divCash"], axis=1) 
-        # response = response.rename(columns = {"adjHigh":"high","adjLow":"low","adjOpen":"open","adjVolume":"volume"}) #"adjClose":"close"
-        # pd.set_option("display.max_columns", None)
-        # pd.set_option("display.max_rows", None)
-        # print(response)
+    #     response = response.drop(columns=["adjHigh", "adjLow", "adjOpen", "adjVolume", "splitFactor", "divCash"], axis=1) 
+    #     # response = response.rename(columns = {"adjHigh":"high","adjLow":"low","adjOpen":"open","adjVolume":"volume"}) #"adjClose":"close"
+    #     # pd.set_option("display.max_columns", None)
+    #     # pd.set_option("display.max_rows", None)
+    #     # print(response)
 
-        alpaca_df = get_proper_df(symbol, 4000, "V2")
+    #     alpaca_df = get_proper_df(symbol, 4000, "V2")
 
-        print(type(alpaca_df.index[0]), print(type(response.index[0])))
+    #     print(type(alpaca_df.index[0]), print(type(response.index[0])))
 
-        printing_df = pd.concat([alpaca_df['c'], response['close'], response["adjClose"]], axis=1, keys=["alpaca_c", "tiingo_c", "tiingo_adj_c"])
+    #     printing_df = pd.concat([alpaca_df['c'], response['close'], response["adjClose"]], axis=1, keys=["alpaca_c", "tiingo_c", "tiingo_adj_c"])
         
-        # print(response["close"])
-        # print(printing_df)
+    #     # print(response["close"])
+    #     # print(printing_df)
 
-        print(len(alpaca_df["c"]), len(response["close"]), len(response["adjClose"]))
-        print(get_percent_away(alpaca_df['c'], response['close']))
-        print(get_percent_away(alpaca_df['c'], response['adjClose']))
+    #     print(len(alpaca_df["c"]), len(response["close"]), len(response["adjClose"]))
+    #     print(get_percent_away(alpaca_df['c'], response['close']))
+    #     print(get_percent_away(alpaca_df['c'], response['adjClose']))
+
+    ##########################################################
+    # Rework sav_gol so it doesn't cheat
+
+    df = get_proper_df("AGYS", 4000, "V2")
+    print(params2["nn1"]["FEATURE_COLUMNS"])
+    df = modify_dataframe("AGYS", params2["nn1"]["FEATURE_COLUMNS"], df, params2["nn1"]["TEST_VAR"], "V2", True)
+
+    pd.set_option("display.max_columns", None)
+    pd.set_option("display.max_rows", None)
+    # print(df)
+
+    plt.plot(df["c"], c="b")
+    plt.plot(df["es.c"], c="r")
+    # plt.plot(df["testing"], c="g")
+    plt.show()
 
     print(time.perf_counter() - s, flush=True)
 

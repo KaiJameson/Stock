@@ -5,6 +5,8 @@ import talib as ta
 import pandas as pd
 import pywt
 import matplotlib.pyplot as plt
+import time
+from statistics import mean
 
 base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
 
@@ -16,6 +18,20 @@ def df_savgol(selector, feature, df, symbol):
         techs_dict[feature]["function"](feature, df, symbol)
 
     df[f"{selector}.{feature}"] = savgol_filter(df[feature], 7, 3)
+
+def df_no_cheat_savgol(selector, feature, df, symbol):
+    ncs = []
+
+    window = 7
+
+    for i in range(1, len(df) + 1):
+        if i < window:
+            ncs.append(np.nan)
+            continue
+
+        ncs.append(savgol_filter(df.c[:i], 7, 3)[-1])
+
+    df[f"{selector}.{feature}"] = ncs
 
 def df_change_percent(selector, feature, df, symbol):
     if feature not in base_features:
@@ -36,6 +52,11 @@ def df_moving_average(selector, feature, df, symbol):
     if feature not in base_features:
         techs_dict[feature]["function"](feature, df, symbol)
     df[f"{selector}.{feature}"] = ta.SMA(df.c, timeperiod=7)
+
+def df_exponential_smoothing(selector, feature, df, symbol):
+    if feature not in base_features:
+        techs_dict[feature]["function"](feature, df, symbol)
+    df[f"{selector}.{feature}"] = ta.EMA(df.c, timeperiod=7)
 
 def df_wavelet_transform(selector, feature, df, symbol):
     if feature not in base_features:
@@ -252,8 +273,7 @@ def df_weigh_mov_avg(name, df, *args):
 def df_DEMA(name, df, *args):
     df[name] = ta.DEMA(df.c, timeperiod=30)
 
-def df_EMA(name, df, *args):
-    df[name] = ta.EMA(df.c, timeperiod=5)
+
 
 def df_MESA(name, df, *args):
     MESA_mama, MESA_fama = ta.MAMA(df.c)
@@ -296,16 +316,28 @@ def convert_date_values(name, df, *args):
     df[name] = df.index	
     df[name] = df[name].dt.dayofweek + 1
 
+
+
 def testing(name, df, *args):
-    pass
+    # df["old_s.c"] = savgol_filter(df["c"], 7, 3)
+    print("HELLO? YOU PLAY TO WIN THE GAME?")
+    s = time.perf_counter()
+    print(mean(df["c"].pct_change()))
+    print(f"time to calc sav_gol {time.perf_counter() - s}")
+
+
+        
+    
 
 techs_dict = {
     "s": {"function":df_savgol},
+    "ncs": {"function":df_no_cheat_savgol},
     "pc": {"function":df_change_percent},
     "d": {"function":df_differencer},
     "wt": {"function":df_wavelet_transform},
     "pt": {"function":df_power_transformation},
     "ma": {"function":df_moving_average},
+    "es": {"function":df_exponential_smoothing},
     "m": {"function":df_m},
     "vad": {"function":vad_sentiment},
     "fin_vad": {"function":vad_sentiment},
@@ -381,7 +413,6 @@ techs_dict = {
     "TRIX": {"function":df_TRIX},
     "weigh_mov_avg": {"function":df_weigh_mov_avg},
     "DEMA": {"function":df_DEMA},
-    "EMA": {"function":df_EMA},
     "MESA_mama": {"function":df_MESA},
     "MESA_fama": {"function":df_MESA},
     "midpnt": {"function":df_midpnt},
