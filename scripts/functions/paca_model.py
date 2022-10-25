@@ -59,15 +59,15 @@ def model_first_layer(model, layers, ind, n_steps, features, bidirectional):
     else:
         if next_layer_name == "Dense":
             if bidirectional:
-                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=False, 
-                    input_shape=(n_steps, len(features)))))
+                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=False), 
+                    input_shape=(n_steps, len(features))))
             else:
                 model.add(layers[ind][1](layers[ind][0], return_sequences=False, 
                     input_shape=(n_steps, len(features))))
         else:
             if bidirectional:
-                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=True, 
-                    input_shape=(n_steps, len(features)))))
+                model.add(Bidirectional(layers[ind][1](layers[ind][0], return_sequences=True), 
+                    input_shape=(n_steps, len(features))))
             else:
                 model.add(layers[ind][1](layers[ind][0], return_sequences=True, 
                     input_shape=(n_steps, len(features))))
