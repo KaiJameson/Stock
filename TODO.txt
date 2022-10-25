@@ -18,7 +18,7 @@ Qlib
 MLENS
     * review results of the extensive MLENS testing for models worthy of further investigation
 Model testing
-    * all of these new data sources need to be retested: SPY, 7MA, AROON, time series forecast, ht_trendmode, ht_sine, pearson's correlation, money flow index, relative strength index, day_of_week, chaikin line, true range, volatility estimators, 10Y bond rate
+    * all of these new data sources need to be retested: ht_sine, pearson's correlation, money flow index, relative strength index, day_of_week, chaikin line, true range, 10Y bond rate
     * classification NN ensembles
     * use the new volatility indicators
 keras tuner
@@ -28,4 +28,3 @@ Model loading/trading
     * have all the models get loaded into memory ahead of time
     * load data exactly at 3:59 to make predictions/make trading decisions
 MISC
-    * rework the sav_gol calculation so it doesn't cheat

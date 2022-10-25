@@ -31,7 +31,7 @@ def time_kfold(params):
 
     if len(sys.argv) > 2:
         test_interval = int(sys.argv[2])
-        print(test_interval)
+        
         if type(test_interval) != type(1):
             print(f"test_interval must be an int, instead it was {type(test_interval)}")
             print("Please try again")
