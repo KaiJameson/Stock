@@ -31,7 +31,7 @@ def keras_tuning(params):
             check_prediction_subfolders(directory_dict['keras_tuner'], save_folder)
 
             # df = get_proper_df(symbol, 4000, "V2")
-            df_dict = get_df_dict(symbol, params, "V2", True)
+            df_dict = get_df_dict(symbol, params, True)
             data_dict = load_all_data(params, df_dict, "one_day")
 
             hyper_params = set()

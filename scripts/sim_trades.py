@@ -11,9 +11,11 @@ from functions.paca_model import get_current_price
 from functions.data_load import get_proper_df, df_subset, get_df_dict
 from functions.time import get_past_datetime
 from functions.functions import check_directories, r2, interpret_dict
+from itertools import product
 from paca_model import configure_gpu
 from statistics import mean
 import datetime
+import copy
 import time
 import sys
 
@@ -64,7 +66,7 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
         
         starting_prices = []
         for symbol in tune_symbols:
-            symbols_df_dict[symbol] = get_df_dict(symbol, params, "V2", True)
+            symbols_df_dict[symbol] = get_df_dict(symbol, params, True)
             # symbols_df_dict[symbol] = get_proper_df(symbol, params["LIMIT"], "V2")
             starting_prices.append(get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
             - datetime.timedelta(1)), symbols_df_dict[symbol]['price'], tmp_cal))
@@ -160,10 +162,42 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
 if __name__ == "__main__":
     check_directories()
     
-
-    for model in sim_trades_dict["ENSEMBLE"]:
-        if model in models:
-            sim_trades_dict[model] = models[model]
-
-    simulate_trades(tune_year, tune_month, tune_day, tune_days, sim_trades_dict)
     
+    changable_dict = copy.deepcopy(sim_trades_dict)
+
+    param_lists = []
+    keys = []
+
+    for variable in sim_trades_dict:
+        print(sim_trades_dict[variable], type(sim_trades_dict[variable]))
+        if type(sim_trades_dict[variable]) is list:
+            keys.append(variable)
+            param_lists.append(sim_trades_dict[variable])
+            
+    indexes = [len(i) for i in param_lists]
+    j = 1
+    for i in indexes:
+        j *= i
+
+    # print(keys)
+    # print(param_lists)
+    results = []
+    print(f"\nIndexes have lengths of {indexes} with a total of {j} combinations\n\n")
+    for index_tuple in product(*map(range, indexes)):
+        for i, k in enumerate(indexes):
+            # print(f"i {i}")
+            # print(f"keys[i] {keys[i]}")
+            # print(f"param_lists[i] {param_lists[i]}")
+            # print(f"index_tuple[i] {index_tuple[i]}")
+            # print(f"param_lists[i][index_tuple[i]] {param_lists[i][index_tuple[i]]}")
+
+            changable_dict[keys[i]] = param_lists[i][index_tuple[i]]
+            
+        for model in changable_dict["ENSEMBLE"]:
+            if model in models:
+                changable_dict[model] = models[model]
+
+        # print(changable_dict)
+        simulate_trades(tune_year, tune_month, tune_day, tune_days, changable_dict)
+
+

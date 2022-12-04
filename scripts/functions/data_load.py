@@ -1,10 +1,10 @@
 from matplotlib import ticker
 from config.environ import directory_dict
-from config.api_key import alpha_key
+from config.api_key import alpha_key, tiingo_key
 from functions.time import get_past_date_string
 from functions.error import  net_error_handler, keyboard_interrupt
 from functions.trade import get_api
-from functions.time import modify_timestamp, get_current_datetime, get_past_datetime
+from functions.time import get_current_date_string, get_current_datetime, get_past_datetime
 from functions.functions import layer_name_converter
 from functions.technical_indicators import techs_dict
 from functions.io import save_to_dictionary, read_saved_contents
@@ -26,7 +26,7 @@ import sys
 
 
 
-def modify_dataframe(symbol, features, df, test_var, option, to_print):
+def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_print):
     base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
 
     for feature in features:
@@ -38,7 +38,7 @@ def modify_dataframe(symbol, features, df, test_var, option, to_print):
                 elif dot_split[0].startswith("tick-"):
                     feature_split = dot_split[0].split("-")
                     print(f"feature split {feature_split}")
-                    ticker_df = get_proper_df(feature_split[1], 4000, option)
+                    ticker_df = get_proper_df(feature_split[1], limit, data_source)
                     # ticker_df = df_subset(current_date, ticker_df)
 
                     if feature_split[2] not in base_features:
@@ -52,7 +52,7 @@ def modify_dataframe(symbol, features, df, test_var, option, to_print):
                     techs_dict[feature]["function"](feature, df, symbol)
                 elif feature.startswith("tick-"):
                     feature_split = feature.split("-")
-                    ticker_df = get_proper_df(feature_split[1], 4000, option)
+                    ticker_df = get_proper_df(feature_split[1], limit, data_source)
                     # ticker_df = df_subset(current_date, ticker_df)
 
                     if feature_split[2] not in base_features:
@@ -75,6 +75,13 @@ def modify_dataframe(symbol, features, df, test_var, option, to_print):
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
     pd.set_option('display.expand_frame_repr', False)
+    print(f"before")
+    print(df.head(2))
+    print(df.tail(2))
+
+    df = df.tail(limit)
+
+    print(f"after")
     if to_print:
         print(df.head(2))
         print(df.tail(2))
@@ -92,7 +99,7 @@ def scale_data(df, result):
     result["column_scaler"] = column_scaler
     return result
 
-def get_alpacaV2_df(symbol, limit=1000, to_print=True):
+def get_alpacaV2_df(symbol, limit=1000):
     api = get_api()
     no_connection = True
     end = get_current_datetime()
@@ -169,22 +176,52 @@ def download_alpha_df(symbol, output_size):
     
     return df
 
-def get_proper_df(symbol, limit, option):
-    if option == "alp":
+def get_tiingo_df(symbol, limit):
+    latest_date_str = get_current_date_string()
+
+    url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices?endDate={latest_date_str}&token={tiingo_key}"
+    print(url)
+
+    r = requests.get(url)
+    # print(r.json())
+    response = r.json()
+    response = pd.DataFrame(response)
+    response = response.set_index(["date"])
+    response.index = pd.to_datetime(response.index).date
+
+    response = response.drop(columns=["adjHigh", "adjLow", "adjOpen", "adjVolume", "adjClose", "splitFactor", "divCash"], axis=1) 
+    response = response.rename(columns = {"high":"h", "low":"l", "open":"o", "close":"c", "volume":"v"})
+    # pd.set_option("display.max_columns", None)
+    # pd.set_option("display.max_rows", None)
+    print(response)
+    return response
+
+def get_proper_df(symbol, limit, data_source):
+    if data_source == "alp":
         df = get_alpha_df(symbol, "full")
-    elif option == "V2":
-        df = get_alpacaV2_df(symbol, limit, to_print=True)
+    elif data_source == "V2":
+        df = get_alpacaV2_df(symbol, limit)
+    elif data_source == "tii":
+        df = get_tiingo_df(symbol, limit)
 
     return df
 
-def get_df_dict(symbol, params, option, to_print):
+def get_df_dict(symbol, params, to_print):
     df_dict = {}
+    base_df_dict = {}
 
-    base_df = get_proper_df(symbol, 4000, option)
-    df_dict['price'] = modify_dataframe(symbol, "c", base_df, "c", option, False)
+    base_df_dict["V2"] = get_proper_df(symbol, 4000, "V2")
+    df_dict['price'] = modify_dataframe(symbol, features="c", df=base_df_dict["V2"],
+        test_var="c", limit=4000, data_source="V2", to_print=False)
 
     for predictor in params['ENSEMBLE']:
-        df_dict[predictor] = modify_dataframe(symbol, params[predictor]["FEATURE_COLUMNS"], base_df, params[predictor]["TEST_VAR"], option, to_print)
+        if params[predictor]["DATA_SOURCE"] in base_df_dict:
+            pass
+        else:
+            base_df_dict[params[predictor]["DATA_SOURCE"]] = get_proper_df(symbol, 4000, params[predictor]["DATA_SOURCE"])
+
+        df_dict[predictor] = modify_dataframe(symbol, params[predictor]["FEATURE_COLUMNS"], base_df_dict[params[predictor]["DATA_SOURCE"]],
+                params[predictor]["TEST_VAR"], params[predictor]["LIMIT"], params[predictor]["DATA_SOURCE"], to_print)
 
     return df_dict
         

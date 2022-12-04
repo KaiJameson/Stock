@@ -75,7 +75,7 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
     print(f"year:{tune_year} month:{tune_month} day:{tune_day}")
 
 
-    df_dict = get_df_dict(symbol, params, "V2", to_print=True)
+    df_dict = get_df_dict(symbol, params, to_print=True)
     tmp_cal = get_calendar(get_past_datetime(tune_year, tune_month, tune_day), api, symbol)
     starting_day_price = get_actual_price((get_past_datetime(tune_year, tune_month, tune_day) 
         - datetime.timedelta(1)), df_dict['price'], tmp_cal)

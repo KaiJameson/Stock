@@ -74,9 +74,9 @@ def df_wavelet_transform(selector, feature, df, symbol):
     df[f"{selector}.{feature}"] = reconstructed_signal[len(reconstructed_signal) - len(df.index):]
 
 def df_BBANDS(name, df, *args):
-    up, mid, dow = ta.BBANDS(df.c, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
-    if name == "up_band":
-        df[name] = up
+    high, mid, dow = ta.BBANDS(df.c, timeperiod=10, nbdevup=2, nbdevdn=2, matype=0)
+    if name == "high_band":
+        df[name] = high
     else:
         df[name] = dow
 
@@ -349,7 +349,7 @@ techs_dict = {
     "rogers_stachell": {"function":rogers_stachell},
     "skew": {"function":get_skew},
     "yang_zhang" : {"function":yang_zhang},
-    "up_band": {"function":df_BBANDS},
+    "high_band": {"function":df_BBANDS},
     "low_band": {"function":df_BBANDS},
     "OBV": {"function":df_OBV},
     "RSI": {"function":df_RSI},
