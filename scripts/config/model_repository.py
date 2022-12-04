@@ -15,6 +15,7 @@ models = {
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -33,6 +34,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -51,6 +53,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -69,6 +72,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -87,6 +91,7 @@ models = {
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -105,6 +110,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -123,6 +129,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -141,6 +148,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -159,6 +167,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["c", "s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -177,6 +186,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["ma.c", "s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -195,6 +205,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -213,6 +224,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["c", "pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -231,6 +243,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["ma.c", "pc.c", "c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -249,6 +262,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -267,6 +281,7 @@ models = {
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -285,6 +300,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -303,6 +319,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -321,6 +338,7 @@ models = {
         "PATIENCE": 100,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -339,6 +357,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -357,6 +376,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.v", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -376,6 +396,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.v", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
@@ -394,6 +415,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
@@ -411,6 +433,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": False,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -429,6 +452,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": False,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -447,6 +471,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -465,6 +490,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -483,6 +509,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["wt.o", "wt.l", "wt.h", "wt.c", "wt.m", "wt.v", "wt.tc", "wt.vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -501,6 +528,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["d.o", "d.l", "d.h", "d.c", "d.m", "d.v", "d.tc", "d.vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "d.c",
         "SAVE_PRED": {}
@@ -519,6 +547,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.v", "pc.tc", "pc.vwap", "aroon_down", "aroon_up", "TSF", "ht_trendmode", "ht_sine"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -537,6 +566,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "s.tc", "s.vwap", "day_of_week"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -555,6 +585,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.v", "pc.tc", "pc.vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "pc.c",
         "SAVE_PRED": {}
@@ -573,6 +604,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -591,6 +623,7 @@ models = {
         "PATIENCE": 50,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["s.o", "s.l", "s.h", "s.c", "s.m", "s.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -609,6 +642,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -627,6 +661,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -645,6 +680,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -663,6 +699,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -681,6 +718,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -699,6 +737,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "acc",
         "SAVE_PRED": {}
@@ -717,6 +756,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "vad"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -735,6 +775,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "fin_vad"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -753,6 +794,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "ma.fin_vad"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -771,6 +813,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -789,6 +832,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "ma.tc", "ma.vwap", "tick-SPY-ma.c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -807,6 +851,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "tick-SPY-ma.c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -825,6 +870,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "garman_klass"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -843,6 +889,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "ma.garman_klass"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -861,6 +908,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "kurtosis", "skew"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -879,6 +927,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "garman_klass"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -897,6 +946,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap", "yang_zhang"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -915,6 +965,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -933,6 +984,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -951,6 +1003,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -969,6 +1022,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "pc.tc", "pc.vwap", "o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -987,6 +1041,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1005,6 +1060,7 @@ models = {
         "PATIENCE": 300,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1023,6 +1079,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1041,6 +1098,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["c", "v", "tc", "vwap", "yang_zhang"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1059,6 +1117,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1077,6 +1136,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1095,6 +1155,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1112,7 +1173,8 @@ models = {
         "EPOCHS": 2000,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["o", "l", "h", "c", ""],
+        "FEATURE_COLUMNS": ["o", "l", "h", "c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1131,6 +1193,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["es.o", "es.l", "es.h", "es.c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1149,6 +1212,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "fin_bert_pos", "fin_bert_neg", "fin_bert_neu"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1167,6 +1231,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "low_band", "high_band"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1185,6 +1250,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "OBV"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1203,6 +1269,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "aroon_down", "aroon_up"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1221,6 +1288,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "TSF"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1239,6 +1307,7 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "ht_trendmode"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1257,6 +1326,83 @@ models = {
         "PATIENCE": 200,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "pears_cor"],
+        "DATA_SOURCE": "V2",
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn71" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": 0.0,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["ma.c", "pc.c", "c"],
+        "DATA_SOURCE": "V2",
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn72" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["o", "l", "h", "c", "ma.fin_bert_pos", "ma.fin_bert_neg", "ma.fin_bert_neu"],
+        "DATA_SOURCE": "V2",
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn73" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, LSTM)],
+        "DROPOUT": 0.0,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["o", "l", "h", "c"],
+        "DATA_SOURCE": "V2",
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn74" : { 
+        "N_STEPS": 100,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": 0.2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": 0.0,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 2000,
+        "PATIENCE": 200,
+        "LIMIT": 4000,
+        "FEATURE_COLUMNS": ["c"],
+        "DATA_SOURCE": "V2",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
@@ -1268,19 +1414,41 @@ models = {
         "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
         "DROPOUT": .4,
         "BIDIRECTIONAL": False,
-        "LOSS": "binary_crossentropy",
+        "LOSS": "huber_loss",
+        "OPTIMIZER": "adam",
+        "BATCH_SIZE": 1024,
+        "EPOCHS": 20,
+        "PATIENCE": 200,
+        "LIMIT": 2000,
+        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "SHUFFLE": True,
+        "TEST_VAR": "c",
+        "SAVE_PRED": {}
+        },
+    "nn100" : { 
+        "N_STEPS": 10,
+        "LOOKUP_STEP": 1,
+        "TEST_SIZE": .2,
+        "LAYERS": [(256, LSTM), (256, Dense), (128, Dense), (64, Dense)],
+        "DROPOUT": .4,
+        "BIDIRECTIONAL": False,
+        "LOSS": "huber_loss",
         "OPTIMIZER": "adam",
         "BATCH_SIZE": 1024,
         "EPOCHS": 20,
         "PATIENCE": 200,
         "LIMIT": 4000,
-        "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "FEATURE_COLUMNS": ["o", "l", "h", "ma.c", "c", "ma.m", "ma.v"],
+        "DATA_SOURCE": "tii",
         "SHUFFLE": True,
         "TEST_VAR": "c",
         "SAVE_PRED": {}
         },
     "DTREE1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "MAX_DEPTH": 5,
         "MIN_SAMP_LEAF": 3,
         "LOOKUP_STEP": 1,
@@ -1289,6 +1457,8 @@ models = {
         },
     "XTREE1" : {
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -1298,6 +1468,8 @@ models = {
         },
     "RFORE1" : {
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -1307,6 +1479,8 @@ models = {
         },
     "KNN1" : {
         "FEATURE_COLUMNS": ["c"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_NEIGHBORS": 5,
         "WEIGHTS": "distance",
         "LOOKUP_STEP":1,
@@ -1315,6 +1489,8 @@ models = {
         },
     "ADA1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 1000,
         "MIN_SAMP_LEAF": 1,
@@ -1324,6 +1500,8 @@ models = {
         },
     "XGB1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 1000,
         "MAX_LEAVES": 1000,
@@ -1333,6 +1511,8 @@ models = {
         },
     "BAGREG1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 1000,
         "MIN_SAMP_LEAF": 1,
@@ -1342,6 +1522,8 @@ models = {
         },
     "MLP1" : { 
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "LAYERS": (20, 20), 
         "EARLY_STOP": True,
         "VALIDATION_FRACTION": .2,
@@ -1352,6 +1534,8 @@ models = {
     },
     "MLENS1" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "LAYERS": [["MLP1", "RFORE1"], ["ADA1", "KNN1"], ["XGB1", "BAGREG1"], ["DTREE1", "XTREE1"]],
         "META_EST": "reg",
         "LOOKUP_STEP":1,
@@ -1416,6 +1600,8 @@ models = {
     },
     "DTREE2" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "MAX_DEPTH": 5,
         "MIN_SAMP_LEAF": 3,
         "LOOKUP_STEP": 1,
@@ -1424,6 +1610,8 @@ models = {
         },
     "XTREE2" : {
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -1433,6 +1621,8 @@ models = {
         },
     "RFORE2" : {
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 10,
         "MIN_SAMP_LEAF": 1,
@@ -1442,6 +1632,8 @@ models = {
         },
     "KNN2" : {
         "FEATURE_COLUMNS": ["c"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_NEIGHBORS": 5,
         "WEIGHTS": "distance",
         "LOOKUP_STEP":1,
@@ -1450,6 +1642,8 @@ models = {
         },
     "ADA2" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 1000,
         "MIN_SAMP_LEAF": 1,
@@ -1459,6 +1653,8 @@ models = {
         },
     "XGB2" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 1000,
         "MAX_LEAVES": 1000,
@@ -1468,6 +1664,8 @@ models = {
         },
     "BAGREG2" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": 100,
         "MAX_DEPTH": 1000,
         "MIN_SAMP_LEAF": 1,
@@ -1477,6 +1675,8 @@ models = {
         },
     "MLP2" : { 
         "FEATURE_COLUMNS": ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "LAYERS": (20, 20), 
         "EARLY_STOP": True,
         "VALIDATION_FRACTION": .2,
@@ -1487,6 +1687,8 @@ models = {
     },
     "MLENS2" : {
         "FEATURE_COLUMNS": ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "LAYERS": [["MLP1", "RFORE1"], ["ADA1", "KNN1"], ["XGB1", "BAGREG1"], ["DTREE1", "XTREE1"]],
         "META_EST": "reg",
         "LOOKUP_STEP":1,
@@ -1557,6 +1759,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
         "LOOKUP_STEP": 1,
@@ -1567,6 +1771,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1578,6 +1784,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1589,6 +1797,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_NEIGHBORS": [1, 2, 3, 4, 5, 7, 10, 20, 50, 100],
         "WEIGHTS": ["uniform", "distance"],
         "LOOKUP_STEP":1,
@@ -1599,6 +1809,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1610,6 +1822,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MAX_LEAVES": [10, 100, 1000],
@@ -1621,6 +1835,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "N_ESTIMATORS": [5, 10, 50, 100, 1000],
         "MAX_DEPTH": [1, 3, 5, 10, 100, 1000],
         "MIN_SAMP_LEAF": [1, 3, 5, 10],
@@ -1632,6 +1848,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "LAYERS": [(1), (2), (4), (8), (10), (10, 5), (20, 10, 5), (5, 10), (10, 10, 10), (50, 50), (100)],
         "EARLY_STOP": [True, False],
         "VALIDATION_FRACTION": .2,
@@ -1645,6 +1863,8 @@ exhaustive_search = {
         "FEATURE_COLUMNS": [["c"], ["o", "l", "h", "c", "m", "v"], ["o", "l", "h", "c", "m", "v", "tc", "vwap"],
             ["ma.o", "ma.l", "ma.h", "ma.c", "ma.m", "ma.v", "tc", "vwap"], ["pc.v", "ma.v", "tc", "vwap"],
             ["ma.c", "pc.c"], ["c", "d.c", "ma.c", "pc.c"], ["pc.o", "pc.l", "pc.h", "pc.c", "pc.m", "pc.v", "tc", "vwap"]],
+        "DATA_SOURCE": "V2",
+        "LIMIT": 4000,
         "LAYERS": [[["DTREE1"], ["DTREE1"]], [["XTREE1"], ["XTREE1"]], [["RFORE1"], ["RFORE1"]], [["KNN1"], ["KNN1"]], 
             [["ADA1"], ["ADA1"]], [["XGB1"], ["XGB1"]], [["XGB2"], ["XGB2"]], [["BAGREG1"], ["BAGREG1"]], 
             [["MLP1"], ["MLP1"]], [["MLP2"], ["MLP2"]], [["MLP3"], ["MLP3"]], 
@@ -1733,6 +1953,7 @@ keras_tune_models = {
         "SAVELOAD": True,
         "LIMIT": 4000,
         "FEATURE_COLUMNS": ["ma.c", "ma.o", "ma.l", "ma.h", "ma.m", "ma.v", "ma.tc", "ma.vwap"],
+        "DATA_SOURCE": "V2",
         "TEST_VAR": "c",
         "SAVE_PRED": {},
     }

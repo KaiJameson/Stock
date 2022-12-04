@@ -84,6 +84,7 @@ def get_random_folder():
 
 def get_model_name(nn_params):
     return (f"sh{'T' if nn_params['SHUFFLE'] else 'F'}"
+            f"{'' if nn_params['DATA_SOURCE'] == 'V2' else nn_params['DATA_SOURCE']}"
             f"{features_string(nn_params['FEATURE_COLUMNS'])}{layers_string(nn_params['LAYERS'])}s"
             f"{nn_params['N_STEPS']}l{nn_params['LIMIT']}e{nn_params['EPOCHS']}"
             f"p{nn_params['PATIENCE']}b{nn_params['BATCH_SIZE']}d{nn_params['DROPOUT']}"

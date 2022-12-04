@@ -32,7 +32,7 @@ def load_trade(symbols, params, real_mon):
             ss = time.perf_counter()
             s = time.perf_counter()
 
-            df_dict = get_df_dict(symbol, params, "V2", False)
+            df_dict = get_df_dict(symbol, params, False)
             data_dict = load_all_data(defaults, df_dict, "one_day")
             print(f"Data processing took {r2(time.perf_counter() - s)} seconds")
             s = time.perf_counter()

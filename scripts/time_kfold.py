@@ -70,7 +70,7 @@ def time_kfold(params):
         calendar = get_calendar(current_date, api, symbol)
         
         predictor = params["ENSEMBLE"][0]
-        df_dict = get_df_dict(symbol, params, "V2", True)
+        df_dict = get_df_dict(symbol, params, True)
         
         try:
             while progress['days_done'] < progress['total_days']:
