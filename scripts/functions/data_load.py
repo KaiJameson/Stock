@@ -33,6 +33,8 @@ def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_prin
         if feature not in base_features:
             if "." in feature:
                 dot_split = feature.split(".")
+                # print(dot_split, flush=True)
+                # print(df)
                 if dot_split[0] in techs_dict:
                     techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df, symbol)
                 elif dot_split[0].startswith("tick-"):
