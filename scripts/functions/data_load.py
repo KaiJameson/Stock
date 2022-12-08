@@ -39,7 +39,7 @@ def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_prin
                     techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df, symbol)
                 elif dot_split[0].startswith("tick-"):
                     feature_split = dot_split[0].split("-")
-                    print(f"feature split {feature_split}")
+                    # print(f"feature split {feature_split}")
                     ticker_df = get_proper_df(feature_split[1], limit, data_source)
                     # ticker_df = df_subset(current_date, ticker_df)
 
@@ -77,17 +77,10 @@ def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_prin
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
     pd.set_option('display.expand_frame_repr', False)
-    print(f"before")
-    print(df.head(2))
-    print(df.tail(2))
-
-    df = df.tail(limit)
-
-    print(f"after")
     if to_print:
         print(df.head(2))
         print(df.tail(2))
-        # print(df.shape)
+        print(df.shape)
 
     return df
 
