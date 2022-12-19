@@ -1,5 +1,5 @@
 from functions.volitility import *
-from functions.sentiment import vad_sentiment, fin_bert_sentiment, fin_bert_return
+from functions.sentiment import vad_sentiment, fin_bert_sentiment
 from scipy.signal import savgol_filter
 import talib as ta
 import pandas as pd
@@ -316,7 +316,8 @@ def convert_date_values(name, df, *args):
     df[name] = df.index	
     df[name] = df[name].dt.dayofweek + 1
 
-
+def df_pass(name, df, symbol):
+    pass
 
 def testing(name, df, *args):
     # df["old_s.c"] = savgol_filter(df["c"], 7, 3)
@@ -342,8 +343,8 @@ techs_dict = {
     "vad": {"function":vad_sentiment},
     "fin_vad": {"function":vad_sentiment},
     "fin_bert_pos": {"function":fin_bert_sentiment},
-    "fin_bert_neg": {"function":fin_bert_return},
-    "fin_bert_neu": {"function":fin_bert_return},
+    "fin_bert_neg": {"function":df_pass},
+    "fin_bert_neu": {"function":df_pass},
     "garman_klass":  {"function":garman_klass},
     "hodges_tompkins": {"function":hodges_tompkins},
     "kurtosis": {"function":get_kurtosis},

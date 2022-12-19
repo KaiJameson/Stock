@@ -158,6 +158,5 @@ def properly_group_sentiment(sent_list, name, df, df_copy):
     df[name] = df_copy[name]
 
 
-def fin_bert_return(name, df, symbol):
-    pass
+
 

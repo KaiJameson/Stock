@@ -758,29 +758,29 @@ if __name__ == "__main__":
 
     # TIINGO SHIT
 
-    symbol = "UPS"
-    # historical_date_str = "2015-12-1"
-    # historical_date_str = ""
-    latest_date_str = get_current_date_string()
+    # symbol = "UPS"
+    # # historical_date_str = "2015-12-1"
+    # # historical_date_str = ""
+    # latest_date_str = get_current_date_string()
 
-    # for symbol in load_save_symbols:
+    # # for symbol in load_save_symbols:
 
-    url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices?endDate={latest_date_str}&token={tiingo_key}"
-    print(url)
+    # url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices?endDate={latest_date_str}&token={tiingo_key}"
+    # print(url)
 
-    r = requests.get(url)
-    # print(r.json())
-    response = r.json()
-    response = pd.DataFrame(response)
-    response = response.set_index(["date"])
-    response.index = pd.to_datetime(response.index).date
+    # r = requests.get(url)
+    # # print(r.json())
+    # response = r.json()
+    # response = pd.DataFrame(response)
+    # response = response.set_index(["date"])
+    # response.index = pd.to_datetime(response.index).date
 
     
-    response = response.drop(columns=["adjHigh", "adjLow", "adjOpen", "adjVolume", "splitFactor", "divCash"], axis=1) 
-    # response = response.rename(columns = {"adjHigh":"high","adjLow":"low","adjOpen":"open","adjVolume":"volume"}) #"adjClose":"close"
-    # pd.set_option("display.max_columns", None)
-    # pd.set_option("display.max_rows", None)
-    print(response)
+    # response = response.drop(columns=["adjHigh", "adjLow", "adjOpen", "adjVolume", "splitFactor", "divCash"], axis=1) 
+    # # response = response.rename(columns = {"adjHigh":"high","adjLow":"low","adjOpen":"open","adjVolume":"volume"}) #"adjClose":"close"
+    # # pd.set_option("display.max_columns", None)
+    # # pd.set_option("display.max_rows", None)
+    # print(response)
 
     #     alpaca_df = get_proper_df(symbol, 4000, "V2")
 
@@ -796,20 +796,63 @@ if __name__ == "__main__":
     #     print(get_percent_away(alpaca_df['c'], response['adjClose']))
 
     ##########################################################
-    # Rework sav_gol so it doesn't cheat
+    # Get 15/30/60 minute prices from
+    symbol = "AMKR"
 
-    # df = get_proper_df("AGYS", 4000, "V2")
-    # print(params2["nn1"]["FEATURE_COLUMNS"])
-    # df = modify_dataframe("AGYS", params2["nn1"]["FEATURE_COLUMNS"], df, params2["nn1"]["TEST_VAR"], "V2", True)
+    api = get_api()
+    no_connection = True
+    end = get_current_datetime()
+    start = get_past_datetime(2000, 1, 1)
+    # end = start = get_past_datetime(2022, 12, 6)
+    print(start, end)
+    while no_connection:
+        try:
+            s = time.perf_counter()
+            df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, 
+                limit=2000).df
+            df = df.rename(columns={"open": "o", "high":"h", "low": "l", "close": "c",
+                "volume": "v", "trade_count": "tc"})
+            df.index = df.index.date
 
+            test_df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Hour,
+                limit=90000).df
+            test_df = test_df.rename(columns={"open": "o", "high":"h", "low": "l", "close": "c",
+                "volume": "v", "trade_count": "tc"})
+            test_df = test_df.drop(columns=["vwap"])
+
+            no_connection = False
+            # print(f"all loading took {time.perf_counter() - s}")
+        except KeyboardInterrupt:
+            keyboard_interrupt()
+        except Exception:
+            
+            error_handler(symbol, Exception)
+    
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
-    # # print(df)
 
-    # plt.plot(df["c"], c="b")
-    # plt.plot(df["es.c"], c="r")
-    # # plt.plot(df["testing"], c="g")
-    # plt.show()
+    # print(test_df.tail(80))
+    # print("\n\n\n\n")
+
+    # print(test_df.index[-1].time())
+    # print(type(test_df.index[-1].time()))
+    # print(datetime.time(23) > test_df.index[-1].time())
+
+    # print(test_df.index.apply())
+    # mask = (test_df.index.time() < datetime.time(21))
+    # test_df = test_df.loc[mask]
+    asedt = time.perf_counter()
+    test_df = test_df.between_time('14:00', '20:00')
+
+    current_date = test_df.index[0].date
+    i = 0
+    while i > len(test_df.index):
+        pass
+
+    print(time.perf_counter() - asedt)
+
+    # print(test_df.tail(80))
+    # print(df.tail(10))
 
     print(time.perf_counter() - s, flush=True)
 

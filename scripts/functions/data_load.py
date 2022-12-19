@@ -25,7 +25,6 @@ import sys
 
 
 
-
 def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_print):
     base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
 
@@ -188,7 +187,7 @@ def get_tiingo_df(symbol, limit):
     response = response.rename(columns = {"high":"h", "low":"l", "open":"o", "close":"c", "volume":"v"})
     # pd.set_option("display.max_columns", None)
     # pd.set_option("display.max_rows", None)
-    print(response)
+    # print(response)
     return response
 
 def get_proper_df(symbol, limit, data_source):
