@@ -1,6 +1,5 @@
 import sys
 from config.environ import directory_dict
-from config.symbols import real_test_symbols
 from functions.time import (get_past_date_string, increment_calendar, make_Timestamp, read_date_string, 
     get_current_datetime, get_calendar)
 from functions.trade import get_api
@@ -34,13 +33,16 @@ def get_user_input():
                 print("Please try again")
                 sys.exit(-1)
         elif sys.argv[1] == "tuning":
-            if len(sys.argv) > 3:
+            if len(sys.argv) > 4:
                 test_name = sys.argv[2]
                 folder = sys.argv[3]
+                symbols = sys.argv[4]
+                print("THIS IS BROKE PLS FIX, SYMBOLS IS NOT PROPERLY MADE")
                 print(f"\n~~~Running tuning with test: {test_name}~~~")
-                make_tuning_sheet(test_name, folder)
+                make_tuning_sheet(test_name, folder, symbols)
             else:
-                print("Tuning requires another argument for the test name and a third for saved folder.")
+                print("Tuning requires another argument for the test name and a third for saved folder,")
+                print("along with a fourth to say what symbols you want.")
                 print("Please try again")
                 sys.exit(-1)
         else:
@@ -186,11 +188,11 @@ def make_PL_sheet(date, api):
     pl_file.close()
     print("~~~Task Complete~~~")
 
-def make_tuning_sheet(test_name, folder):
+def make_tuning_sheet(test_name, folder, symbols):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
     tpa = tcd = te = tm = tt = 0
 
-    for symbol in real_test_symbols:
+    for symbol in symbols:
         extraction_dict = {
             "percent_away": 0.0,
             "correct_direction": 0.0,
@@ -216,8 +218,8 @@ def make_tuning_sheet(test_name, folder):
             print(f"Program will now exit to prevent writing incomplete values.")
             return
             
-    tune_text += (f"    \t{r2(tpa/len(real_test_symbols))}\t{r2(tcd/len(real_test_symbols))}"
-        f"\t{r2(te/len(real_test_symbols))}\t{r2(tm/len(real_test_symbols))}\n")
+    tune_text += (f"    \t{r2(tpa/len(symbols))}\t{r2(tcd/len(symbols))}"
+        f"\t{r2(te/len(symbols))}\t{r2(tm/len(symbols))}\n")
 
     tune_text += (f"\nTesting all of the days took {r2(tt / 3600)} hours or {int(tt // 3600)}:"
         f"{int((tt / 3600 - (tt // 3600)) * 60)} minutes.\n")
