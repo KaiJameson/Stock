@@ -5,6 +5,7 @@ import talib as ta
 
 def lin_reg_comparator(df, timeperiod, run_days):
     # df = df["df"]
+    print(df, flush=True)
     df["lin_reg"] = ta.LINEARREG(df.c, timeperiod=timeperiod)
     avg_p, avg_d, current_money = simple_one_day_predicting_comparator_guts(df, "lin_reg", run_days)
 

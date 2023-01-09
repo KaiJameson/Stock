@@ -147,8 +147,10 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
                 avg_e[predictor] = mean(progress['epochs_dict'][predictor])
         hold_money = r2(test_money * (current_price / starting_day_price))
 
-        sub_df = df_subset(df_dict['price'], current_date)
-        comparator_results_excel(sub_df, tune_days, symbol)
+        sub_df = df_subset(df_dict, current_date)
+        print(df_dict["price"], flush=True)
+        print(sub_df["price"], flush=True)
+        comparator_results_excel(sub_df["price"], tune_days, symbol)
         
         
         print_backtest_results(params, progress, avg_p, avg_d, avg_e, hold_money)
@@ -202,7 +204,7 @@ if __name__ == "__main__":
         pool.close()
         pool.join()
 
-    make_tuning_sheet(get_test_name(params), params['TUNE_FOLDER'])
+    make_tuning_sheet(get_test_name(params), params['TUNE_FOLDER'], tune_symbols)
 
 
 

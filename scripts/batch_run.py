@@ -80,7 +80,7 @@ if len(sys.argv) > 2:
             r2(result_df["Time used"].sum() / 60), r2(result_df["Money Made"].mean())]
 
         results.append(test_output)
-        make_tuning_sheet(get_test_name(params), params['TUNE_FOLDER'])
+        make_tuning_sheet(get_test_name(params), params['TUNE_FOLDER'], tune_symbols)
     
 
     result_df = pd.DataFrame(results, columns=["Model Name", "Average percent", "Average direction", 

@@ -128,7 +128,7 @@ def time_kfold(params):
             error_handler(symbol, Exception)
     
     overall_test_name = f"{test_interval}-{get_test_name(params)}"
-    make_tuning_sheet(overall_test_name, params['TUNE_FOLDER'])
+    make_tuning_sheet(overall_test_name, params['TUNE_FOLDER'], kfold_symbols)
 
 if __name__ == "__main__":
     check_directories()
