@@ -190,12 +190,14 @@ def make_PL_sheet(date, api):
 
 def make_tuning_sheet(test_name, folder, symbols):
     tune_text = f"~~~ Here are the results for {test_name} tuning ~~~\n"
-    tpa = tcd = te = tm = tt = 0
+    tpa = tcd = vtpa = vtcd = te = tm = tt = 0
 
     for symbol in symbols:
         extraction_dict = {
             "percent_away": 0.0,
             "correct_direction": 0.0,
+            "valid_percent_away": 0.0,
+            "valid_correct_direction": 0.0,
             "epochs": 0.0,
             "total_money": 0.0,
             "time_so_far": 0.0
@@ -204,22 +206,37 @@ def make_tuning_sheet(test_name, folder, symbols):
         if os.path.isfile(f"{folder}/{symbol}-{test_name}.txt"):
             print(f"Opening the juicy file {folder}/{symbol}-{test_name}.txt now", flush=True)
             extraction_dict = read_saved_contents(f"{folder}/{symbol}-{test_name}.txt", extraction_dict)
-            tune_text += (f"{symbol}\t{extraction_dict['percent_away']}\t{extraction_dict['correct_direction']}\t"
-                          f"{r2(extraction_dict['epochs'])}\t{extraction_dict['total_money']}\n") 
+
             tpa += extraction_dict["percent_away"]
             tcd += extraction_dict["correct_direction"]
             te += extraction_dict["epochs"]
             tm += extraction_dict["total_money"]
             tt += extraction_dict["time_so_far"]
+
+            if extraction_dict.get("valid_percent_away"):
+                vtpa += extraction_dict["valid_percent_away"]
+                vtcd += extraction_dict["valid_correct_direction"]
+                tune_text += (f"{symbol}\t{extraction_dict['percent_away']}\t{extraction_dict['correct_direction']}\t"
+                            f"{extraction_dict['valid_percent_away']}\t{extraction_dict['valid_correct_direction']}\t"
+                            f"{r2(extraction_dict['epochs'])}\t{extraction_dict['total_money']}\n") 
+            else:
+                tune_text += (f"{symbol}\t{extraction_dict['percent_away']}\t{extraction_dict['correct_direction']}\t"
+                            f"{r2(extraction_dict['epochs'])}\t{extraction_dict['total_money']}\n") 
+
+
         else:
             print(f"I am sorry to inform you that {folder}/{symbol}-{test_name}.txt")
             print(f"does not exist. You're either going to get an incomplete result or nothing at!!!")
             print(f"Are you feeling lucky yet?")
             print(f"Program will now exit to prevent writing incomplete values.")
             return
-            
-    tune_text += (f"    \t{r2(tpa/len(symbols))}\t{r2(tcd/len(symbols))}"
-        f"\t{r2(te/len(symbols))}\t{r2(tm/len(symbols))}\n")
+    if extraction_dict.get("valid_percent_away"):
+        tune_text += (f"    \t{r2(tpa/len(symbols))}\t{r2(tcd/len(symbols))}"
+            f"\t{r2(vtpa/len(symbols))}\t{r2(vtcd/len(symbols))}"
+            f"\t{r2(te/len(symbols))}\t{r2(tm/len(symbols))}\n")
+    else:
+        tune_text += (f"    \t{r2(tpa/len(symbols))}\t{r2(tcd/len(symbols))}"
+            f"\t{r2(te/len(symbols))}\t{r2(tm/len(symbols))}\n")
 
     tune_text += (f"\nTesting all of the days took {r2(tt / 3600)} hours or {int(tt // 3600)}:"
         f"{int((tt / 3600 - (tt // 3600)) * 60)} minutes.\n")
