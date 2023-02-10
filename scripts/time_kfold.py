@@ -99,17 +99,8 @@ def time_kfold(params):
                 y_valid_real, y_valid_pred = return_real_predict(model, data_dict[predictor]['result']['X_valid'], data_dict[predictor]['result']['y_valid'],
                     data_dict[predictor]['result']['column_scaler']['future'])
 
-                # print(f"len of y_valid_real, y_valid_pred is {len(y_valid_real)}, {len(y_valid_pred)}")
-                # print(y_valid_real)
-                # print(y_valid_pred)
-                # print(f"acc for validation is {get_accuracy(y_valid_real, y_valid_pred, lookup_step=1)}")
-                # print(f"valid percent away is {get_percent_away(y_valid_real, y_valid_pred)}")
-
-                # print(f"len of y_real, y_pred is {len(y_real)}, {len(y_pred)}")
-                # print(y_real)
-                # print(y_pred)
-                # print(f"acc for test is {get_accuracy(y_real, y_pred, lookup_step=1)}")
-                # print(f"test percent away is {get_percent_away(y_real, y_pred)}")
+                print(f"len of y_valid_real, y_valid_pred is {len(y_valid_real)}, {len(y_valid_pred)}")
+                print(f"len of y_real, y_pred is {len(y_real)}, {len(y_pred)}")
 
                 acc = get_accuracy(y_real, y_pred, lookup_step=1)
                 per_away = get_percent_away(y_real, y_pred)

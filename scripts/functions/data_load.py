@@ -27,7 +27,6 @@ import sys
 
 def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_print):
     base_features = ["o", "c", "l", "h", "v", "tc", "vwap"]
-
     for feature in features:
         if feature not in base_features:
             if "." in feature:

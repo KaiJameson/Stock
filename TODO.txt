@@ -1,6 +1,8 @@
 Implement classification ensemble
     * add in the wavelet transform 2d models
     * add in wavelet transform 3d models
+Data load
+    * fix limit for tiingo
 News
     * Try title and title/content from alpaca
     * use finBERT model
@@ -15,12 +17,13 @@ PCA
     * implement other feature simplication techniques
 Qlib
     * find out if any models there are relevant for project
+Hourly data
+    * Filter raw hourly data to only use 14-20
 MLENS
     * review results of the extensive MLENS testing for models worthy of further investigation
 Model testing
     * all of these new data sources need to be retested: ht_sine, pearson's correlation, money flow index, relative strength index, day_of_week, chaikin line, true range, 10Y bond rate
     * classification NN ensembles
-    * use the new volatility indicators
 keras tuner
     * allow keras tuner to build model dynamically based on layers parameter
 Model loading/trading 
