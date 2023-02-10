@@ -56,6 +56,8 @@ def time_kfold(params):
             "current_money": 0,
             "percent_away_list": [],
             "correct_direction_list": [],
+            "valid_percent_away_list": [],
+            "valid_correct_direction_list": [],
             "epochs_list": []
         }
 
@@ -94,15 +96,29 @@ def time_kfold(params):
                 y_real, y_pred = return_real_predict(model, data_dict[predictor]['result']['X_test'], data_dict[predictor]['result']['y_test'],
                      data_dict[predictor]['result']['column_scaler']['future'])
 
+                y_valid_real, y_valid_pred = return_real_predict(model, data_dict[predictor]['result']['X_valid'], data_dict[predictor]['result']['y_valid'],
+                    data_dict[predictor]['result']['column_scaler']['future'])
+
+                print(f"len of y_valid_real, y_valid_pred is {len(y_valid_real)}, {len(y_valid_pred)}")
                 print(f"len of y_real, y_pred is {len(y_real)}, {len(y_pred)}")
 
                 acc = get_accuracy(y_real, y_pred, lookup_step=1)
                 per_away = get_percent_away(y_real, y_pred)
+
+                valid_acc = get_accuracy(y_valid_real, y_valid_pred, lookup_step=1)
+                valid_per_away = get_percent_away(y_valid_real, y_valid_pred)
+
                 print(r1002(acc))
                 print(r2(per_away))
 
+                print(r1002(valid_acc))
+                print(r2(valid_per_away))
+
                 progress['percent_away_list'].append(per_away)
                 progress['correct_direction_list'].append(acc)
+
+                progress['valid_percent_away_list'].append(valid_per_away)
+                progress['valid_correct_direction_list'].append(valid_acc)
 
                 day_took = (time.perf_counter() - time_s)
                 progress['time_so_far'] += day_took
@@ -111,6 +127,8 @@ def time_kfold(params):
 
             avg_p = sr2(mean(progress['percent_away_list']))
             avg_d = sr1002(mean(progress['correct_direction_list']))
+            avg_valid_p = sr2(mean(progress['valid_percent_away_list']))
+            avg_valid_d = sr1002(mean(progress['valid_correct_direction_list']))
             avg_e = mean(progress['epochs_list'])
 
 
@@ -118,6 +136,8 @@ def time_kfold(params):
             with open(f"{params['TUNE_FOLDER']}/{test_name}.txt", "a") as f:
                 f.write(f"percent_away|{avg_p}\n")
                 f.write(f"correct_direction|{avg_d}\n")
+                f.write(f"valid_percent_away|{avg_valid_p}\n")
+                f.write(f"valid_correct_direction|{avg_valid_d}\n")
                 f.write(f"epochs|{avg_e}\n")
                 f.write(f"total_money|{progress['current_money']}\n")
                 f.write(f"time_so_far|{progress['time_so_far']}\n")

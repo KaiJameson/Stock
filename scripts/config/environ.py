@@ -6,6 +6,8 @@ from tensorflow.keras.layers import LSTM, Dense
 directory_dict = {
     "batch_run":         "../batch_run",
     "batch_run_summary": "../batch_run/summary",
+    "combine_eval":      "../combine_eval",
+    "combine_eval_summary":"../combine_eval/summary",
     "comparator_results":"../tuning_info/comparators",
     "config":            "../config",
     "data":              "../data", 
@@ -37,7 +39,6 @@ time_zone = "US/EASTERN"
 test_money = 10000.0
 stocks_traded = 20
 random_seed = 314
-back_test_days = 100
 save_logs = False
 to_plot = False
 make_config = False

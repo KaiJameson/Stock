@@ -22,15 +22,34 @@ import os
 
 
 def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=False):
+    test_name = (symbol + "-" + get_test_name(params))
+    output_list = []
+
+    if os.path.isfile(f"{params['TUNE_FOLDER']}/{test_name}.txt"):
+        if output:
+            output_dict = {
+                "percent_away": 0.0,
+                "correct_direction": 0.0,
+                "epochs": 0.0,
+                "total_money": 0.0,
+                "time_so_far": 0.0,
+            }
+
+            output_dict = read_saved_contents(f"{params['TUNE_FOLDER']}/{test_name}.txt", output_dict)
+            output_list = [test_name, output_dict['percent_away'], output_dict['correct_direction'],
+                output_dict['time_so_far'], output_dict['total_money']]
+            return output_list
+        else:
+            print(f"A fully completed file with the name {test_name} already exists.")
+            print("Exiting this instance of tuning now: ")
+            return
 
     api = get_api()
     
     if not output:
         configure_gpu()
 
-    output_list = []
 
-    test_name = (symbol + "-" + get_test_name(params))
 
     progress = {
         "total_days": tune_days,
@@ -45,24 +64,6 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
         "epochs_dict": {}
     }
 
-    if os.path.isfile(f"{params['TUNE_FOLDER']}/{test_name}.txt"):
-        if output:
-            output_dict = {
-                "percent_away": 0.0,
-                "correct_direction": 0.0,
-                "epochs": 0,
-                "total_money": 0.0,
-                "time_so_far": 0.0,
-            }
-
-            output_dict = read_saved_contents(f"{params['TUNE_FOLDER']}/{test_name}.txt", output_dict)
-            output_list = [test_name, output_dict['percent_away'], output_dict['correct_direction'],
-                output_dict['time_so_far'], output_dict['total_money']]
-            return output_list
-        else:
-            print(f"A fully completed file with the name {test_name} already exists.")
-            print("Exiting this instance of tuning now: ")
-            return
 
     test_var = "c"
     for predictor in params['ENSEMBLE']:
@@ -148,8 +149,6 @@ def tuning(symbol, tune_year, tune_month, tune_day, tune_days, params, output=Fa
         hold_money = r2(test_money * (current_price / starting_day_price))
 
         sub_df = df_subset(df_dict, current_date)
-        print(df_dict["price"], flush=True)
-        print(sub_df["price"], flush=True)
         comparator_results_excel(sub_df["price"], tune_days, symbol)
         
         
@@ -189,8 +188,7 @@ if __name__ == "__main__":
             tuner_dict[model] = models[model]
     print(tuner_dict)
 
-    
-        
+
     tune_symbols, params = get_user_input(sym_dict, tuner_dict)
     print(params)
     print("\nStaring tuner.py using these following symbols: " + str(tune_symbols) + "\n", flush=True)

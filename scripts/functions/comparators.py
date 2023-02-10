@@ -49,7 +49,7 @@ def sav_gol_comparator(df, time_period, poly_order, run_days):
         df.drop(labels=df.iloc[i].name, inplace=True)
         df["s.c"] = savgol_filter(df.c[:i], time_period, poly_order)
         current_price = df.c[i - 1]
-        predicted_price = df.sc[i - 1]
+        predicted_price = df["s.c"][i - 1]
 
         p_diff = ra1002((actual_price - predicted_price) / actual_price)
         correct_dir = get_correct_direction(predicted_price, current_price, actual_price, "c")

@@ -314,7 +314,9 @@ def df_TSF(name, df, *args):
 
 def convert_date_values(name, df, *args):	    
     df[name] = df.index	
-    df[name] = df[name].dt.dayofweek + 1
+    df[name] = pd.to_datetime(df[name])
+    df[name] = df[name].dt.weekday + 1
+    
 
 def df_pass(name, df, symbol):
     pass

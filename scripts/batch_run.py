@@ -16,7 +16,6 @@ check_directories()
 
 if len(sys.argv) > 2:
     s_time = time.perf_counter()
-    test_days = 500
 
     params = {
         "ENSEMBLE":[],

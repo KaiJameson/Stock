@@ -11,6 +11,7 @@ from functions.paca_model import get_current_price
 from functions.data_load import get_proper_df, df_subset, get_df_dict
 from functions.time import get_past_datetime
 from functions.functions import check_directories, r2, interpret_dict
+from functions.io import read_saved_contents
 from itertools import product
 from paca_model import configure_gpu
 from statistics import mean
@@ -18,11 +19,28 @@ import datetime
 import copy
 import time
 import sys
+import os 
 
 
         
 
-def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
+def simulate_trades(tune_year, tune_month, tune_day, tune_days, params, output=False):
+    
+    if os.path.isfile(f"{directory_dict['sim_trades']}/{params['ENSEMBLE']}-{params['TRADE_METHOD']}-{interpret_dict(params['TRADE_PARAMS'])}.txt"):
+        if output:
+            output_dict = {
+                "equity": 0.0,
+            }
+
+            output_dict = read_saved_contents(f"{directory_dict['sim_trades']}/{params['ENSEMBLE']}-"
+                f"{params['TRADE_METHOD']}-{interpret_dict(params['TRADE_PARAMS'])}.txt", output_dict)
+            output_result = output_dict['equity']
+            return output_result
+        else:
+            print(f"A fully completed file with the name {interpret_dict(params['TRADE_PARAMS'])} already exists.")
+            print("Exiting this instance of sim_trades now: ")
+            return
+    
     time_s = time.perf_counter()
 
     api = get_api()
@@ -156,7 +174,11 @@ def simulate_trades(tune_year, tune_month, tune_day, tune_days, params):
             f"Holding the NASDAQ would have made {r2(test_money * (qqq_end_price / qqq_start_price))}.\n")
         f.write(f"It was holding these {portfolio['owned']} stocks at the end\n")
         f.write(f"Testing all of the days took {r2(time_so_far / 3600)} hours or {int(time_so_far // 3600)}:"
-            f"{int((time_so_far / 3600 - (time_so_far // 3600)) * 60)} minutes.\n")
+            f"{int((time_so_far / 3600 - (time_so_far // 3600)) * 60)} minutes.\n\n")
+        f.write(f"equity|{r2(portfolio['equity'])}\n")
+
+    if output:
+        return portfolio['equity']
 
 
 if __name__ == "__main__":
