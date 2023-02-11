@@ -94,15 +94,28 @@ def fin_bert_sentiment(name, df, symbol):
     
     sent_list = []
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(device)
+
+
     tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
     model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")
-
+    if torch.cuda.is_available():
+        model.to(device)
+    print(torch.cuda.is_available(), flush=True)
 
     for ele in reversed(news):
         input = tokenizer(ele.headline, padding = True, truncation = True, return_tensors='pt')
+        if torch.cuda.is_available():
+            input.to(device)
+        # print(input.is_cuda)
         # print(input)
         outputs = model(**input)
-        predictions = torch.nn.functional.softmax(outputs.logits, dim=-1).detach().numpy()[0]
+
+        if torch.cuda.is_available():
+            predictions = torch.nn.functional.softmax(outputs.logits, dim=-1).cpu().detach().numpy()[0]
+        else:
+            predictions = torch.nn.functional.softmax(outputs.logits, dim=-1).detach().numpy()[0]
         # print(predictions.detach().numpy()[0], ele.headline, ele.created_at.date())
         # print(predictions.shape)
 
@@ -124,7 +137,8 @@ def fin_bert_sentiment(name, df, symbol):
     properly_group_sentiment(sent_list[:, [0, 3]], "fin_bert_neu", df, df_copy)
 
 
-    # print(df.tail(60))
+
+    print(df.tail(20))
 
 def properly_group_sentiment(sent_list, name, df, df_copy):
 
