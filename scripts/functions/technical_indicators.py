@@ -51,12 +51,12 @@ def df_power_transformation(selector, feature, df, symbol):
 def df_moving_average(selector, feature, df, symbol):
     if feature not in base_features:
         techs_dict[feature]["function"](feature, df, symbol)
-    df[f"{selector}.{feature}"] = ta.SMA(df.c, timeperiod=7)
+    df[f"{selector}.{feature}"] = ta.SMA(df[feature], timeperiod=7)
 
 def df_exponential_smoothing(selector, feature, df, symbol):
     if feature not in base_features:
         techs_dict[feature]["function"](feature, df, symbol)
-    df[f"{selector}.{feature}"] = ta.EMA(df.c, timeperiod=7)
+    df[f"{selector}.{feature}"] = ta.EMA(df[feature], timeperiod=7)
 
 def df_wavelet_transform(selector, feature, df, symbol):
     if feature not in base_features:

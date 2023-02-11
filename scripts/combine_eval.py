@@ -31,8 +31,8 @@ if len(sys.argv) > 3:
 
     
     results = []
-    print(combine_eval_dict)
-    print(type(combine_eval_dict))
+    # print(combine_eval_dict)
+    # print(type(combine_eval_dict))
     tune_symbols, do_not_use = get_user_input(sym_dict, combine_eval_dict)
     changable_dict = copy.deepcopy(combine_eval_dict)
 
@@ -46,9 +46,6 @@ if len(sys.argv) > 3:
         for test_indexes in all_test_combinations:
             changable_dict["ENSEMBLE"] = []
             for index in test_indexes:
-                print("HELEPELEPEPLELPEPLPLELELPEPOLELP")
-                print(index)
-                # print(combine_eval_dict['ENSEMBLE'][index], end="\n\n")
                 changable_dict["ENSEMBLE"].append(index)
                 changable_dict[index] = models[index]
 
@@ -91,7 +88,7 @@ if len(sys.argv) > 3:
     pd.set_option("display.max_rows", None)
     print(result_df)
 
-    result_df.to_csv(f"{combine_eval_dict['TUNE_FOLDER']}/summary/{combine_eval_dict['ENSEMBLE']}.txt", sep="\t")
+    result_df.to_csv(f"{combine_eval_dict['TUNE_FOLDER']}/summary/summary-{combine_eval_dict['ENSEMBLE']}.txt", sep="\t")
     print(f"Doing all of these tests took {(time.perf_counter() - s_time) / 60} minutes")
 else:
     print("This program requires an argument for what symbols to run and two ints expressing # of models to combine.")
