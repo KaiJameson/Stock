@@ -4,6 +4,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import pandas as pd
 import numpy as np
+import nltk
 import torch
 import datetime
 import copy
