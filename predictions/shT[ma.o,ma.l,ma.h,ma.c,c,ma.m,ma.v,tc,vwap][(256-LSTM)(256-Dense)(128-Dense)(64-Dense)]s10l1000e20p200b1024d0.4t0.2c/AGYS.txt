@@ -1,0 +1,1 @@
+AGYS|{'2020-5-18': {'prediction': 18.29111, 'epochs': 20}, '2020-5-19': {'prediction': 18.58341, 'epochs': 20}, '2020-5-20': {'prediction': 18.49987, 'epochs': 20}, '2020-5-21': {'prediction': 18.965794, 'epochs': 20}}

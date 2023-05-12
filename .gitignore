@@ -15,7 +15,6 @@ load_run_results/
 models/
 results/
 old/
-predictions/
 plots/
 real_test/
 reports/
