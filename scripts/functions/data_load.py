@@ -35,7 +35,7 @@ def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_prin
                 # print(df)
                 if dot_split[0] in techs_dict:
                     techs_dict[dot_split[0]]["function"](dot_split[0], dot_split[1], df, symbol)
-                    print(feature, df.tail(20))
+                    # print(feature, df.tail(20))
                 elif dot_split[0].startswith("tick-"):
                     feature_split = dot_split[0].split("-")
                     # print(f"feature split {feature_split}")
@@ -70,7 +70,7 @@ def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_prin
     
     for feature in list(df.columns):
         if feature not in features and feature != test_var and feature != "c":
-            print(f"dropping {feature}")
+            # print(f"dropping {feature}")
             df = df.drop(columns=[feature])
 
     # pd.set_option("display.max_columns", None)
@@ -78,7 +78,7 @@ def modify_dataframe(symbol, features, df, test_var, limit, data_source, to_prin
     pd.set_option('display.expand_frame_repr', False)
     if to_print:
         print(df.head(2))
-        print(df.tail(20))
+        print(df.tail(2))
         print(df.shape)
 
     return df
