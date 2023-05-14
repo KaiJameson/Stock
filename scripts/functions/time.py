@@ -157,6 +157,8 @@ def increment_calendar(current_date, calendar, increment):
     for day, ele in enumerate(calendar):
         if calendar[day].date.date() == current_date:
             # print(f"before current date {current_date}")
+            # print(day, increment)
+            # print(day+ increment)
             current_date = calendar[day + increment].date.date()
             # print(f"after current date {current_date}")
             return current_date

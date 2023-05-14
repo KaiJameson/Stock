@@ -191,7 +191,7 @@ if __name__ == "__main__":
     keys = []
 
     for variable in sim_trades_dict:
-        print(sim_trades_dict[variable], type(sim_trades_dict[variable]))
+        # print(sim_trades_dict[variable], type(sim_trades_dict[variable]))
         if type(sim_trades_dict[variable]) is list:
             keys.append(variable)
             param_lists.append(sim_trades_dict[variable])
