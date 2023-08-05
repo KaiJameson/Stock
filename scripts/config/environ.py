@@ -72,6 +72,8 @@ make_config = False
 defaults = {
     "ENSEMBLE": ["nn8", "nn11", "nn26", "nn28"],
     "TRADING": True,
+    "TRADE_METHOD": "preport_no_rebal",
+    # "TRADE_METHOD": "rebal_split",
     "SAVE_FOLDER": "trading",
     "nn8" : { 
         "N_STEPS": 100,

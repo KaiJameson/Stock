@@ -265,6 +265,8 @@ if __name__ == "__main__":
 
     s = time.perf_counter()
     configure_gpu()
+
+    ############################################################################
     # TRANSFORMER SECTION
     # import numpy as np
     # import pandas as pd
@@ -584,68 +586,6 @@ if __name__ == "__main__":
     # print('Test Data - Loss: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}'.format(test_eval[0], test_eval[1], test_eval[2]))
 
 
-
-    # WAVELET TRANSFORMS WORKING SECTION
-
-    # predictor = "KNN1"
-
-    # for symbol in load_save_symbols:
-    #     df = get_proper_df(symbol, 4000, "V2")
-    #     df = modify_dataframe(params["KNN1"]["FEATURE_COLUMNS"], df, True)
-    # data_dict = load_all_data(symbol, params, df, get_current_datetime())
-
-    
-    # def calculate_entropy(list_values):
-    #     counter_values = Counter(list_values).most_common()
-    #     probabilities = [elem[1]/len(list_values) for elem in counter_values]
-    #     entropy=scipy.stats.entropy(probabilities)
-    #     return entropy
- 
-    # def calculate_statistics(list_values):
-    #     n5 = np.nanpercentile(list_values, 5)
-    #     n25 = np.nanpercentile(list_values, 25)
-    #     n75 = np.nanpercentile(list_values, 75)
-    #     n95 = np.nanpercentile(list_values, 95)
-    #     median = np.nanpercentile(list_values, 50)
-    #     mean = np.nanmean(list_values)
-    #     std = np.nanstd(list_values)
-    #     var = np.nanvar(list_values)
-    #     rms = np.nanmean(np.sqrt(list_values**2))
-    #     return [n5, n25, n75, n95, median, mean, std, var, rms]
-    
-    # def get_features(list_values):
-    #     entropy = calculate_entropy(list_values)
-    #     statistics = calculate_statistics(list_values)
-    #     # print(entropy)
-    #     # print(statistics)
-    #     return [entropy] + statistics
-
-    # def load_ecg_data(filename):
-    #     raw_data = loadmat(filename)
-    #     list_signals = raw_data['ECGData'][0][0][0]
-    #     list_labels = list(map(lambda x: x[0][0], raw_data['ECGData'][0][0][1]))
-    #     return list_signals, list_labels
-    
-    
-
-    # def get_ecg_features(ecg_data, waveletname):
-    #     list_features = []
-    #     # print(list_labels)
-    #     i = 0
-    #     for signal in ecg_data: # 97 
-    #         # print(f"\n\n SIGNAL {signal} {signal.shape} {i} SIGNAL \n")
-    #         list_coeff = pywt.wavedec(signal, waveletname)
-    #         features = []
-    #         for coeff in list_coeff:
-    #             # print(len(coeff), coeff.shape)
-    #             features += get_features(coeff)
-    #             # print(len(get_features(coeff)))
-    #         # print(len(features))
-    #         list_features.append(features)
-    #         i += 1
-
-    #     list_features = sum(list_features, [])
-    #     return list_features
 
 
     # TRYING 2D data with ECG FEATURES

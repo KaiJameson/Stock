@@ -34,7 +34,40 @@ def getOwnedStocks(real_mon):
         owned[position.symbol] = position.qty
     return owned
 
-def buy_all_at_once(symbols, owned, price_list, real_mon):
+def sell_order(symbol, qty, api, sold_list):
+    print(f"symbol {symbol} qty {qty} ")
+    sell = api.submit_order(
+        symbol=symbol,
+        qty=qty,
+        side="sell",
+        type="market",
+        time_in_force="day"
+    )
+
+    print("\n~~~SELLING " + sell.symbol + "~~~")
+    print("Quantity: " + sell.qty)
+    print("Status: " + sell.status)
+    print("Type: " + sell.type)
+    print("Time in force: "  + sell.time_in_force + "\n")
+    sold_list[symbol] = {"qty":sell.qty, "status":sell.status, "type":sell.type, "time_in_force": sell.time_in_force}
+
+def buy_order(symbol, qty, api, bought_list):
+    buy = api.submit_order(
+        symbol=symbol,
+        qty=qty,
+        side="buy",
+        type="market",
+        time_in_force="day"
+    )
+
+    print("\n~~~Buying " + buy.symbol + "~~~")
+    print("Quantity: " + buy.qty)
+    print("Status: " + buy.status)
+    print("Type: " + buy.type)
+    print("Time in force: "  + buy.time_in_force + "\n")
+    bought_list[symbol] = {"qty":buy.qty, "status":buy.status, "type":buy.type, "time_in_force":buy.time_in_force}
+
+def buy_all_at_once(symbols, owned, price_list, real_mon, trade_method):
     api = get_toggleable_api(real_mon)
     clock = api.get_clock()
     if not clock.is_open:
@@ -42,106 +75,139 @@ def buy_all_at_once(symbols, owned, price_list, real_mon):
         return
 
     buy_list = []
+    hold_list = []
+    bought_list = {}
     sold_list = {}
+
     end = get_current_datetime()
     start = get_current_datetime()
+    print(f"Getting trading underway with trading method: {trade_method} . GLHF and God help you")
 
-    for symbol in symbols:
-        try:
-            df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
-            current_price = df["close"][0]
-
-            if current_price < price_list[symbol]["predicted"]:
-                if symbol not in owned:
-                    buy_list.append(symbol)
-                
-            else:
-                if symbol in owned:
-                    qty = owned.pop(symbol)
-                    print(f"symbol {symbol} qty {qty} ")
-                    sell = api.submit_order(
-                        symbol=symbol,
-                        qty=qty,
-                        side="sell",
-                        type="market",
-                        time_in_force="day"
-                    )
-
-                    print("\n~~~SELLING " + sell.symbol + "~~~")
-                    print("Quantity: " + sell.qty)
-                    print("Status: " + sell.status)
-                    print("Type: " + sell.type)
-                    print("Time in force: "  + sell.time_in_force + "\n")
-                    sold_list[symbol] = {"qty":sell.qty, "status":sell.status, "type":sell.type, "time_in_force": sell.time_in_force}
-
-            print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
-            make_runtime_price(current_price)
-
-        except Exception:
-            error_handler(symbol, Exception)
-
-            
-    print("The Owned list: " + str(owned))
-    print("The buy list: " + str(buy_list))
-
-    account_equity = float(api.get_account().equity)
-    buy_power = float(api.get_account().cash)
-
-    value_in_stocks_before = round((1 - (buy_power / account_equity)) * 100, 2)
-
-    print(f"Value in stocks: {str(value_in_stocks_before)}%")
-    print("Account equity: " + str(account_equity))
-
-    stock_portion_adjuster = get_stock_portion_adjuster(value_in_stocks_before, buy_list)
-        
-    print("\nThe value in stocks is " + str(value_in_stocks_before))
-    print("The Stock portion adjuster is " + str(stock_portion_adjuster))
-
-    bought_list = {}
-    hold_list = []
-    for symbol in symbols:
-        try:
-            if symbol not in owned and symbol not in buy_list:
-                print("~~~Not buying " + symbol + "~~~")
-                continue
-
-            elif symbol in owned and symbol not in buy_list:
-                print("~~~Holding " + symbol + "~~~")
-                hold_list.append(symbol)
-                continue
-            
-            else:
+    if trade_method == "preport_no_rebal":
+        for symbol in symbols:
+            try:
                 df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
                 current_price = df["close"][0]
 
-                buy_qty = (buy_power / stock_portion_adjuster) // current_price
+                if current_price < price_list[symbol]["predicted"]:
+                    if symbol not in owned:
+                        buy_list.append(symbol)
+                    
+                else:
+                    if symbol in owned:
+                        qty = owned.pop(symbol)
+                        sell_order(symbol, qty, api, sold_list)
 
-                if buy_qty == 0:
+                print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
+                if real_mon:
+                    make_runtime_price(current_price)
+
+            except Exception:
+                error_handler(symbol, Exception)
+
+                
+        print("The Owned list: " + str(owned))
+        print("The buy list: " + str(buy_list))
+
+        account_equity = float(api.get_account().equity)
+        buy_power = float(api.get_account().cash)
+
+        value_in_stocks_before = round((1 - (buy_power / account_equity)) * 100, 2)
+
+        print(f"Value in stocks: {str(value_in_stocks_before)}%")
+        print("Account equity: " + str(account_equity))
+
+        stock_portion_adjuster = get_stock_portion_adjuster(value_in_stocks_before, buy_list)
+            
+        print("\nThe value in stocks is " + str(value_in_stocks_before))
+        print("The Stock portion adjuster is " + str(stock_portion_adjuster))
+
+        for symbol in symbols:
+            try:
+                if symbol not in owned and symbol not in buy_list:
+                    print("~~~Not buying " + symbol + "~~~")
+                    continue
+
+                elif symbol in owned and symbol not in buy_list:
+                    print("~~~Holding " + symbol + "~~~")
+                    hold_list.append(symbol)
+                    continue
+                
+                else:
+                    df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+                    current_price = df["close"][0]
+
+                    qty = (buy_power / stock_portion_adjuster) // current_price
+
+                    if qty == 0:
+                        print("Not enough money to purchase stock " + symbol + ".")
+                        continue
+
+                    buy_order(symbol, qty, api, bought_list)
+                    
+            except Exception:
+                error_handler(symbol, Exception)
+
+        account_equity = float(api.get_account().equity)
+        buy_power = float(api.get_account().cash)
+
+        value_in_stocks_after = round((1 - (buy_power / account_equity)) * 100, 2)
+    elif trade_method == "rebal_split":
+        for symbol in symbols:
+            try:
+                df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+                current_price = df["close"][0]
+
+                if current_price < price_list[symbol]["predicted"]:
+                    buy_list.append(symbol)
+                    
+                if symbol in owned:
+                    qty = owned.pop(symbol)
+                    sell_order(symbol, qty, api, sold_list)
+
+                print("The current price for " + symbol + " is: " + str(round(current_price, 2)))
+                if real_mon:
+                    make_runtime_price(current_price)
+
+            except Exception:
+                error_handler(symbol, Exception)
+
+                
+        print("The Owned list: " + str(owned))
+        print("The buy list: " + str(buy_list))
+
+        account_equity = float(api.get_account().equity)
+        buy_power = float(api.get_account().cash)
+
+        value_in_stocks_before = round((1 - (buy_power / account_equity)) * 100, 2)
+
+        print(f"Value in stocks: {str(value_in_stocks_before)}%")
+        print("Account equity: " + str(account_equity))
+            
+        print("\nThe value in stocks is " + str(value_in_stocks_before))
+
+        for symbol in buy_list:
+            try:
+                df = api.get_bars(symbol, start=start, end=end, timeframe=TimeFrame.Day, limit=1).df
+                current_price = df["close"][0]
+
+                qty = (buy_power / len(buy_list)) // current_price
+
+                if qty == 0:
                     print("Not enough money to purchase stock " + symbol + ".")
                     continue
 
-                buy = api.submit_order(
-                    symbol=symbol,
-                    qty=buy_qty,
-                    side="buy",
-                    type="market",
-                    time_in_force="day"
-                )
-                
-                print("\n~~~Buying " + buy.symbol + "~~~")
-                print("Quantity: " + buy.qty)
-                print("Status: " + buy.status)
-                print("Type: " + buy.type)
-                print("Time in force: "  + buy.time_in_force + "\n")
-                bought_list[symbol] = {"qty":buy.qty, "status":buy.status, "type":buy.type, "time_in_force":buy.time_in_force}
-                
-        except Exception:
-            error_handler(symbol, Exception)
+                buy_order(symbol, qty, api, bought_list)
+                    
+            except Exception:
+                error_handler(symbol, Exception)
 
-    account_equity = float(api.get_account().equity)
-    buy_power = float(api.get_account().cash)
+        account_equity = float(api.get_account().equity)
+        buy_power = float(api.get_account().cash)
 
-    value_in_stocks_after= round((1 - (buy_power / account_equity)) * 100, 2)
+        value_in_stocks_after = round((1 - (buy_power / account_equity)) * 100, 2)
+    else:
+        print("Lol, implement that COWARD")
 
     return sold_list, hold_list, bought_list, account_equity, value_in_stocks_before, value_in_stocks_after
 

@@ -53,13 +53,14 @@ def load_trade(symbols, params, real_mon):
 
     if do_the_trades:
         time_s = time.perf_counter()
-        results = buy_all_at_once(symbols, owned, pred_curr_list, real_mon)
+        results = buy_all_at_once(symbols, owned, pred_curr_list, real_mon, params["TRADE_METHOD"])
         print("Performing all the trades took " + str(time.perf_counter() - time_s) + " seconds")
     else:
         print("Why are you running this if you don't want to do the trades?")
 
-    runtime_predict_excel(symbols, pred_curr_list)
-    create_day_summary(symbols, params, pred_curr_list, results[0], results[1], results[2], results[3], results[4], results[5], real_mon)
+    if real_mon:
+        runtime_predict_excel(symbols, pred_curr_list)
+        create_day_summary(symbols, params, pred_curr_list, results[0], results[1], results[2], results[3], results[4], results[5], real_mon)
 
 def create_day_summary(symbols, params, pred_curr_list, sold_list, hold_list, bought_list, account_equity, value_in_stocks_before, value_in_stocks_after, real_mon):
     api = get_toggleable_api(real_mon)
